@@ -111,7 +111,9 @@ export function ConsultoriaIAPage() {
       setModels(list);
       if (list.length > 0) setSelectedModel((prev) => prev || list[0].id);
     });
-    loadConversations().catch(() => setError('Não foi possível carregar o histórico.'));
+    loadConversations().catch(() =>
+      setError('Não foi possível conectar à API. Verifique sua conexão ou tente novamente em instantes.')
+    );
   }, [loadConversations]);
 
   const loadConversation = async (id: string) => {
@@ -351,9 +353,21 @@ export function ConsultoriaIAPage() {
             {error && (
               <div className="chat-error">
                 <p>{error}</p>
-                <Link to="/dashboard/objetivos" className="chat-error-link">
-                  Ir para Objetivos
-                </Link>
+                <button
+                  type="button"
+                  className="chat-error-link"
+                  onClick={() => {
+                    setError(null);
+                    void loadConversations();
+                    void aiApi.models().then((data) => {
+                      const list = Array.isArray(data) ? data : [];
+                      setModels(list);
+                      if (list.length > 0) setSelectedModel((prev) => prev || list[0].id);
+                    });
+                  }}
+                >
+                  Tentar novamente
+                </button>
               </div>
             )}
 

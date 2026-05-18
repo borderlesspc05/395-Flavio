@@ -2,7 +2,11 @@ import axios from 'axios';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+/** API no Render por padrão; use VITE_USE_LOCAL_API=true + proxy Vite para backend local. */
+const API_BASE_URL =
+  import.meta.env.VITE_USE_LOCAL_API === 'true'
+    ? ''
+    : (import.meta.env.VITE_API_BASE_URL || 'https://three95-flavio.onrender.com');
 const DEFAULT_TIMEOUT = 90000;
 const CHAT_TIMEOUT = 120000;
 

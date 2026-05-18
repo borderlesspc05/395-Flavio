@@ -154,7 +154,10 @@ export function ObjetivosPage() {
   useEffect(() => {
     const state = location.state as { openCreateModal?: boolean } | null;
     if (state?.openCreateModal) {
-      openCreate();
+      setEditing(null);
+      setForm({ ...EMPTY_FORM });
+      setFormError(null);
+      setModalOpen(true);
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location, navigate]);

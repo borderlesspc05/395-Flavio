@@ -1,0 +1,13 @@
+# Render — Web Service (API Magnus Mind)
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: three95-flavio
+    runtime: node
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production

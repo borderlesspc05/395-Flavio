@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
   ArrowLeft,
@@ -49,6 +50,9 @@ function normalizeReport(raw: Record<string, unknown>): ReportDetail {
 }
 
 export function RelatoriosPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const autoGenerateHandled = useRef(false);
   const [reports, setReports] = useState<ReportDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -75,7 +79,7 @@ export function RelatoriosPage() {
     load();
   }, [load]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     setGenerating(true);
     setError(null);
     try {
@@ -89,7 +93,15 @@ export function RelatoriosPage() {
     } finally {
       setGenerating(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const state = location.state as { autoGenerate?: boolean } | null;
+    if (!state?.autoGenerate || autoGenerateHandled.current) return;
+    autoGenerateHandled.current = true;
+    navigate(location.pathname, { replace: true, state: {} });
+    void handleGenerate();
+  }, [location, navigate, handleGenerate]);
 
   const openDetail = async (id: string) => {
     setSelectedId(id);

@@ -26,6 +26,15 @@ app.use(
 );
 app.use(express.json({ limit: '2mb' }));
 
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'Magnus Mind API',
+    storage: isFirebaseEnabled() ? 'firestore' : 'memory',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/', (_req, res) => {
   res.json({
     name: 'Magnus Mind API',
@@ -33,6 +42,13 @@ app.get('/', (_req, res) => {
     version: '1.0.0',
     storage: isFirebaseEnabled() ? 'firestore' : 'memory',
     timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      ai: '/api/ai',
+      objectives: '/api/objectives',
+      reports: '/api/reports',
+    },
+    note: 'Esta URL é a API. O app web está no Netlify (frontend).',
   });
 });
 
@@ -44,6 +60,14 @@ app.use('/api/activities', activitiesRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/whatsapp', whatsappRouter);
+
+app.use((_req, res) => {
+  res.status(404).json({
+    error: 'Not found',
+    message: `Rota ${_req.method} ${_req.path} não existe.`,
+    hint: 'Use rotas que começam com /api (ex.: /api/health, /api/ai/models).',
+  });
+});
 
 app.use(errorHandler);
 

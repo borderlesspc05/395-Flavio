@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   CheckCircle,
@@ -273,26 +273,30 @@ export function DashboardHome() {
           </div>
         </div>
         <div className="quick-actions-grid">
-          <button type="button" className="quick-action-card" onClick={() => navigate('/dashboard/initial-form')}>
+          <Link to="/dashboard/initial-form" className="quick-action-card">
             <FileText size={32} className="action-icon" />
             <span className="action-label">Editar Formulário</span>
-          </button>
-          <button type="button" className="quick-action-card" onClick={() => navigate('/dashboard/consultoria-ia')}>
+          </Link>
+          <Link to="/dashboard/consultoria-ia" className="quick-action-card">
             <Bot size={32} className="action-icon" />
             <span className="action-label">Consultoria IA</span>
-          </button>
-          <button
-            type="button"
+          </Link>
+          <Link
+            to="/dashboard/objetivos"
+            state={{ openCreateModal: true }}
             className="quick-action-card"
-            onClick={() => navigate('/dashboard/objetivos', { state: { openCreateModal: true } })}
           >
             <Target size={32} className="action-icon" />
             <span className="action-label">Criar Objetivo</span>
-          </button>
-          <button type="button" className="quick-action-card" onClick={() => navigate('/dashboard/relatorios')}>
+          </Link>
+          <Link
+            to="/dashboard/relatorios"
+            state={{ autoGenerate: true }}
+            className="quick-action-card"
+          >
             <BarChart3 size={32} className="action-icon" />
             <span className="action-label">Gerar Relatório</span>
-          </button>
+          </Link>
         </div>
       </div>
 
