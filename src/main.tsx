@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import './styles/theme-refined.css';
+import './styles/magnus-design.css';
+import './styles/consultoria-responsive.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

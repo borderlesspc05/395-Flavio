@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import { reportsApi } from '../services/api';
+import type { NormalizedReport } from '../services/apiNormalize';
 
 interface ReportStats {
   totalObjectives?: number;
@@ -35,17 +36,17 @@ interface ReportDetail {
   content?: Record<string, unknown>;
 }
 
-function normalizeReport(raw: Record<string, unknown>): ReportDetail {
+function toReportDetail(n: NormalizedReport): ReportDetail {
   return {
-    id: String(raw.id),
-    title: String(raw.title ?? raw.titulo ?? 'Relatório'),
-    type: String(raw.type ?? 'completo'),
-    createdAt: String(raw.createdAt ?? new Date().toISOString()),
-    titulo: raw.titulo ? String(raw.titulo) : undefined,
-    conteudo: raw.conteudo ? String(raw.conteudo) : undefined,
-    resumo: raw.resumo ? String(raw.resumo) : undefined,
-    stats: (raw.stats as ReportStats) || undefined,
-    content: raw.content as Record<string, unknown> | undefined,
+    id: n.id,
+    title: n.title,
+    type: n.type,
+    createdAt: n.createdAt,
+    titulo: n.titulo,
+    conteudo: n.conteudo,
+    resumo: n.resumo,
+    stats: n.stats as ReportStats | undefined,
+    content: n.content,
   };
 }
 
@@ -66,7 +67,7 @@ export function RelatoriosPage() {
     setError(null);
     try {
       const data = await reportsApi.list();
-      const list = (Array.isArray(data) ? data : []).map((r: Record<string, unknown>) => normalizeReport(r));
+      const list = (Array.isArray(data) ? data : []).map((r) => toReportDetail(r));
       setReports(list);
     } catch {
       setError('Não foi possível carregar os relatórios.');
@@ -84,7 +85,7 @@ export function RelatoriosPage() {
     setError(null);
     try {
       const report = await reportsApi.generate('completo');
-      const normalized = normalizeReport(report as Record<string, unknown>);
+      const normalized = toReportDetail(report);
       setReports((prev) => [normalized, ...prev]);
       setSelectedId(normalized.id);
       setDetail(normalized);
@@ -108,7 +109,7 @@ export function RelatoriosPage() {
     setDetailLoading(true);
     try {
       const data = await reportsApi.get(id);
-      setDetail(normalizeReport(data as Record<string, unknown>));
+      setDetail(toReportDetail(data));
     } catch {
       setError('Não foi possível carregar o relatório.');
     } finally {

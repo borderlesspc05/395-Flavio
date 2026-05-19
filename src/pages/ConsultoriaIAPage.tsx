@@ -96,11 +96,14 @@ export function ConsultoriaIAPage() {
 
   const loadConversations = useCallback(async () => {
     const data = await aiApi.conversations();
-    const list = (Array.isArray(data) ? data : []).map((c: ConvSummary) => ({
-      ...c,
-      currentModelId: c.currentModelId || c.model,
-      preview: c.preview || c.title,
-    }));
+    const list = (Array.isArray(data) ? data : []).map((raw) => {
+      const c = raw as ConvSummary;
+      return {
+        ...c,
+        currentModelId: c.currentModelId || c.model,
+        preview: c.preview || c.title,
+      };
+    });
     setConversations(list);
     return list;
   }, []);
@@ -121,7 +124,7 @@ export function ConsultoriaIAPage() {
     setError(null);
     try {
       const conv = await aiApi.conversation(id);
-      const msgs = mapMessages(conv.messages || [], id);
+      const msgs = mapMessages((conv.messages || []) as ServerMessage[], id);
       setMessages(msgs);
       setActiveId(id);
       setSelectedModel(conv.model || conv.currentModelId || selectedModel);
@@ -183,9 +186,15 @@ export function ConsultoriaIAPage() {
       }
     } catch (err: unknown) {
       setMessages((prev) => prev.filter((m) => m.id !== tempUser.id));
-      const ax = err as { code?: string; message?: string };
+      const ax = err as {
+        code?: string;
+        message?: string;
+        response?: { status?: number; data?: { error?: string } };
+      };
       if (ax.code === 'ECONNABORTED') {
         setError('A resposta demorou mais que o esperado. Tente novamente.');
+      } else if (ax.response?.status === 400) {
+        setError(ax.response.data?.error || 'Requisição inválida. Tente enviar a mensagem novamente.');
       } else {
         setError('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.');
       }
@@ -371,7 +380,7 @@ export function ConsultoriaIAPage() {
               </div>
             )}
 
-            {showObjectivesBanner && (
+            {showObjectivesBanner && messages.length > 0 && (
               <div className="chat-objectives-banner">
                 <div className="chat-objectives-banner-content">
                   <Target size={20} />
@@ -409,6 +418,15 @@ export function ConsultoriaIAPage() {
                   Faça perguntas sobre estratégia, operações, finanças e gestão. O assistente responde
                   com base em frameworks consultivos.
                 </p>
+                {showObjectivesBanner && (
+                  <div className="chat-empty-objectives-hint">
+                    <Target size={18} aria-hidden />
+                    <p>
+                      Transforme insights em objetivos estratégicos na aba{' '}
+                      <Link to="/dashboard/objetivos">Objetivos</Link>.
+                    </p>
+                  </div>
+                )}
                 <div className="chat-suggestions">
                   {SUGGESTIONS.map((s) => (
                     <button

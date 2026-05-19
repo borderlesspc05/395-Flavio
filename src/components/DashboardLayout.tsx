@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -27,8 +27,14 @@ const navItems = [
 export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const mainRef = useRef<HTMLElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isConsultoria = location.pathname === '/dashboard/consultoria-ia';
+
+  useEffect(() => {
+    setSidebarOpen(false);
+    mainRef.current?.focus({ preventScroll: true });
+  }, [location.pathname]);
 
   const handleNav = (_id: string, path: string) => {
     navigate(path);
@@ -42,11 +48,21 @@ export function DashboardLayout() {
 
   return (
     <div className="dashboard-container">
+      <a href="#main-content" className="mm-skip-link">
+        Ir para o conteúdo principal
+      </a>
       <div className="dashboard-body">
-        {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-        <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        {sidebarOpen && (
+          <div
+            className="sidebar-overlay"
+            onClick={() => setSidebarOpen(false)}
+            onKeyDown={(e) => e.key === 'Escape' && setSidebarOpen(false)}
+            role="presentation"
+          />
+        )}
+        <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Navegação principal">
           <div className="sidebar-header">
-            <img src="/icone-magnusmind.svg" alt="Magnus Mind" className="sidebar-logo" />
+            <img src="/icone-magnusmind.svg" alt="" className="sidebar-logo" aria-hidden />
             <p className="logo-text">magnus mind</p>
           </div>
           <nav className="sidebar-nav">
@@ -54,32 +70,45 @@ export function DashboardLayout() {
               const Icon = item.icon;
               const active =
                 location.pathname === item.path ||
-                (item.path === '/dashboard' && (location.pathname === '/dashboard' || location.pathname === '/dashboard/'));
+                (item.path === '/dashboard' &&
+                  (location.pathname === '/dashboard' || location.pathname === '/dashboard/'));
               return (
                 <button
                   key={item.id}
                   type="button"
                   className={`nav-item ${active ? 'active' : ''}`}
                   onClick={() => handleNav(item.id, item.path)}
+                  aria-current={active ? 'page' : undefined}
                 >
-                  <Icon className="nav-icon" size={20} />
+                  <Icon className="nav-icon" size={20} aria-hidden />
                   <span className="nav-label">{item.label}</span>
                 </button>
               );
             })}
             <button type="button" className="nav-item nav-item-logout" onClick={handleLogout}>
-              <LogOut className="nav-icon" size={20} />
+              <LogOut className="nav-icon" size={20} aria-hidden />
               <span className="nav-label">Sair</span>
             </button>
           </nav>
         </aside>
         <div className={`dashboard-main-wrapper ${isConsultoria ? 'consultoria-ia-active' : ''}`}>
           <header className="dashboard-header">
-            <button type="button" className="menu-toggle" onClick={() => setSidebarOpen(true)} aria-label="Toggle menu">
-              <Menu size={40} />
+            <button
+              type="button"
+              className="menu-toggle"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir menu de navegação"
+              aria-expanded={sidebarOpen}
+            >
+              <Menu size={40} aria-hidden />
             </button>
           </header>
-          <main className={`dashboard-main ${isConsultoria ? 'consultoria-ia-active' : ''}`}>
+          <main
+            ref={mainRef}
+            id="main-content"
+            tabIndex={-1}
+            className={`dashboard-main ${isConsultoria ? 'consultoria-ia-active' : ''}`}
+          >
             <Outlet />
           </main>
         </div>

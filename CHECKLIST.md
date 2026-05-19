@@ -8,6 +8,19 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
+## Sessão de 19/05/2026 — resumo do dia
+
+1. **Camada de compatibilidade com a API do Render** — `src/services/apiNormalize.ts` normaliza chat, conversas, sugestões e relatórios para o formato esperado pelo frontend.
+2. **Consultoria IA corrigida** — respostas da IA, nova conversa e histórico passam a funcionar com a API em produção (`conversationId`, `reply`, mensagens).
+3. **Sugestões de objetivos** — modal “Sugerir com IA” lê `objectives` ou `suggestions` e mapeia campos (`impactoEstimado`, `owner`).
+4. **Relatórios** — geração e visualização montam `conteudo`, `resumo` e `stats` a partir de `data`/`insights` retornados pelo Render.
+5. **Modelos de IA** — nomes exibidos via `displayName` no seletor de modelos.
+6. **UI e responsividade** — design system (`magnus-design.css`), Consultoria IA responsiva (`consultoria-responsive.css`) e dashboard refinado (`theme-refined.css`).
+7. **Acessibilidade no dashboard** — skip link, `aria-current` na navegação e foco no conteúdo principal (`DashboardLayout`).
+8. **Build validado** — `npm run build` concluído com sucesso; alterações prontas para deploy no Netlify.
+
+---
+
 ## 1. Plataforma e arquitetura
 
 | Item | Status |
@@ -47,10 +60,10 @@ Documento de validação do que foi implementado na plataforma.
 | Login e registro | ✅ |
 | Dashboard — visão geral | ✅ |
 | Formulário inicial (5 campos + estágios do negócio) | ✅ |
-| Consultoria IA (chat, histórico, modelos, sugestões) | ✅ |
-| Objetivos estratégicos (CRUD, filtros, CSV, sugestões IA) | ✅ |
+| Consultoria IA (chat, histórico, modelos, sugestões) — compatível com API Render | ✅ |
+| Objetivos estratégicos (CRUD, filtros, CSV, sugestões IA) — compatível com API Render | ✅ |
 | Minha equipe (membros, performance, filtros) | ✅ |
-| Relatórios (gerar e visualizar) | ✅ |
+| Relatórios (gerar e visualizar) — compatível com API Render | ✅ |
 | Histórico de atividades | ✅ |
 
 ---
@@ -101,10 +114,13 @@ Documento de validação do que foi implementado na plataforma.
 | Item | Status |
 |------|--------|
 | Conexão com API no Render (não mais `localhost:3001` por padrão) | ✅ |
+| Normalização de resposta do chat (`conversation` + `messages` → `reply`) | ✅ |
+| Carregamento de conversa (`conversation` + `messages` no GET) | ✅ |
 | Mensagem de erro clara quando API indisponível | ✅ |
 | Botão “Tentar novamente” no erro de conexão | ✅ |
 | Histórico de conversas via `/api/ai/conversations` | ✅ |
-| Seleção de modelo de IA | ✅ |
+| Seleção de modelo de IA (`displayName`) | ✅ |
+| Layout responsivo da tela de consultoria | ✅ |
 
 ---
 
@@ -140,7 +156,7 @@ Documento de validação do que foi implementado na plataforma.
 ├── src/                    # Frontend React
 │   ├── components/         # AuthLayout, DashboardLayout, CursorGlowBackground
 │   ├── pages/              # Login, Dashboard, IA, Objetivos, Equipe, Relatórios
-│   ├── services/           # api.ts, initialForm.ts
+│   ├── services/           # api.ts, apiNormalize.ts, initialForm.ts
 │   ├── config/firebase.ts
 │   └── styles/theme-refined.css
 ├── server/src/             # API Express
@@ -189,4 +205,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 18 de maio de 2026*
+*Última atualização: 19 de maio de 2026*

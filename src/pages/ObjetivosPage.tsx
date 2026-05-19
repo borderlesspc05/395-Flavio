@@ -285,8 +285,7 @@ export function ObjetivosPage() {
     setSelectedSuggestions(new Set());
     try {
       const res = await objectivesApi.suggest();
-      const list = res?.suggestions ?? res ?? [];
-      setSuggestions(Array.isArray(list) ? list : []);
+      setSuggestions((res.suggestions ?? []) as SuggestedItem[]);
     } catch {
       setSuggestions([]);
     } finally {

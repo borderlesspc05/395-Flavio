@@ -1,0 +1,403 @@
+/* Magnus Mind — design system layer (frontend-design + ui-ux-pro-max) */
+
+:root {
+  --mm-font-display: 'Sora', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --mm-font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --mm-radius-lg: 14px;
+  --mm-radius-xl: 18px;
+  --mm-transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+  --mm-focus-ring: 0 0 0 2px var(--primary-dark), 0 0 0 4px var(--accent-blue);
+  --mm-gold-glow: rgba(176, 141, 87, 0.35);
+}
+
+/* —— Base typography —— */
+body {
+  font-family: var(--mm-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3,
+.dashboard-home-title,
+.objetivos-title,
+.relatorios-title,
+.historico-title,
+.equipe-title,
+.form-title,
+.auth-title,
+.chat-title,
+.consultoria-ia .section-title {
+  font-family: var(--mm-font-display);
+  letter-spacing: -0.02em;
+}
+
+/* —— Atmosphere: subtle grain on dashboard —— */
+.dashboard-container::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 998;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* —— Skip link (a11y) —— */
+.mm-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10000;
+  padding: 0.75rem 1.25rem;
+  background: var(--accent-vivid);
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--mm-radius-lg);
+  text-decoration: none;
+}
+
+.mm-skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  outline: none;
+  box-shadow: var(--mm-focus-ring);
+}
+
+/* —— Focus & touch (ui-ux-pro-max) —— */
+button,
+a,
+input,
+select,
+textarea,
+[role='button'] {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.nav-item:focus-visible,
+.quick-action-card:focus-visible {
+  outline: none;
+  box-shadow: var(--mm-focus-ring);
+}
+
+/* —— Unified page headers —— */
+.objetivos-header,
+.relatorios-header,
+.historico-header,
+.equipe-header,
+.dashboard-home-header {
+  position: relative;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid rgba(96, 165, 250, 0.12);
+}
+
+.objetivos-header::after,
+.relatorios-header::after,
+.historico-header::after,
+.equipe-header::after,
+.dashboard-home-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 64px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-logo), var(--accent-blue));
+  border-radius: 2px;
+}
+
+.dashboard-home-title,
+.objetivos-title,
+.relatorios-title,
+.historico-title,
+.equipe-title {
+  font-size: clamp(1.5rem, 4vw, 2rem) !important;
+  line-height: 1.2 !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dashboard-home-subtitle,
+.objetivos-subtitle,
+.relatorios-subtitle,
+.historico-subtitle,
+.equipe-subtitle {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  line-height: 1.55;
+  max-width: 52ch;
+}
+
+/* Icon wrappers — consistent */
+.objetivos-icon-wrapper,
+.relatorios-icon-wrapper,
+.historico-icon-wrapper,
+.equipe-header .stat-icon-wrapper,
+.card-icon-wrapper {
+  border-radius: var(--mm-radius-lg) !important;
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.15);
+}
+
+/* —— Primary buttons —— */
+.btn-primary,
+.objetivos-primary-button,
+.generate-button,
+.chat-send-button:not(:disabled) {
+  min-height: 44px;
+  font-family: var(--mm-font-body);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform var(--mm-transition), box-shadow var(--mm-transition), opacity var(--mm-transition);
+}
+
+.btn-primary:hover:not(:disabled),
+.objetivos-primary-button:hover:not(:disabled),
+.generate-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(59, 130, 246, 0.35);
+}
+
+.btn-primary:active:not(:disabled),
+.objetivos-primary-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled,
+.objetivos-primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* —— Form inputs (44px touch target) —— */
+.auth-form input,
+.form-group input,
+.form-group textarea,
+.form-group select,
+.objetivos-search-input,
+.objetivos-order-select,
+.historico-filters select,
+.chat-input {
+  min-height: 44px;
+  font-size: 1rem;
+  border-radius: var(--mm-radius-lg) !important;
+  transition: border-color var(--mm-transition), box-shadow var(--mm-transition), background var(--mm-transition);
+}
+
+.form-group textarea,
+.chat-input {
+  min-height: 88px;
+}
+
+.auth-form input:focus,
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus,
+.objetivos-search-input:focus,
+.chat-input:focus {
+  border-color: var(--border-focus) !important;
+  box-shadow: var(--mm-focus-ring);
+}
+
+/* —— Cards elevation —— */
+.dashboard-card,
+.recommendation-card,
+.report-card,
+.activity-item,
+.objetivos-card,
+.member-card,
+.form-card-inline {
+  transition: transform var(--mm-transition), border-color var(--mm-transition), box-shadow var(--mm-transition);
+}
+
+.recommendation-card-clickable:hover,
+.report-card:hover,
+.objetivos-card:hover {
+  transform: translateY(-2px);
+}
+
+/* —— Empty & loading states —— */
+.objetivos-empty-state,
+.relatorios-empty,
+.historico-empty,
+.activity-list-empty,
+.form-loading {
+  text-align: center;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  border: 1px dashed rgba(96, 165, 250, 0.25);
+  border-radius: var(--mm-radius-xl);
+  background: rgba(17, 42, 74, 0.35);
+}
+
+.objetivos-empty-title,
+.relatorios-empty p,
+.historico-empty p {
+  font-family: var(--mm-font-display);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Shimmer loading */
+@keyframes mm-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.form-loading,
+.relatorios-loading,
+.historico-loading,
+.activity-list-loading {
+  background: linear-gradient(
+    90deg,
+    rgba(17, 42, 74, 0.4) 0%,
+    rgba(59, 130, 246, 0.12) 50%,
+    rgba(17, 42, 74, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: mm-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--mm-radius-lg);
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+/* —— Sidebar polish —— */
+.dashboard-sidebar {
+  border-right: 1px solid rgba(96, 165, 250, 0.15) !important;
+  background: linear-gradient(180deg, rgba(10, 25, 47, 0.98) 0%, rgba(10, 20, 38, 0.99) 100%) !important;
+}
+
+.nav-item {
+  min-height: 44px;
+}
+
+.nav-item.active {
+  position: relative;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: linear-gradient(180deg, var(--gold-logo), var(--accent-blue));
+  border-radius: 0 2px 2px 0;
+}
+
+/* —— Auth card premium —— */
+.auth-card-vivid {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card-vivid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold-logo), var(--accent-blue), transparent);
+  opacity: 0.9;
+}
+
+.auth-title {
+  font-family: var(--mm-font-display) !important;
+}
+
+/* —— Consultoria IA —— */
+.chat-error {
+  border-radius: var(--mm-radius-lg);
+  padding: 0.75rem 1rem;
+}
+
+.chat-error-link {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border-card);
+  border-radius: var(--mm-radius-lg);
+  color: var(--accent-blue);
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.chat-error-link:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.chat-objectives-banner {
+  border-radius: var(--mm-radius-xl);
+  border-left: 3px solid var(--accent-vivid);
+}
+
+/* —— Inner pages layout width —— */
+.objetivos-page,
+.relatorios-page,
+.historico-page,
+.minha-equipe-page,
+.dashboard-home,
+.form-container-inline {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* —— Responsive page headers —— */
+@media (max-width: 768px) {
+  .objetivos-header,
+  .relatorios-header-content,
+  .historico-header-content,
+  .equipe-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .objetivos-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .objetivos-summary {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .objetivos-filters {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .objetivos-summary {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* —— Reduced motion —— */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-card,
+  .quick-action-card,
+  .btn-primary,
+  .form-loading,
+  .relatorios-loading {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .btn-primary:hover,
+  .objetivos-primary-button:hover {
+    transform: none;
+  }
+}

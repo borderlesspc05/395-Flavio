@@ -43,10 +43,11 @@ router.get('/conversations/:id', async (req: Request, res: Response, next: NextF
 
 router.post('/chat', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { message, conversationId, model, suggestObjectives } = req.body;
+    const { conversationId, model, suggestObjectives } = req.body;
+    const message = req.body.message ?? req.body.content;
 
     if (!message || typeof message !== 'string') {
-      throw new AppError(400, 'message is required');
+      throw new AppError(400, 'content is required');
     }
 
     const result = await handleChat({

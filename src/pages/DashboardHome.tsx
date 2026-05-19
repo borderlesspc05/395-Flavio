@@ -108,7 +108,7 @@ export function DashboardHome() {
           .slice(0, 6);
         setRecommendations(open);
         setTeamCount(Array.isArray(team) ? team.length : team?.items?.length ?? 0);
-        setReportsCount(Array.isArray(reports) ? reports.length : reports?.items?.length ?? 0);
+        setReportsCount(Array.isArray(reports) ? reports.length : 0);
         const actList = Array.isArray(acts) ? acts : acts?.items ?? [];
         setActivities(
           actList.slice(0, 5).map((a: { title?: string; type?: string; createdAt?: string }) => ({
