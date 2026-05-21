@@ -65,7 +65,7 @@ Documento de validação do que foi implementado na plataforma.
 
 - [x] Build de produção validado (`npm run build`)
 - [x] Push no GitHub — commit `c8e7ec7` (compatibilidade API + UI)
-- [ ] Push pendente — alterações pós-commit (Miro, Firebase, marca, ondas) *se ainda não enviadas*
+- [x] Push no GitHub — commit `a159960` (Miro, Firebase, marca, ondas)
 
 ### Conta para testar
 
