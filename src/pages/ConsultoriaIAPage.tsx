@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { getInitialForm } from '../services/initialForm';
 import ReactMarkdown from 'react-markdown';
 import {
   Bot,
@@ -19,9 +22,9 @@ import { aiApi } from '../services/api';
 import type { ChatMessage } from '../types';
 
 const SUGGESTIONS = [
-  'Como posso melhorar a eficiência operacional?',
-  'Quais são as principais oportunidades de crescimento?',
-  'Qual é o risco financeiro atual?',
+  'MM Blueprint: qual outcome devo forjar primeiro (2.1 Outcome Forge)?',
+  'O que construir na ordem certa antes de mover a equipe (2.2 Build)?',
+  'Como avaliar impacto antes de escalar (2.3 Impact Evaluation)?',
 ];
 
 interface AiModel {
@@ -82,9 +85,23 @@ export function ConsultoriaIAPage() {
   const [showObjectivesBanner, setShowObjectivesBanner] = useState(true);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
+  const [diagnosticComplete, setDiagnosticComplete] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeConv = conversations.find((c) => c.id === activeId);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setDiagnosticComplete(null);
+        return;
+      }
+      getInitialForm(user.uid)
+        .then(({ completedAt }) => setDiagnosticComplete(!!completedAt))
+        .catch(() => setDiagnosticComplete(false));
+    });
+    return unsub;
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -234,6 +251,13 @@ export function ConsultoriaIAPage() {
 
   return (
     <div className="consultoria-ia">
+      {diagnosticComplete === false && (
+        <div className="consultoria-gate-banner" style={{ margin: '0 1rem 0', maxWidth: 1200 }}>
+          Complete o <strong>Human-to-Business Canvas</strong> (Onda 1 — Diagnóstico) antes do MM
+          Blueprint.{' '}
+          <Link to="/dashboard/initial-form">Ir para o diagnóstico</Link>
+        </div>
+      )}
       <div className="consultoria-container">
         {sidebarOpen && (
           <div className="history-overlay" onClick={() => setSidebarOpen(false)} />
@@ -413,10 +437,10 @@ export function ConsultoriaIAPage() {
                 <div className="chat-empty-icon">
                   <Bot size={48} />
                 </div>
-                <h2 className="chat-empty-title">Consultoria IA Magnus Mind</h2>
+                <h2 className="chat-empty-title">Onda 2 — Design · MM Blueprint</h2>
                 <p className="chat-empty-description">
-                  Faça perguntas sobre estratégia, operações, finanças e gestão. O assistente responde
-                  com base em frameworks consultivos.
+                  Caminho A: Outcome Forge → Build → Impact Evaluation. A IA estrutura a solução na
+                  ordem certa — sem entregar respostas prontas, com clareza para agir.
                 </p>
                 {showObjectivesBanner && (
                   <div className="chat-empty-objectives-hint">

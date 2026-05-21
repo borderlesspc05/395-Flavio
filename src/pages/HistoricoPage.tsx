@@ -96,8 +96,10 @@ export function HistoricoPage() {
             <History size={28} />
           </div>
           <div>
-            <h1 className="historico-title">Histórico de Atividades</h1>
-            <p className="historico-subtitle">Acompanhe todas as ações realizadas na plataforma</p>
+            <h1 className="historico-title">Loop contínuo · 4.2</h1>
+            <p className="historico-subtitle">
+              Follow-up e rastreio — se não satisfeito ou para subir de nível, retome o Diagnóstico (passo 1)
+            </p>
           </div>
         </div>
       </header>

@@ -17,6 +17,7 @@ import {
 import { auth } from '../config/firebase';
 import { getInitialForm } from '../services/initialForm';
 import { objectivesApi, teamApi, reportsApi, activitiesApi } from '../services/api';
+import { MagnusWavesProgress } from '../components/MagnusWavesProgress';
 import { STAGE_DESCRIPTIONS, PRIORITY_LABELS, type InitialFormData, type Objective } from '../types';
 
 function formatDate(d: Date) {
@@ -128,12 +129,20 @@ export function DashboardHome() {
     <div className="dashboard-home">
       <div className="dashboard-home-header">
         <div>
-          <h1 className="dashboard-home-title">Bem-vindo ao Magnus Mind</h1>
+          <h1 className="dashboard-home-title">People Sprint — Magnus Mind</h1>
           <p className="dashboard-home-subtitle">
-            Visão geral do seu negócio e próximos passos recomendados
+            Clareza para agir, estrutura para sustentar. Diagnóstico → Design → Difusão → Domínio.
           </p>
         </div>
       </div>
+
+      <MagnusWavesProgress
+        progress={{
+          formComplete,
+          objectivesTotal,
+          reportsCount,
+        }}
+      />
 
       <div className="dashboard-home-grid">
         <div className="dashboard-card status-card">
@@ -142,7 +151,7 @@ export function DashboardHome() {
               {formComplete ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
             </div>
             <div className="card-title-group">
-              <h3 className="card-title">Formulário Inicial</h3>
+              <h3 className="card-title">Diagnóstico</h3>
               <span className={`card-status-badge ${formComplete ? 'completed' : 'incomplete'}`}>
                 {formLoading ? '...' : formComplete ? 'Completo' : 'Incompleto'}
               </span>
@@ -154,7 +163,7 @@ export function DashboardHome() {
                 ? 'Carregando...'
                 : formComplete && formCompletedAt
                   ? `Seu formulário foi completado em ${formatDate(formCompletedAt)}`
-                  : 'O formulário inicial ainda não foi completado.'}
+                  : 'Complete o diagnóstico antes de priorizar soluções — sem verdade, toda ação vira ruído.'}
             </p>
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${formComplete ? 100 : 0}%` }} />
@@ -241,7 +250,7 @@ export function DashboardHome() {
           </div>
         ) : recommendations.length === 0 ? (
           <div className="activity-list-empty">
-            <p>Nenhum objetivo em aberto. Crie objetivos na aba Objetivos ou gere sugestões pela Consultoria IA.</p>
+            <p>Nenhum objetivo em aberto. Conclua o Design (MM Blueprint) e inicie a Difusão em Objetivos.</p>
           </div>
         ) : (
           <div className="recommendations-grid">
@@ -275,11 +284,11 @@ export function DashboardHome() {
         <div className="quick-actions-grid">
           <Link to="/dashboard/initial-form" className="quick-action-card">
             <FileText size={32} className="action-icon" />
-            <span className="action-label">Editar Formulário</span>
+            <span className="action-label">Human-to-Business Canvas</span>
           </Link>
           <Link to="/dashboard/consultoria-ia" className="quick-action-card">
             <Bot size={32} className="action-icon" />
-            <span className="action-label">Consultoria IA</span>
+            <span className="action-label">MM Blueprint (IA)</span>
           </Link>
           <Link
             to="/dashboard/objetivos"
@@ -287,7 +296,7 @@ export function DashboardHome() {
             className="quick-action-card"
           >
             <Target size={32} className="action-icon" />
-            <span className="action-label">Criar Objetivo</span>
+            <span className="action-label">Difusão — Novo objetivo</span>
           </Link>
           <Link
             to="/dashboard/relatorios"
@@ -295,7 +304,7 @@ export function DashboardHome() {
             className="quick-action-card"
           >
             <BarChart3 size={32} className="action-icon" />
-            <span className="action-label">Gerar Relatório</span>
+            <span className="action-label">MID — Kirkpatrick 4</span>
           </Link>
         </div>
       </div>

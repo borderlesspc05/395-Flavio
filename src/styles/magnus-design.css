@@ -7,7 +7,7 @@
   --mm-radius-xl: 18px;
   --mm-transition: 0.2s cubic-bezier(0.33, 1, 0.68, 1);
   --mm-focus-ring: 0 0 0 2px var(--primary-dark), 0 0 0 4px var(--accent-blue);
-  --mm-gold-glow: rgba(176, 141, 87, 0.35);
+  --mm-gold-glow: rgba(175, 146, 112, 0.35);
 }
 
 /* —— Base typography —— */
@@ -92,7 +92,7 @@ textarea:focus-visible,
   position: relative;
   margin-bottom: var(--spacing-xl);
   padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid rgba(96, 165, 250, 0.12);
+  border-bottom: 1px solid rgba(175, 146, 112, 0.12);
 }
 
 .objetivos-header::after,
@@ -117,7 +117,7 @@ textarea:focus-visible,
 .equipe-title {
   font-size: clamp(1.5rem, 4vw, 2rem) !important;
   line-height: 1.2 !important;
-  background: linear-gradient(135deg, #f8fafc 0%, #93c5fd 100%);
+  background: linear-gradient(135deg, #f5f3f2 0%, #ffbc7d 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

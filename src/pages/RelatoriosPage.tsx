@@ -231,8 +231,10 @@ export function RelatoriosPage() {
             <BarChart3 size={28} />
           </div>
           <div>
-            <h1 className="relatorios-title">Relatórios</h1>
-            <p className="relatorios-subtitle">Gere e visualize relatórios estratégicos do seu negócio</p>
+            <h1 className="relatorios-title">Onda 4 — Domínio · MID</h1>
+            <p className="relatorios-subtitle">
+              Magnus Intelligence Dashboard — avaliação Kirkpatrick nível 4 e loop contínuo
+            </p>
           </div>
         </div>
       </header>
@@ -240,7 +242,8 @@ export function RelatoriosPage() {
       <section className="relatorios-generate-section">
         <h2 className="section-title">Gerar novo relatório</h2>
         <p className="section-description">
-          O relatório consolida objetivos, equipe e progresso com análise consultiva.
+          Consolida execução (Difusão) e contexto para medir impacto com honestidade — base do
+          dashboard 4.1. Se não satisfeito, retome o Diagnóstico (loop 4.2).
         </p>
         <button type="button" className="generate-button" onClick={handleGenerate} disabled={generating}>
           {generating ? <Loader2 size={20} className="spinning" /> : <Sparkles size={20} />}

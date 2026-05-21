@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { DIAGNOSTIC_FIELD_STEPS } from '../constants/magnusWaves';
 import { getInitialForm, saveInitialForm } from '../services/initialForm';
 import { BUSINESS_STAGES, type InitialFormData } from '../types';
 
@@ -65,8 +66,11 @@ export function InitialFormPage() {
   };
 
   if (loading) {
-    return <p className="form-loading">Carregando formulário...</p>;
+    return <p className="form-loading">Carregando diagnóstico...</p>;
   }
+
+  const textFields = DIAGNOSTIC_FIELD_STEPS.filter((s) => s.field !== 'estagioNegocio');
+  const stageStep = DIAGNOSTIC_FIELD_STEPS.find((s) => s.field === 'estagioNegocio')!;
 
   return (
     <div className="form-container-inline">
@@ -75,40 +79,53 @@ export function InitialFormPage() {
           <img src="/icone-magnusmind.svg" alt="" className="logo-icon" />
           <p className="logo-text">magnus mind</p>
         </div>
-        <h1 className="form-title">Informações Iniciais</h1>
+        <h1 className="form-title">Onda 1 — Diagnóstico</h1>
+        <p className="form-timestamp" style={{ marginBottom: '0.5rem', textAlign: 'center' }}>
+          <strong>Human-to-Business Canvas™</strong> — meta: canvas desenhado ao final das 5 etapas
+        </p>
+        <p className="form-timestamp" style={{ marginBottom: '1rem', textAlign: 'center' }}>
+          Decoding → Gap Scan → System Scan → Team Scan → Solution Pick
+        </p>
         {completedAt && (
           <p className="form-timestamp">
-            Última atualização: <strong>{completedAt.toLocaleString('pt-BR')}</strong>
+            Canvas atualizado em: <strong>{completedAt.toLocaleString('pt-BR')}</strong>
           </p>
         )}
-        {success && <p className="form-success-msg">Respostas salvas com sucesso.</p>}
+        {success && (
+          <p className="form-success-msg">
+            Diagnóstico salvo. Próximo passo: <strong>Design (MM Blueprint)</strong> na People Sprint IA.
+          </p>
+        )}
 
         <form className="initial-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">1. Descreva sua organização e o contexto do negócio</label>
-            <textarea
-              className={`form-textarea ${errors.organizacao ? 'input-error' : ''}`}
-              rows={4}
-              value={data.organizacao}
-              onChange={(e) => setData({ ...data, organizacao: e.target.value })}
-              placeholder="Conte sobre sua empresa, mercado e posicionamento..."
-            />
-            {errors.organizacao && <span className="error-message">{errors.organizacao}</span>}
-          </div>
+          {textFields.map((step, index) => {
+            const field = step.field;
+            if (field === 'estagioNegocio') return null;
+            return (
+              <div className="form-group" key={field}>
+                <span className="diagnostic-step-badge">{step.label}</span>
+                <label className="form-label">
+                  {index + 1}. {step.hint}
+                </label>
+                <textarea
+                  className={`form-textarea ${errors[field] ? 'input-error' : ''}`}
+                  rows={field === 'organizacao' ? 4 : 3}
+                  value={data[field]}
+                  onChange={(e) => setData({ ...data, [field]: e.target.value })}
+                  placeholder={
+                    field === 'organizacao'
+                      ? 'Empresa, mercado, posicionamento...'
+                      : undefined
+                  }
+                />
+                {errors[field] && <span className="error-message">{errors[field]}</span>}
+              </div>
+            );
+          })}
 
           <div className="form-group">
-            <label className="form-label">2. Qual é o principal produto ou serviço que gera valor para o cliente?</label>
-            <textarea
-              className={`form-textarea ${errors.produtoServico ? 'input-error' : ''}`}
-              rows={3}
-              value={data.produtoServico}
-              onChange={(e) => setData({ ...data, produtoServico: e.target.value })}
-            />
-            {errors.produtoServico && <span className="error-message">{errors.produtoServico}</span>}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">3. Em qual estágio o negócio se encontra atualmente?</label>
+            <span className="diagnostic-step-badge">{stageStep.label}</span>
+            <label className="form-label">3. {stageStep.hint}</label>
             <div className="radio-group">
               {BUSINESS_STAGES.map((stage) => (
                 <label
@@ -129,30 +146,8 @@ export function InitialFormPage() {
             {errors.estagioNegocio && <span className="error-message">{errors.estagioNegocio}</span>}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">4. Quais fatores externos mais impactam seu negócio hoje?</label>
-            <textarea
-              className={`form-textarea ${errors.fatoresExternos ? 'input-error' : ''}`}
-              rows={3}
-              value={data.fatoresExternos}
-              onChange={(e) => setData({ ...data, fatoresExternos: e.target.value })}
-            />
-            {errors.fatoresExternos && <span className="error-message">{errors.fatoresExternos}</span>}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">5. O que mudou recentemente que exige repensar sua forma de operar ou liderar?</label>
-            <textarea
-              className={`form-textarea ${errors.mudancasRecentes ? 'input-error' : ''}`}
-              rows={3}
-              value={data.mudancasRecentes}
-              onChange={(e) => setData({ ...data, mudancasRecentes: e.target.value })}
-            />
-            {errors.mudancasRecentes && <span className="error-message">{errors.mudancasRecentes}</span>}
-          </div>
-
           <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? 'Salvando...' : 'Salvar Formulário'}
+            {saving ? 'Salvando canvas...' : 'Salvar Human-to-Business Canvas'}
             <span className="btn-arrow">→</span>
           </button>
         </form>

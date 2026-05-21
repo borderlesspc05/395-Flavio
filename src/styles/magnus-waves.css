@@ -1,0 +1,182 @@
+/* Magnus Waves — progresso do Miro (MM People Sprint 90+) */
+
+.magnus-waves-progress {
+  margin-bottom: var(--spacing-2xl);
+  padding: var(--spacing-lg);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md), var(--shadow-inset);
+}
+
+.magnus-waves-progress-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.magnus-waves-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary-dark);
+  background: linear-gradient(135deg, var(--mm-brand-warm, #ffbc7d), var(--gold-logo, #af9270));
+  border-radius: 999px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.magnus-waves-tagline {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.magnus-waves-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+
+.magnus-waves-grid.compact .magnus-wave-steps {
+  display: none;
+}
+
+.magnus-wave-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.magnus-wave-card:not([aria-disabled='true']):hover {
+  border-color: var(--border-focus);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.magnus-wave-card.is-active {
+  border-color: var(--gold-logo);
+  box-shadow: 0 0 0 1px rgba(175, 146, 112, 0.25);
+}
+
+.magnus-wave-card.status-complete {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.magnus-wave-card.status-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.magnus-wave-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.magnus-wave-number {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  border-radius: 50%;
+  background: rgba(175, 146, 112, 0.2);
+  color: var(--gold-logo);
+}
+
+.magnus-wave-status-icon.status-complete {
+  color: #22c55e;
+}
+
+.magnus-wave-status-icon.status-active {
+  color: var(--gold-logo);
+}
+
+.magnus-wave-status-icon.status-locked {
+  color: var(--text-tertiary);
+}
+
+.magnus-wave-label {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.magnus-wave-subtitle {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.magnus-wave-steps {
+  margin: var(--spacing-xs) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.magnus-wave-steps li {
+  padding: 0.1rem 0;
+}
+
+.magnus-wave-step-id {
+  font-weight: var(--font-weight-semibold);
+  color: var(--gold-logo);
+}
+
+.diagnostic-step-badge {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold-logo);
+  background: rgba(175, 146, 112, 0.15);
+  border: 1px solid rgba(175, 146, 112, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.consultoria-gate-banner {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.consultoria-gate-banner a {
+  color: var(--gold-logo);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: 1024px) {
+  .magnus-waves-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .magnus-waves-grid {
+    grid-template-columns: 1fr;
+  }
+}

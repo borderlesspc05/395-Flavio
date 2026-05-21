@@ -1,7 +1,8 @@
 # Magnus Mind — Design System
 
-**Direção:** consultoria estratégica premium · dark navy · acentos azul elétrico + dourado discreto  
-**Tom:** refinado, confiável, inteligente — não genérico “AI slop”
+**Direção:** consultoria estratégica premium · slate `#2F3A4C` · acento ouro `#AF9270` · realce `#FFBC7D`  
+**Referência:** [magnusmind.io](https://magnusmind.io/) · fluxo em `docs/FLUXO-PROJETO.md`  
+**Tom:** refinado, confiável, humano + IA com propósito
 
 ## Tipografia
 
@@ -14,12 +15,13 @@
 
 | Token | Valor | Uso |
 |-------|-------|-----|
-| `--primary-dark` | `#0a192f` | Fundo principal |
-| `--accent-blue` | `#60a5fa` | Ações, links, ícones |
-| `--accent-vivid` | `#3b82f6` | CTA primário |
-| `--gold-logo` | `#b08d57` | Detalhe de marca |
-| `--bg-card` | rgba(17,42,74,.65) | Cards |
-| `--border-card` | rgba(96,165,250,.22) | Bordas |
+| `--mm-brand-primary` | `#2F3A4C` | Marca (site) |
+| `--mm-brand-accent` | `#AF9270` | CTA / links |
+| `--mm-brand-warm` | `#FFBC7D` | Realces |
+| `--mm-brand-cream` | `#F5F3F2` | Fundo site (light) |
+| `--primary-dark` | `#1a222d` | Fundo app (dark) |
+| `--accent-blue` | `#AF9270` | Ações na plataforma |
+| `--border-card` | rgba(175,146,112,.22) | Bordas |
 
 ## Espaçamento
 

@@ -15,13 +15,13 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-  { id: 'formulario', label: 'Formulário Inicial', icon: FileText, path: '/dashboard/initial-form' },
-  { id: 'consultoria', label: 'Consultoria IA', icon: Bot, path: '/dashboard/consultoria-ia' },
-  { id: 'objetivos', label: 'Objetivos', icon: Target, path: '/dashboard/objetivos' },
-  { id: 'equipe', label: 'Minha Equipe', icon: Users, path: '/dashboard/minha-equipe' },
-  { id: 'relatorios', label: 'Relatórios', icon: BarChart3, path: '/dashboard/relatorios' },
-  { id: 'historico', label: 'Histórico', icon: History, path: '/dashboard/historico' },
+  { id: 'dashboard', label: 'Hub (MID)', icon: LayoutDashboard, path: '/dashboard' },
+  { id: 'formulario', label: '1 · Diagnóstico', icon: FileText, path: '/dashboard/initial-form' },
+  { id: 'consultoria', label: '2 · Design (Blueprint)', icon: Bot, path: '/dashboard/consultoria-ia' },
+  { id: 'objetivos', label: '3 · Difusão', icon: Target, path: '/dashboard/objetivos' },
+  { id: 'equipe', label: 'Equipe', icon: Users, path: '/dashboard/minha-equipe' },
+  { id: 'relatorios', label: '4 · Domínio (MID)', icon: BarChart3, path: '/dashboard/relatorios' },
+  { id: 'historico', label: 'Loop contínuo', icon: History, path: '/dashboard/historico' },
 ];
 
 export function DashboardLayout() {

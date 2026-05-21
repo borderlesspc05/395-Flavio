@@ -3,24 +3,34 @@
 /* Fonts loaded via index.html + magnus-design.css */
 
 :root {
-  --primary-dark: #0a192f;
-  --primary-blue: #112240;
-  --primary-mid: #1a2f4a;
-  --accent-blue: #60a5fa;
-  --accent-vivid: #3b82f6;
-  --light-blue: #93c5fd;
-  --gold-logo: #b08d57;
-  --bg-overlay: rgba(17, 39, 66, 0.72);
-  --bg-card: rgba(17, 42, 74, 0.65);
-  --bg-sidebar: rgba(10, 25, 47, 0.95);
-  --bg-input: rgba(6, 18, 36, 0.75);
-  --bg-input-focus: rgba(8, 24, 48, 0.9);
-  --border-card: rgba(96, 165, 250, 0.22);
-  --border-focus: rgba(96, 165, 250, 0.55);
-  --border-vivid: rgba(96, 165, 250, 0.45);
-  --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(96, 165, 250, 0.12) inset;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  /* Tokens oficiais — https://magnusmind.io/ (Elementor kit) */
+  --mm-brand-primary: #2f3a4c;
+  --mm-brand-secondary: #54595f;
+  --mm-brand-text: #7a7a7a;
+  --mm-brand-accent: #af9270;
+  --mm-brand-cream: #f5f3f2;
+  --mm-brand-lavender: #b9b6c3;
+  --mm-brand-warm: #ffbc7d;
+
+  /* Tema escuro da plataforma (derivado da marca) */
+  --primary-dark: #1a222d;
+  --primary-blue: #2f3a4c;
+  --primary-mid: #3d4d63;
+  --accent-blue: #af9270;
+  --accent-vivid: #c9a962;
+  --light-blue: #ffbc7d;
+  --gold-logo: #af9270;
+  --bg-overlay: rgba(47, 58, 76, 0.78);
+  --bg-card: rgba(47, 58, 76, 0.55);
+  --bg-sidebar: rgba(26, 34, 45, 0.96);
+  --bg-input: rgba(30, 38, 50, 0.85);
+  --bg-input-focus: rgba(47, 58, 76, 0.92);
+  --border-card: rgba(175, 146, 112, 0.22);
+  --border-focus: rgba(175, 146, 112, 0.55);
+  --border-vivid: rgba(255, 188, 125, 0.4);
+  --shadow-glow: 0 0 40px rgba(175, 146, 112, 0.12);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(175, 146, 112, 0.1) inset;
+  font-family: 'Plus Jakarta Sans', 'Roboto', system-ui, sans-serif;
 }
 
 /* —— Full viewport navy (fix white strip at bottom) —— */
@@ -83,8 +93,8 @@ body {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(96, 165, 250, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(96, 165, 250, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(175, 146, 112, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(175, 146, 112, 0.06) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 90% 80% at var(--mouse-x) var(--mouse-y), black 20%, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 90% 80% at var(--mouse-x) var(--mouse-y), black 20%, transparent 75%);
@@ -121,8 +131,8 @@ body {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(96, 165, 250, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(96, 165, 250, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(175, 146, 112, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(175, 146, 112, 0.04) 1px, transparent 1px),
     radial-gradient(ellipse 80% 50% at 15% 40%, rgba(59, 130, 246, 0.12) 0%, transparent 55%),
     radial-gradient(ellipse 60% 40% at 85% 70%, rgba(107, 179, 255, 0.08) 0%, transparent 50%);
   background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
@@ -232,16 +242,16 @@ body {
 
 .form-group input {
   background: rgba(4, 14, 30, 0.85) !important;
-  border-color: rgba(96, 165, 250, 0.25) !important;
+  border-color: rgba(175, 146, 112, 0.25) !important;
 }
 
 .form-group input:focus {
   border-color: var(--accent-blue) !important;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25) !important;
+  box-shadow: 0 0 0 3px rgba(175, 146, 112, 0.25) !important;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 50%, #38bdf8 100%) !important;
+  background: linear-gradient(135deg, #af9270 0%, #c9a962 50%, #ffbc7d 100%) !important;
   box-shadow: 0 4px 20px rgba(59, 130, 246, 0.45) !important;
   font-weight: 600 !important;
 }
@@ -253,12 +263,12 @@ body {
 /* —— Sidebar refined —— */
 .dashboard-sidebar {
   background: var(--bg-sidebar) !important;
-  border-right: 1px solid rgba(96, 165, 250, 0.12) !important;
+  border-right: 1px solid rgba(175, 146, 112, 0.12) !important;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
 }
 
 .sidebar-header {
-  border-bottom-color: rgba(96, 165, 250, 0.12) !important;
+  border-bottom-color: rgba(175, 146, 112, 0.12) !important;
   padding-bottom: var(--spacing-lg) !important;
 }
 
@@ -287,13 +297,13 @@ body {
 .nav-item:hover {
   transform: none !important;
   background: rgba(59, 130, 246, 0.08) !important;
-  border-color: rgba(96, 165, 250, 0.2) !important;
+  border-color: rgba(175, 146, 112, 0.2) !important;
 }
 
 .nav-item.active {
   background: rgba(59, 130, 246, 0.12) !important;
-  border: 1px solid rgba(96, 165, 250, 0.5) !important;
-  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.15) inset !important;
+  border: 1px solid rgba(175, 146, 112, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(175, 146, 112, 0.15) inset !important;
   color: #fff !important;
 }
 
@@ -303,7 +313,7 @@ body {
 
 .nav-item-logout {
   margin-top: auto;
-  border-top: 1px solid rgba(96, 165, 250, 0.1) !important;
+  border-top: 1px solid rgba(175, 146, 112, 0.1) !important;
 }
 
 /* —— Dashboard cards —— */
@@ -323,7 +333,7 @@ body {
   text-align: center;
   padding: 1rem 1.5rem !important;
   background: rgba(59, 130, 246, 0.15) !important;
-  border: 1px solid rgba(96, 165, 250, 0.35) !important;
+  border: 1px solid rgba(175, 146, 112, 0.35) !important;
   border-radius: 12px !important;
   color: var(--light-blue) !important;
   font-size: 1.15rem !important;
@@ -538,7 +548,7 @@ body {
     justify-content: space-between;
     text-align: left;
     padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(96, 165, 250, 0.12);
+    border-bottom: 1px solid rgba(175, 146, 112, 0.12);
   }
 
   .stat-item:last-child {
@@ -604,7 +614,7 @@ body {
 }
 
 .activity-indicator.info {
-  box-shadow: 0 0 10px rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 0 10px rgba(175, 146, 112, 0.5) !important;
 }
 
 .card-action-button {

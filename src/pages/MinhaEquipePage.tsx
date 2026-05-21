@@ -223,8 +223,10 @@ export function MinhaEquipePage() {
               <Users size={32} />
             </div>
             <div>
-              <h1 className="equipe-title">Minha Equipe</h1>
-              <p className="equipe-subtitle">Gerencie membros, desempenho e informações da equipe</p>
+              <h1 className="equipe-title">Equipe · Difusão</h1>
+              <p className="equipe-subtitle">
+                Contexto humano para Make the Move — donos, ritmo e imprint na execução
+              </p>
             </div>
           </div>
           <button type="button" className="add-member-button" onClick={openCreate}>

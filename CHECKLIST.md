@@ -8,16 +8,84 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
-## Sessão de 19/05/2026 — resumo do dia
+## Referências de produto e marca
 
-1. **Camada de compatibilidade com a API do Render** — `src/services/apiNormalize.ts` normaliza chat, conversas, sugestões e relatórios para o formato esperado pelo frontend.
-2. **Consultoria IA corrigida** — respostas da IA, nova conversa e histórico passam a funcionar com a API em produção (`conversationId`, `reply`, mensagens).
-3. **Sugestões de objetivos** — modal “Sugerir com IA” lê `objectives` ou `suggestions` e mapeia campos (`impactoEstimado`, `owner`).
-4. **Relatórios** — geração e visualização montam `conteudo`, `resumo` e `stats` a partir de `data`/`insights` retornados pelo Render.
-5. **Modelos de IA** — nomes exibidos via `displayName` no seletor de modelos.
-6. **UI e responsividade** — design system (`magnus-design.css`), Consultoria IA responsiva (`consultoria-responsive.css`) e dashboard refinado (`theme-refined.css`).
-7. **Acessibilidade no dashboard** — skip link, `aria-current` na navegação e foco no conteúdo principal (`DashboardLayout`).
-8. **Build validado** — `npm run build` concluído com sucesso; alterações prontas para deploy no Netlify.
+| Recurso | Link |
+|---------|------|
+| Fluxo / jornada (Miro) | [Board Miro](https://miro.com/welcomeonboard/OHFhOTB0LzkrTHNSUE41STIranBkRVdkUzQwS0l3RFZqT0NuV1BnNnozTVZ5aEFaOHZRL1p1WEV3bStqbzRrU08vVCtLNnRKc0VVRDRUVGgwS0huZVFXOXo0SWtaMngyOHhITERvZC9TbmMwN2JiQUlsa0g5RlphVnVHQnFxTlB3VHhHVHd5UWtSM1BidUtUYmxycDRnPT0hdjE=?share_link_id=192123947908) |
+| Site / cores | [magnusmind.io](https://magnusmind.io/) |
+| Doc fluxo | `docs/FLUXO-PROJETO.md` |
+| Manifesto MVP (People Sprint) | `docs/MANIFESTO-MVP.md` |
+| Doc marca | `docs/MARCA-MAGNUSMIND.md` |
+
+---
+
+## Checklist — tudo que fizemos hoje (19/05/2026)
+
+### Correções funcionais (API Render × frontend)
+
+- [x] Identificada causa raiz: API em produção devolve formato diferente do backend local
+- [x] Criado `src/services/apiNormalize.ts` (chat, conversas, sugestões, relatórios, modelos)
+- [x] Integrado normalização em `src/services/api.ts`
+- [x] **Consultoria IA** — chat, nova conversa, histórico e respostas da IA funcionando
+- [x] **Sugestões de objetivos** — modal lê `objectives` / `suggestions` + mapeamento de campos
+- [x] **Relatórios** — `conteudo`, `resumo` e `stats` gerados a partir de `data` / `insights`
+- [x] **Modelos de IA** — `displayName` no seletor
+
+### UI, marca e responsividade
+
+- [x] Design system: `magnus-design.css`, `consultoria-responsive.css`, `theme-refined.css`
+- [x] Paleta alinhada ao site [magnusmind.io](https://magnusmind.io/) (`#2F3A4C`, `#AF9270`, `#FFBC7D`, `#F5F3F2`)
+- [x] `brand-overrides.css` + tokens em `theme-refined.css`
+- [x] Fontes Roboto / Roboto Slab no `index.html`
+- [x] Dashboard responsivo e Consultoria IA (drawer de histórico em telas médias)
+- [x] Acessibilidade: skip link, `aria-current`, foco no `main`
+
+### Firebase
+
+- [x] SDK configurado — projeto `magnusmind-d42ec` em `src/config/firebase.ts`
+- [x] `measurementId` + Google Analytics (`initFirebaseAnalytics`)
+- [x] Auth, Firestore e Storage exportados
+- [x] Variáveis `VITE_FIREBASE_*` em `.env.development`, `.env.production` e `.env.example`
+
+### Produto — Manifesto e Miro (MM People Sprint 90+)
+
+- [x] Documentado manifesto em `docs/MANIFESTO-MVP.md`
+- [x] Fluxo Miro completo em `docs/FLUXO-PROJETO.md` (4 ondas + sub-etapas)
+- [x] Constantes do fluxo: `src/constants/magnusWaves.ts`
+- [x] Componente **Magnus Waves** no dashboard (`MagnusWavesProgress.tsx`)
+- [x] **Onda 1** — Human-to-Business Canvas™ (formulário com badges 1.1–1.5)
+- [x] **Onda 2** — MM Blueprint (People Sprint IA + gate se diagnóstico incompleto)
+- [x] **Onda 3** — Difusão / Make the Move (Objetivos + Equipe)
+- [x] **Onda 4** — MID / Kirkpatrick 4 + loop (Relatórios + Histórico)
+- [x] Menu lateral numerado por onda; copy das telas alinhada ao Miro
+- [x] `docs/MARCA-MAGNUSMIND.md` com paleta oficial
+
+### Repositório e qualidade
+
+- [x] Build de produção validado (`npm run build`)
+- [x] Push no GitHub — commit `c8e7ec7` (compatibilidade API + UI)
+- [ ] Push pendente — alterações pós-commit (Miro, Firebase, marca, ondas) *se ainda não enviadas*
+
+### Conta para testar
+
+| Campo | Valor |
+|-------|-------|
+| E-mail | `demo@magnusmind.app` |
+| Senha | `MagnusMind2026!` |
+
+---
+
+## Sessão de 19/05/2026 — resumo em 8 tópicos
+
+1. **API Render compatível** — `apiNormalize.ts` corrige chat, sugestões e relatórios.
+2. **Funcionalidades críticas** — Consultoria IA, sugestões e relatórios voltaram a funcionar.
+3. **UI + marca Magnus Mind** — cores do site, responsividade e design system.
+4. **Firebase conectado** — `magnusmind-d42ec` com Auth, Firestore, Analytics.
+5. **Manifesto People Sprint** — documentado em `docs/MANIFESTO-MVP.md`.
+6. **Fluxo Miro / Magnus Waves** — 4 ondas mapeadas no app e na documentação.
+7. **Human-to-Business Canvas** — formulário com etapas 1.1–1.5 do board.
+8. **Build OK** — pronto para deploy; validar no Netlify após push.
 
 ---
 
@@ -205,4 +273,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 19 de maio de 2026*
+*Última atualização: 19 de maio de 2026 — checklist do dia revisado após alinhamento Miro*

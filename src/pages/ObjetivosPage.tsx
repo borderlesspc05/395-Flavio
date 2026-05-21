@@ -340,9 +340,9 @@ export function ObjetivosPage() {
             <Target size={28} />
           </div>
           <div>
-            <h1 className="objetivos-title">Objetivos Estratégicos</h1>
+            <h1 className="objetivos-title">Onda 3 — Difusão · Make the Move</h1>
             <p className="objetivos-subtitle">
-              Visão consolidada dos objetivos do seu negócio — crie, priorize e acompanhe o progresso.
+              3.1 4 WS · 3.2 Imprint · 3.3 Follow-up — planos simples, ações com dono e ritmo real.
             </p>
           </div>
         </div>
@@ -352,7 +352,7 @@ export function ObjetivosPage() {
             <span>Sugestões com IA</span>
           </div>
           <button type="button" className="objetivos-link-button" onClick={() => navigate('/dashboard/consultoria-ia')}>
-            Consultoria IA
+            MM Blueprint (Design)
             <ArrowRight size={16} />
           </button>
         </div>
