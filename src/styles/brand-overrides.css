@@ -2607,3 +2607,53 @@
   position: relative;
 }
 
+/* ---------- Difusão · modal com formulário rolável ---------- */
+.objetivo-modal-overlay {
+  align-items: flex-start !important;
+  overflow-y: auto !important;
+  padding: clamp(0.75rem, 3vw, 1.5rem) !important;
+  overscroll-behavior: contain;
+}
+
+.objetivo-modal {
+  width: min(720px, calc(100vw - 2rem)) !important;
+  max-height: calc(100dvh - clamp(1.5rem, 6vw, 3rem)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.objetivo-modal-header {
+  flex: 0 0 auto;
+}
+
+.objetivo-modal-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 0.25rem;
+}
+
+.objetivo-modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  background: linear-gradient(180deg, rgba(20, 27, 37, 0), rgba(20, 27, 37, 0.98) 34%);
+  border-top: 1px solid rgba(175, 146, 112, 0.16);
+}
+
+@media (max-width: 640px) {
+  .objetivo-modal-overlay {
+    padding: 0.75rem !important;
+  }
+
+  .objetivo-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - 1.5rem) !important;
+  }
+}
+

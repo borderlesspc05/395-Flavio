@@ -92,6 +92,44 @@ function buildFieldPhaseIndex() {
   return index;
 }
 
+function scrollProjectToTop(behavior: ScrollBehavior = 'auto') {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      const scrollTargets = new Set<HTMLElement>();
+      const mainContent = document.querySelector<HTMLElement>('#main-content');
+      const dashboardMain = document.querySelector<HTMLElement>('.dashboard-main');
+
+      [mainContent, dashboardMain, document.scrollingElement as HTMLElement | null, document.documentElement, document.body]
+        .filter(Boolean)
+        .forEach((target) => scrollTargets.add(target as HTMLElement));
+
+      if (behavior === 'auto') {
+        const previousScrollBehavior = new Map<HTMLElement, string>();
+
+        scrollTargets.forEach((target) => {
+          previousScrollBehavior.set(target, target.style.scrollBehavior);
+          target.style.scrollBehavior = 'auto';
+          target.scrollTop = 0;
+          target.scrollLeft = 0;
+        });
+        window.scrollTo(0, 0);
+
+        window.requestAnimationFrame(() => {
+          previousScrollBehavior.forEach((value, target) => {
+            target.style.scrollBehavior = value;
+          });
+        });
+        return;
+      }
+
+      scrollTargets.forEach((target) => {
+        target.scrollTo({ top: 0, left: 0, behavior });
+      });
+      window.scrollTo({ top: 0, left: 0, behavior });
+    });
+  });
+}
+
 interface DiagnosticFieldControlProps {
   field: DiagnosticField;
   fieldKey: string;
@@ -480,6 +518,11 @@ export function InitialFormPage() {
     setFeedback(null);
   };
 
+  const selectPhase = (phase: DiagnosticPhaseId) => {
+    setActivePhaseId(phase);
+    scrollProjectToTop();
+  };
+
   const validate = () => {
     const nextErrors: Record<string, string> = {};
     for (const key of getRequiredDiagnosticFieldKeys()) {
@@ -492,7 +535,8 @@ export function InitialFormPage() {
     const firstMissing = Object.keys(nextErrors)[0];
     if (firstMissing) {
       const phase = fieldPhaseIndex.get(firstMissing);
-      if (phase) setActivePhaseId(phase);
+      if (phase) selectPhase(phase);
+      else scrollProjectToTop();
       setFeedback('Ainda existem campos-chave pendentes antes de concluir o Human-to-Business Canvas.');
       return false;
     }
@@ -507,8 +551,10 @@ export function InitialFormPage() {
       const at = await saveInitialFormDraft(userId, data);
       setDraftUpdatedAt(at);
       setFeedback('Rascunho salvo. A IA já poderá usar as respostas preenchidas quando você avançar.');
+      scrollProjectToTop();
     } catch {
       setFeedback('Não foi possível salvar o rascunho. Tente novamente.');
+      scrollProjectToTop();
     } finally {
       setSavingDraft(false);
     }
@@ -522,6 +568,7 @@ export function InitialFormPage() {
     try {
       const at = await saveInitialForm(userId, data);
       setCompletedAt(at);
+      scrollProjectToTop('auto');
       navigate('/dashboard', {
         state: {
           postDiagnosticNotice: {
@@ -535,6 +582,7 @@ export function InitialFormPage() {
       });
     } catch {
       setFeedback('Erro ao salvar. Tente novamente.');
+      scrollProjectToTop();
     } finally {
       setSaving(false);
     }
@@ -589,7 +637,7 @@ export function InitialFormPage() {
       )}
 
       <div className="diagnostic-workspace">
-        <PhaseNav activePhase={activePhaseId} data={data} onSelect={setActivePhaseId} />
+        <PhaseNav activePhase={activePhaseId} data={data} onSelect={selectPhase} />
 
         <main className="diagnostic-main">
           <PhaseHeader phase={activePhase} activeLens={activeLens} onLensChange={setActiveLens} />
@@ -669,7 +717,7 @@ export function InitialFormPage() {
           onClick={() => {
             const currentIndex = DIAGNOSTIC_PHASES.findIndex((phase) => phase.id === activePhaseId);
             const previous = DIAGNOSTIC_PHASES[Math.max(0, currentIndex - 1)];
-            setActivePhaseId(previous.id);
+            selectPhase(previous.id);
           }}
           disabled={activePhaseId === DIAGNOSTIC_PHASES[0].id}
         >
@@ -681,7 +729,7 @@ export function InitialFormPage() {
           onClick={() => {
             const currentIndex = DIAGNOSTIC_PHASES.findIndex((phase) => phase.id === activePhaseId);
             const next = DIAGNOSTIC_PHASES[Math.min(DIAGNOSTIC_PHASES.length - 1, currentIndex + 1)];
-            setActivePhaseId(next.id);
+            selectPhase(next.id);
           }}
           disabled={activePhaseId === DIAGNOSTIC_PHASES[DIAGNOSTIC_PHASES.length - 1].id}
         >

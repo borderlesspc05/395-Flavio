@@ -62,6 +62,7 @@ export function DashboardLayout() {
 
   useEffect(() => {
     setSidebarOpen(false);
+    mainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     mainRef.current?.focus({ preventScroll: true });
   }, [location.pathname]);
 
