@@ -2,6 +2,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+/** Normaliza FIREBASE_PRIVATE_KEY colada no Render/Netlify (aspas, \\n, quebras reais). */
+function normalizePrivateKey(raw: string | undefined): string | undefined {
+  if (!raw?.trim()) return undefined;
+  let key = raw.trim();
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1);
+  }
+  key = key.replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
+  return key;
+}
+
 function parseCorsOrigins(): string | string[] {
   const raw = process.env.CORS_ORIGIN ?? '*';
   if (raw === '*') return '*';
@@ -17,7 +31,7 @@ export const env = {
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY),
   },
   openrouter: {
     apiKey: process.env.OPENROUTER_API_KEY,
