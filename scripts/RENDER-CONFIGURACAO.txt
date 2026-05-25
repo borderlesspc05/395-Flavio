@@ -1,21 +1,22 @@
-RENDER — CONFIGURAÇÃO OBRIGATÓRIA (copie exato)
-================================================
+RENDER — USE ESTA CONFIG (funciona com repo na raiz)
+====================================================
 
-OPÇÃO 1 (recomendada)
-  Root Directory:     server
-  Build Command:      npm install --include=dev && npm run build
+  Root Directory:     (DEIXE VAZIO)
+  Build Command:      npm install && npm run build
   Start Command:      npm start
   Health Check Path:  /api/health
 
-OPÇÃO 2 (se Root Directory estiver VAZIO / raiz do repo)
-  Root Directory:     (vazio)
-  Build Command:      npm run render-build
-  Start Command:      npm run render-start
-  Health Check Path:  /api/health
+(O postbuild no package.json compila a API em server/dist automaticamente.)
 
-ERRADO (causa "Cannot GET /api/health"):
-  Root vazio + Build "npm run build" + Start "npm start" ou preview
-  → sobe o Vite/frontend, NÃO a API
+Alternativa:
+  Root Directory:     server
+  Build Command:      npm install --include=dev && npm run build
+  Start Command:      npm start
 
-Depois: Manual Deploy → teste https://three95-flavio.onrender.com/api/health
-Deve retornar JSON {"status":"ok",...} — NÃO HTML "Cannot GET"
+ERRADO — causa "Cannot GET /api/health":
+  Start = vite preview, serve, yarn start sem npm start
+  Build só frontend sem postbuild (versão antiga do repo)
+
+URL: copie do painel Render (pode NÃO ser three95-flavio.onrender.com)
+
+Teste: /api/health → JSON {"status":"ok"} (não HTML)
