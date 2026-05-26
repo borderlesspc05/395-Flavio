@@ -11,6 +11,7 @@ export interface NormalizedChatResponse {
   conversationId: string;
   reply: string;
   suggestedObjectives?: unknown[];
+  demoMode?: boolean;
 }
 
 export interface NormalizedConversation {
@@ -80,6 +81,7 @@ export function normalizeChatResponse(raw: unknown): NormalizedChatResponse {
       conversationId: String(r.conversationId),
       reply: String(r.reply),
       suggestedObjectives: Array.isArray(r.suggestedObjectives) ? r.suggestedObjectives : undefined,
+      demoMode: r.demoMode === true,
     };
   }
 
@@ -94,6 +96,7 @@ export function normalizeChatResponse(raw: unknown): NormalizedChatResponse {
     conversationId: String(conv?.id ?? ''),
     reply: String(last?.content ?? ''),
     suggestedObjectives: Array.isArray(r.suggestedObjectives) ? r.suggestedObjectives : undefined,
+    demoMode: r.demoMode === true,
   };
 }
 

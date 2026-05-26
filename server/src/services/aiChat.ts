@@ -73,6 +73,8 @@ export interface ChatResponse {
   usedWebSearch?: boolean;
   usedRag?: boolean;
   invokedSkills?: string[];
+  /** true quando caiu no mock por falta de OPENROUTER_API_KEY */
+  demoMode?: boolean;
 }
 
 export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
@@ -140,12 +142,14 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
   ];
 
   let rawReply: string;
+  let demoMode = false;
   try {
     rawReply = await chatCompletion({ model, messages });
   } catch (err) {
     const e = err as { code?: string; statusCode?: number };
     if (e.code === 'OPENROUTER_NOT_CONFIGURED') {
       rawReply = mockChatReply(req.message, ragContext);
+      demoMode = true;
     } else {
       throw err;
     }
@@ -194,6 +198,7 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
     model,
     usedRag: Boolean(ragContext),
     usedWebSearch: Boolean(webContext),
+    ...(demoMode ? { demoMode: true } : {}),
   };
 
   if (suggested.length > 0) {

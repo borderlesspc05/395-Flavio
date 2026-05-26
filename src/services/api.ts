@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { localBlueprintGateSuggest } from './blueprintGateLocal';
 import {
   normalizeChatResponse,
   normalizeConversationDetail,
@@ -95,7 +96,32 @@ export const aiApi = {
     api.patch(`/api/ai/conversations/${id}/title`, { title }).then((r) => r.data),
   updateModel: (id: string, modelId: string) =>
     api.patch(`/api/ai/conversations/${id}/model`, { model: modelId }).then((r) => r.data),
+  blueprintGateSuggest: (diagnosticContext: string) =>
+    withUserId((userId) =>
+      api
+        .post(
+          '/api/ai/blueprint-gate',
+          { diagnosticContext, userId: userId || undefined },
+          { timeout: CHAT_TIMEOUT }
+        )
+        .then((r) => r.data as { reply: string; parsed: BlueprintGateParsed; localFallback?: boolean })
+        .catch((err: unknown) => {
+          if (axios.isAxiosError(err) && err.response?.status === 404) {
+            return localBlueprintGateSuggest(diagnosticContext);
+          }
+          throw err;
+        })
+    ),
 };
+
+/** Resposta do Gate Zero (classificação IA) */
+export interface BlueprintGateParsed {
+  recommendedPath: 'A' | 'B';
+  rationale: string;
+  pathASignals: string[];
+  pathBSignals: string[];
+  questionForUser: string;
+}
 
 export const reportsApi = {
   list: () =>

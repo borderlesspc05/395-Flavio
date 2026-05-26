@@ -4,6 +4,7 @@ import { AppError } from '../utils/errors';
 import { listByUser, getById, update, COLLECTIONS } from '../services/storage';
 import { AI_MODELS } from '../services/openrouter';
 import { handleChat } from '../services/aiChat';
+import { runBlueprintGateSuggestion } from '../services/blueprintGate';
 
 const router = Router();
 
@@ -36,6 +37,20 @@ router.get('/conversations/:id', async (req: Request, res: Response, next: NextF
       throw new AppError(404, 'Conversation not found');
     }
     res.json(conv);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Gate Zero — não persiste conversa; só retorna classificação sugerida */
+router.post('/blueprint-gate', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { diagnosticContext } = req.body;
+    if (!diagnosticContext || typeof diagnosticContext !== 'string') {
+      throw new AppError(400, 'diagnosticContext is required');
+    }
+    const result = await runBlueprintGateSuggestion({ diagnosticContext });
+    res.json(result);
   } catch (err) {
     next(err);
   }

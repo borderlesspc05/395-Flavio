@@ -7,6 +7,7 @@ import './index.css';
 import './styles/theme-refined.css';
 import './styles/magnus-design.css';
 import './styles/consultoria-responsive.css';
+import './styles/gate-zero-design.css';
 import './styles/brand-overrides.css';
 import './styles/magnus-waves.css';
 

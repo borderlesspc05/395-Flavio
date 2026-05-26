@@ -71,15 +71,36 @@ export async function chatCompletion(options: ChatCompletionOptions): Promise<st
   }
 }
 
-/** Fallback when no API key — rule-based assistant reply */
+/** Fallback when no API key — rule-based assistant reply (varia com o tema da pergunta). */
 export function mockChatReply(userMessage: string, context?: string): string {
   const preview = userMessage.slice(0, 120);
+  const lower = userMessage.toLowerCase();
+  let angle: string;
+  if (/trein|capacita|curso|aprend|habilidade/.test(lower)) {
+    angle =
+      'Antes de priorizar treinamento, confirme se o gap é de habilidade ou de sistema, contexto ou gestão — o MM Blueprint ancora na causa certa.';
+  } else if (/sistema|processo|autom|ferrament|fluxo|bottleneck|gargalo/.test(lower)) {
+    angle =
+      'Para fricção sistêmica, descreva handoffs, decisões e onde o trabalho se perde; o desenho costuma passar por governança e fluxo, não só conteúdo.';
+  } else if (/okr|objetiv|meta|prioridade|trimestre/.test(lower)) {
+    angle =
+      'Para OKRs ou metas, conecte resultado mensurável a poucas iniciativas com dono e ritmo de revisão — evite lista longa sem decisão.';
+  } else if (/equipe|lider|gestão|people|talento|cultura/.test(lower)) {
+    angle =
+      'Para pessoas e liderança, combine papéis claros, feedback e ambiente psicológico; sem isso, mudanças técnicas raramente sustentam.';
+  } else if (/roadmap|blueprint|design|onda\s*2/.test(lower)) {
+    angle =
+      'No Design (Onda 2), use o diagnóstico 1.1–1.5 como fonte primária e deixe explícito o que não fazer agora, além do que avançar.';
+  } else {
+    angle =
+      'Consolide o diagnóstico em decisões SE-ENTÃO e um recorte 30–90 dias; poucas frentes paralelas costumam vencer dispersão.';
+  }
   return (
-    `[Modo demonstração — configure OPENROUTER_API_KEY para respostas reais]\n\n` +
-    `Recebi sua mensagem: "${preview}${userMessage.length > 120 ? '...' : ''}".\n\n` +
-    (context
-      ? `Contexto de frameworks consultivos foi carregado (${context.length} caracteres).\n\n`
+    `[Modo demonstração — o servidor não tem OPENROUTER_API_KEY; configure a chave para respostas reais do modelo.]\n\n` +
+    `Sobre a sua pergunta: "${preview}${userMessage.length > 120 ? '...' : ''}"\n\n` +
+    (context?.trim()
+      ? `Há trechos de frameworks no contexto (~${context.length} caracteres) que orientariam uma resposta completa.\n\n`
       : '') +
-    `Como consultor Magnus Mind, recomendo revisar seus objetivos estratégicos e alinhar a equipe nas prioridades do trimestre.`
+    angle
   );
 }

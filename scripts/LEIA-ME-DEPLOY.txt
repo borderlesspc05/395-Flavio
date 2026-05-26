@@ -1,0 +1,33 @@
+DEPLOY MAGNUS MIND — 3 passos (o código já foi enviado ao GitHub magnusmind395)
+
+=== JÁ FEITO NO SEU PC ===
+- Correção do build Render (commit 703f90a)
+- Push para https://github.com/magnusmind395/395-Flavio
+- Build do frontend (pasta dist/)
+
+=== PASSO A — RENDER (2 min) ===
+1. https://dashboard.render.com → serviço 395-Flavio
+2. Settings → Build Command: npm install --include=dev && npm run build
+   Start Command: npm start | Root Directory: server
+3. Environment → Add from .env → abra o arquivo:
+   scripts\render.env
+   (no Bloco de Notas: preencha OPENROUTER_API_KEY= sua chave)
+4. Apague todas as variáveis VITE_* se existirem no Render
+5. Save and deploy → Logs: "[firebase] Initialized with service account"
+
+=== PASSO B — NETLIFY (1 min) ===
+Deploys → Trigger deploy (branch main)
+OU no terminal (uma vez): npx netlify-cli login
+depois: .\scripts\deploy.ps1
+
+Site: https://melodic-cupcake-80e777.netlify.app
+
+=== PASSO C — TESTE ===
+https://three95-flavio.onrender.com/api/health
+https://melodic-cupcake-80e777.netlify.app/login
+demo@magnusmind.app / MagnusMind2026!
+
+=== Firebase ===
+Authentication → Authorized domains → melodic-cupcake-80e777.netlify.app
+
+IMPORTANTE: scripts\render.env tem chave privada — não envie no WhatsApp. Gere nova chave no Firebase depois.

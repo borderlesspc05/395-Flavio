@@ -3,7 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { buildDiagnosticContext } from '../constants/diagnosticFlow';
+import { buildGateContextAppendix } from '../constants/blueprintFlow';
 import { getInitialForm } from '../services/initialForm';
+import { getBlueprintGate, type BlueprintGateDoc } from '../services/blueprintGate';
+import { GateZeroPanel } from '../components/GateZeroPanel';
 import ReactMarkdown from 'react-markdown';
 import {
   Bot,
@@ -87,10 +90,13 @@ export function ConsultoriaIAPage() {
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showObjectivesBanner, setShowObjectivesBanner] = useState(true);
+  const [chatDemoModeBanner, setChatDemoModeBanner] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [diagnosticComplete, setDiagnosticComplete] = useState<boolean | null>(null);
   const [diagnosticData, setDiagnosticData] = useState<InitialFormData | null>(null);
+  const [gateDoc, setGateDoc] = useState<BlueprintGateDoc | null>(null);
+  const [gateLoading, setGateLoading] = useState(false);
   const [skills, setSkills] = useState<AgentSkillDto[]>([]);
   const [skillMenuOpen, setSkillMenuOpen] = useState(false);
   const [skillSearch, setSkillSearch] = useState('');
@@ -168,10 +174,22 @@ export function ConsultoriaIAPage() {
         .then(({ data, completedAt }) => {
           setDiagnosticComplete(!!completedAt);
           setDiagnosticData(data);
+          if (completedAt) {
+            setGateLoading(true);
+            getBlueprintGate(user.uid)
+              .then((g) => setGateDoc(g))
+              .catch(() => setGateDoc(null))
+              .finally(() => setGateLoading(false));
+          } else {
+            setGateDoc(null);
+            setGateLoading(false);
+          }
         })
         .catch(() => {
           setDiagnosticComplete(false);
           setDiagnosticData(null);
+          setGateDoc(null);
+          setGateLoading(false);
         });
     });
     return unsub;
@@ -253,15 +271,30 @@ export function ConsultoriaIAPage() {
     setError(null);
 
     try {
+      const baseDiag = diagnosticData ? buildDiagnosticContext(diagnosticData) : '';
+      const gateAppend =
+        gateDoc?.selectedPath != null
+          ? buildGateContextAppendix(gateDoc.selectedPath, {
+              aiRecommendedPath: gateDoc.aiRecommendedPath,
+              rationale: gateDoc.rationale,
+            })
+          : '';
+      const diagnosticContextMerged =
+        [baseDiag, gateAppend].filter(Boolean).join('\n\n') || undefined;
+
       const result = await aiApi.chat({
         conversationId: activeId || undefined,
         content,
         modelId: selectedModel || undefined,
-        diagnosticContext: diagnosticData ? buildDiagnosticContext(diagnosticData) : undefined,
+        diagnosticContext: diagnosticContextMerged,
       });
 
       const convId = result.conversationId as string;
       setActiveId(convId);
+
+      if (result.demoMode) {
+        setChatDemoModeBanner(true);
+      }
 
       const assistant: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -332,6 +365,22 @@ export function ConsultoriaIAPage() {
           Blueprint.{' '}
           <Link to="/dashboard/initial-form">Ir para o diagnóstico</Link>
         </div>
+      )}
+      {diagnosticComplete === true && (
+        <GateZeroPanel
+          diagnosticContext={
+            diagnosticData ? buildDiagnosticContext(diagnosticData) : ''
+          }
+          gateDoc={gateDoc}
+          gateLoading={gateLoading}
+          onGateDocChange={setGateDoc}
+          onScrollToChat={() => {
+            document.getElementById('consultoria-chat-anchor')?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }}
+        />
       )}
       <div className="consultoria-container">
         {sidebarOpen && (
@@ -468,6 +517,28 @@ export function ConsultoriaIAPage() {
           </header>
 
           <div className="chat-messages">
+            {chatDemoModeBanner && (
+              <div className="chat-demo-mode-banner" role="status">
+                <div className="chat-demo-mode-banner-inner">
+                  <Zap size={20} className="chat-demo-mode-icon" aria-hidden />
+                  <div>
+                    <p className="chat-demo-mode-title">Modo demonstração (respostas fixas de teste)</p>
+                    <p className="chat-demo-mode-text">
+                      O backend está sem a variável <code>OPENROUTER_API_KEY</code>. Configure a chave no
+                      ambiente do servidor (Render, .env local, etc.) para o chat usar o modelo de verdade.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="chat-demo-mode-dismiss"
+                  onClick={() => setChatDemoModeBanner(false)}
+                  aria-label="Fechar aviso de modo demonstração"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            )}
             {error && (
               <div className="chat-error">
                 <p>{error}</p>
@@ -524,8 +595,9 @@ export function ConsultoriaIAPage() {
                 </div>
                 <h2 className="chat-empty-title">Onda 2 — Design · MM Blueprint</h2>
                 <p className="chat-empty-description">
-                  Caminho A: Outcome Forge → Build → Impact Evaluation. A IA estrutura a solução na
-                  ordem certa — sem entregar respostas prontas, com clareza para agir.
+                  Confirme o <strong>Gate Zero</strong> acima (Caminho A ou B). Depois, a IA conduz o
+                  Blueprint: Outcome Forge → Build → Impact Evaluation — com clareza para agir, sem
+                  atalhos que ignorem o diagnóstico.
                 </p>
                 {showObjectivesBanner && (
                   <div className="chat-empty-objectives-hint">
@@ -602,7 +674,7 @@ export function ConsultoriaIAPage() {
             )}
           </div>
 
-          <div className="chat-input-container">
+          <div id="consultoria-chat-anchor" className="chat-input-container">
             <div className="chat-input-wrapper">
               {skillMenuOpen && filteredSkills.length > 0 && (
                 <div className="chat-skill-menu" role="listbox" aria-label="Skills disponíveis">

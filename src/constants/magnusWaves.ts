@@ -41,13 +41,13 @@ export const MAGNUS_WAVES: MagnusWave[] = [
     number: 2,
     label: 'Design',
     subtitle: 'MM Blueprint',
-    miroRef: 'Caminho A: Outcome Forge -> Build -> Impact Evaluation',
+    miroRef: 'Gate Zero -> Caminho A ou B -> final result -> Make the Move',
     route: '/dashboard/consultoria-ia',
     steps: [
-      { id: '2.0', label: 'MM Blueprint', description: 'Estruturar a solução na ordem certa' },
-      { id: '2.1', label: 'Outcome Forge', description: 'Definir resultados esperados' },
-      { id: '2.2', label: 'Build', description: 'Montar plano e prioridades' },
-      { id: '2.3', label: 'Impact Evaluation', description: 'Avaliar impacto antes de mover' },
+      { id: '2.0', label: 'Gate Zero', description: 'IA recomenda; usuário confirma Caminho A ou B' },
+      { id: '2.1', label: 'Outcome Forge', description: 'Caminho A: outcome + LO (Bloom) | B: outcome sistêmico' },
+      { id: '2.2', label: 'Build', description: 'Caminho A: programa ATD | B: redesign estrutural' },
+      { id: '2.3', label: 'Impact Evaluation', description: '4 camadas (A) ou métricas sistêmicas (B)' },
     ],
   },
   {

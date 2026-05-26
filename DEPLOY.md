@@ -107,6 +107,14 @@ Configure variáveis `VITE_*` no painel do site criado (**Site configuration →
 
 O arquivo `netlify.toml` já configura SPA redirects (`/*` → `index.html`).
 
+## Firebase (cliente — Firestore)
+
+A **Onda 2** persiste o **Gate Zero** na coleção **`blueprintGate`**, com ID do documento = **UID do usuário** (mesmo padrão de `initialForms`). Campos usados: `selectedPath` (`A` ou `B`), `aiRecommendedPath`, `rationale`, `skipped`, `confirmedAt`.
+
+Configure regras do Firestore para que cada usuário leia/escreva apenas o próprio documento, por exemplo: `request.auth != null && request.auth.uid == documentId` em `match /blueprintGate/{userId}`.
+
+**Passo a passo e regra completa:** [`docs/FIRESTORE-RULES.md`](./FIRESTORE-RULES.md) (coleção `blueprintGate` + `initialForms`).
+
 ## Backend (Render)
 
 1. Crie um **Web Service** com **Root Directory** = `server` (obrigatório).
@@ -162,3 +170,20 @@ O Vite faz proxy de `/api` para `http://localhost:3001`.
 - Chat Consultoria IA: **120s** (`CHAT_TIMEOUT`)
 
 Isso evita erros em cold start do Render (plano gratuito).
+
+### Gate Zero (classificação IA)
+
+- **POST** `/api/ai/blueprint-gate` — body JSON: `{ "diagnosticContext": "texto do canvas 1.1–1.5" }`. Resposta: `{ "reply": "...", "parsed": { "recommendedPath", "rationale", "pathASignals", "pathBSignals", "questionForUser" } }`. Não cria conversa no histórico de chat.
+- Timeout: usa o mesmo limite de chat (120s) no cliente.
+
+#### Mensagem “sugestão local” ou erro 404 no Gate Zero
+
+Se o app mostrar aviso de **sugestão local** ou a rede retornar **404** em `/api/ai/blueprint-gate`, o serviço no Render **não está com o código da API atual** (ou o Root Directory não é `server`).
+
+1. Render → seu **Web Service** da API → **Settings**.
+2. Confirme **Root Directory** = `server`, **Build Command** = `npm install --include=dev && npm run build`, **Start Command** = `npm start`.
+3. **Commits:** o `main` do GitHub ligado ao Render precisa incluir `server/src/routes/ai.ts` com `router.post('/blueprint-gate', ...)`.
+4. **Manual Deploy** (ou push que dispare build) e aguarde o build terminar.
+5. Teste no navegador: `POST https://SEU-SERVICO.onrender.com/api/ai/blueprint-gate` com body JSON (ferramenta tipo Thunder Client) — deve responder **200** com JSON, não 404.
+
+Variável **`OPENROUTER_API_KEY`** no Render continua necessária para a classificação ser feita pela **IA real** (sem chave, o servidor usa heurística no endpoint, não o cliente).

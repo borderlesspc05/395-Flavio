@@ -42,11 +42,14 @@ Entrada: resultado do canvas (diagnóstico completo).
 
 | Etapa | Nome | MVP |
 |-------|------|-----|
+| 2.0 | Gate Zero | IA recomenda Caminho A ou B; usuário confirma |
 | 2 | MM Blueprint | People Sprint IA (`/dashboard/consultoria-ia`) |
-| 2.1 | Outcome Forge | Chat — definir outcomes |
-| 2.2 | Build | Chat — plano e prioridades |
-| 2.3 | Impact Evaluation | Chat — avaliar impacto |
-| — | Caminho B | *Fora do escopo MVP atual* |
+| 2.1 | Outcome Forge | A: ATD outcome + LO · B: outcome sistêmico |
+| 2.2 | Build | A: questionário ID (7 seções) · B: redesign estrutural |
+| 2.3 | Impact Evaluation | A: 4 camadas · B: métricas de sistema |
+| — | final result | Convergência antes da Difusão (Make the Move) |
+
+Doc completo: `docs/MM-BLUEPRINT-DESIGN.md` · Constantes: `src/constants/blueprintFlow.ts`
 
 **Gate:** banner se diagnóstico incompleto.
 
