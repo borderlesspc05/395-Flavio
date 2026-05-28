@@ -10,7 +10,11 @@ export interface Objective {
   status: ObjectiveStatus;
   origem: ObjectiveOrigin;
   prioridade?: number;
+  horizonte?: 'curto' | 'medio' | 'longo';
   prazo?: string;
+  responsavel?: string;
+  impacto?: string;
+  insightOrigem?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -93,6 +97,10 @@ export interface SuggestedObjective {
   descricao: string;
   categoria: string;
   prioridade?: number;
+  horizonte?: 'curto' | 'medio' | 'longo';
+  impacto?: string;
+  responsavel?: string;
+  insightOrigem?: string;
 }
 
 /**

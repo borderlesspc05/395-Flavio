@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
 import {
   ArrowRight,
   Bot,
   Calendar,
   Download,
+  FileText,
   Filter,
+  GitBranch,
   Lightbulb,
   Pencil,
   Plus,
+  RefreshCw,
   Search,
   Sparkles,
   Target,
@@ -16,7 +20,9 @@ import {
   User,
   X,
 } from 'lucide-react';
+import { auth } from '../config/firebase';
 import { objectivesApi } from '../services/api';
+import { loadDesignDiffusionContext, type DesignDiffusionContext } from '../services/designDiffusionContext';
 import {
   PRIORITY_LABELS,
   type Objective,
@@ -114,11 +120,21 @@ function isNearDeadline(prazo?: string) {
   return diff >= 0 && diff <= 14;
 }
 
+function defaultDueDate(horizon?: ObjectiveHorizon) {
+  const days = horizon === 'curto' ? 30 : horizon === 'longo' ? 180 : 90;
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
 export function ObjetivosPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
+  const [designContext, setDesignContext] = useState<DesignDiffusionContext | null>(null);
+  const [designContextLoading, setDesignContextLoading] = useState(true);
+  const [autoSuggestConsumed, setAutoSuggestConsumed] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('todos');
   const [horizonFilter, setHorizonFilter] = useState<HorizonFilter>('todos');
@@ -133,6 +149,8 @@ export function ObjetivosPage() {
   const [suggestions, setSuggestions] = useState<SuggestedItem[]>([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
   const [suggestLoading, setSuggestLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -150,6 +168,22 @@ export function ObjetivosPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setDesignContext(null);
+        setDesignContextLoading(false);
+        return;
+      }
+      setDesignContextLoading(true);
+      loadDesignDiffusionContext(user.uid)
+        .then(setDesignContext)
+        .catch(() => setDesignContext(null))
+        .finally(() => setDesignContextLoading(false));
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const state = location.state as { openCreateModal?: boolean } | null;
@@ -279,40 +313,112 @@ export function ObjetivosPage() {
     a.click();
   };
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     setSuggestLoading(true);
     setSuggestionsOpen(true);
     setSelectedSuggestions(new Set());
+    setSuggestionsError(null);
     try {
-      const res = await objectivesApi.suggest();
+      const res = await objectivesApi.suggest(designContext?.context);
       setSuggestions((res.suggestions ?? []) as SuggestedItem[]);
     } catch {
       setSuggestions([]);
+      setSuggestionsError('Não foi possível gerar sugestões agora. Verifique a conexão e tente novamente.');
     } finally {
       setSuggestLoading(false);
     }
-  };
+  }, [designContext?.context]);
+
+  useEffect(() => {
+    const state = location.state as { generateFromDesign?: boolean } | null;
+    if (
+      !state?.generateFromDesign ||
+      autoSuggestConsumed ||
+      designContextLoading ||
+      !designContext?.diagnosticComplete
+    ) {
+      return;
+    }
+    setAutoSuggestConsumed(true);
+    void loadSuggestions();
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [
+    autoSuggestConsumed,
+    designContext?.diagnosticComplete,
+    designContextLoading,
+    loadSuggestions,
+    location.pathname,
+    location.state,
+    navigate,
+  ]);
 
   const importSuggestions = async () => {
     const selected = suggestions.filter((_, i) => selectedSuggestions.has(i));
-    for (const s of selected) {
-      const prioridade =
-        typeof s.prioridade === 'number' ? numToPriority(s.prioridade) : s.prioridade || 'media';
-      await objectivesApi.create({
-        titulo: s.titulo,
-        descricao: s.descricao,
-        categoria: s.categoria || 'Geral',
-        status: 'pendente',
-        prioridade: priorityToNum(prioridade),
-        origem: 'ia',
-        horizonte: s.horizonte || 'medio',
-        impacto: s.impacto,
-        responsavel: s.responsavel,
-        insightOrigem: s.insightOrigem,
-      });
+    if (selected.length === 0) return;
+    setImportLoading(true);
+    setSuggestionsError(null);
+    try {
+      const safeSelected = selected
+        .map((s) => ({
+          ...s,
+          titulo: String(s.titulo ?? '').trim(),
+          descricao: String(s.descricao ?? '').trim(),
+        }))
+        .filter((s) => s.titulo && s.descricao);
+
+      if (safeSelected.length === 0) {
+        setSuggestionsError('As sugestões selecionadas não têm título/descrição válidos.');
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        safeSelected.map(async (s) => {
+          const prioridade =
+            typeof s.prioridade === 'number' ? numToPriority(s.prioridade) : s.prioridade || 'media';
+          const horizonte = s.horizonte || 'medio';
+          await objectivesApi.create({
+            titulo: s.titulo,
+            descricao: s.descricao,
+            categoria: s.categoria || 'Geral',
+            status: 'pendente',
+            prioridade: priorityToNum(prioridade),
+            origem: 'ia',
+            horizonte,
+            prazo: defaultDueDate(horizonte),
+            impacto: s.impacto || '',
+            responsavel: s.responsavel || '',
+            insightOrigem: s.insightOrigem || '',
+          });
+        })
+      );
+
+      const okCount = results.filter((r) => r.status === 'fulfilled').length;
+      const fail = results.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined;
+
+      if (okCount === 0) {
+        const err = fail?.reason as { response?: { data?: { error?: string } }; message?: string } | undefined;
+        const detail = err?.response?.data?.error || err?.message || '';
+        setSuggestionsError(
+          detail
+            ? `Não foi possível adicionar os objetivos: ${detail}`
+            : 'Não foi possível adicionar os objetivos agora. Tente novamente em instantes.'
+        );
+        return;
+      }
+
+      if (okCount < safeSelected.length) {
+        setSuggestionsError(`${okCount} objetivo(s) adicionados. Alguns falharam, tente importar o restante.`);
+      }
+
+      await load();
+      if (okCount === safeSelected.length) {
+        setSuggestionsOpen(false);
+      }
+    } catch {
+      setSuggestionsError('Não foi possível adicionar os objetivos agora. Tente novamente em instantes.');
+    } finally {
+      setImportLoading(false);
     }
-    setSuggestionsOpen(false);
-    await load();
   };
 
   const toggleSuggestion = (index: number) => {
@@ -380,6 +486,48 @@ export function ObjetivosPage() {
           <span className="summary-value">{pct}%</span>
         </div>
       </div>
+
+      <section className={`design-diffusion-panel ${designContext?.ready ? 'is-ready' : ''}`}>
+        <div className="design-diffusion-main">
+          <div className="design-diffusion-icon">
+            <GitBranch size={22} />
+          </div>
+          <div>
+            <span className="design-diffusion-eyebrow">Onda 2 {'->'} Onda 3</span>
+            <h2 className="design-diffusion-title">Design conectado à Difusão</h2>
+            <p className="design-diffusion-text">
+              {designContextLoading
+                ? 'Lendo diagnóstico e MM Blueprint...'
+                : designContext?.statusLabel ||
+                  'Complete o diagnóstico para a IA transformar a leitura em objetivos.'}
+            </p>
+          </div>
+        </div>
+        <div className="design-diffusion-steps" aria-label="Fluxo Design para Difusão">
+          <span>
+            <FileText size={14} />
+            Diagnóstico
+          </span>
+          <span>
+            <GitBranch size={14} />
+            MM Blueprint
+          </span>
+          <span>
+            <Target size={14} />
+            Objetivos
+          </span>
+        </div>
+        <button
+          type="button"
+          className="design-diffusion-button"
+          onClick={loadSuggestions}
+          disabled={suggestLoading || designContextLoading || !designContext?.diagnosticComplete}
+          title={!designContext?.diagnosticComplete ? 'Complete o diagnóstico antes de gerar objetivos' : undefined}
+        >
+          <RefreshCw size={17} />
+          {suggestLoading ? 'Gerando...' : 'Gerar objetivos do Design'}
+        </button>
+      </section>
 
       <div className="objetivos-actions-bar">
         <div className="objetivos-search">
@@ -508,6 +656,7 @@ export function ObjetivosPage() {
                   </div>
                 </div>
                 <p className="objetivo-description">{obj.descricao}</p>
+                {obj.impacto && <p className="objetivo-impact"><strong>Impacto esperado:</strong> {obj.impacto}</p>}
                 <div className="objetivo-meta">
                   {obj.prazo && (
                     <div className="objetivo-meta-item">
@@ -643,6 +792,14 @@ export function ObjetivosPage() {
                   />
                 </div>
               </div>
+              <div className="objetivo-modal-field">
+                <label className="objetivo-modal-label">Impacto esperado</label>
+                <textarea
+                  className="objetivo-modal-textarea"
+                  value={form.impacto || ''}
+                  onChange={(e) => setForm({ ...form, impacto: e.target.value })}
+                />
+              </div>
               <div className="objetivo-modal-actions">
                 <button type="button" className="objetivo-modal-button-secondary" onClick={closeModal}>
                   Cancelar
@@ -685,6 +842,7 @@ export function ObjetivosPage() {
                     {selectedSuggestions.size} de {suggestions.length} selecionados
                   </span>
                 </div>
+                {suggestionsError && <div className="objetivo-modal-error-message">{suggestionsError}</div>}
                 <div className="suggestions-modal-list">
                   {suggestions.map((s, i) => {
                     const prio =
@@ -728,10 +886,10 @@ export function ObjetivosPage() {
                   <button
                     type="button"
                     className="suggestions-modal-button-primary"
-                    disabled={selectedSuggestions.size === 0}
+                    disabled={selectedSuggestions.size === 0 || importLoading}
                     onClick={importSuggestions}
                   >
-                    Adicionar selecionados
+                    {importLoading ? 'Adicionando...' : 'Adicionar selecionados'}
                   </button>
                 </div>
               </>

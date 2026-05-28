@@ -2607,6 +2607,164 @@
   position: relative;
 }
 
+/* ---------- Difusao - ponte Design -> Objetivos ---------- */
+.design-diffusion-panel {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.8fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+  padding: 1.1rem 1.2rem;
+  background:
+    linear-gradient(160deg, rgba(34, 44, 58, 0.92) 0%, rgba(18, 24, 32, 0.96) 100%);
+  border: 1px solid rgba(175, 146, 112, 0.18);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 16px 34px -22px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+
+.design-diffusion-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(175, 146, 112, 0.14), transparent 42%),
+    repeating-linear-gradient(90deg, rgba(175, 146, 112, 0.06) 0 1px, transparent 1px 48px);
+  opacity: 0.55;
+}
+
+.design-diffusion-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.design-diffusion-main {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.design-diffusion-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: #f3ead8;
+  background: rgba(175, 146, 112, 0.14);
+  border: 1px solid rgba(175, 146, 112, 0.3);
+  border-radius: 8px;
+}
+
+.design-diffusion-eyebrow {
+  display: inline-flex;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(217, 200, 168, 0.9);
+}
+
+.design-diffusion-title {
+  margin: 0.1rem 0 0.2rem;
+  font-family: 'Roboto Slab', 'Georgia', serif;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: #f3ead8;
+}
+
+.design-diffusion-text {
+  margin: 0;
+  color: rgba(241, 235, 224, 0.72);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.design-diffusion-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.design-diffusion-steps span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(241, 235, 224, 0.82);
+  background: rgba(10, 16, 24, 0.42);
+  border: 1px solid rgba(175, 146, 112, 0.18);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.design-diffusion-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 42px;
+  padding: 0.7rem 1rem;
+  color: #1a1208;
+  background: linear-gradient(135deg, #d9c8a8 0%, #af9270 100%);
+  border: 1px solid rgba(175, 146, 112, 0.55);
+  border-radius: 8px;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 220ms ease, box-shadow 220ms ease, opacity 220ms ease;
+}
+
+.design-diffusion-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -14px rgba(217, 200, 168, 0.8);
+}
+
+.design-diffusion-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.objetivo-impact {
+  margin: -0.2rem 0 0.9rem;
+  padding: 0.75rem 0.85rem;
+  color: rgba(241, 235, 224, 0.78);
+  background: rgba(175, 146, 112, 0.08);
+  border-left: 2px solid rgba(175, 146, 112, 0.55);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.objetivo-impact strong {
+  color: #d9c8a8;
+}
+
+@media (max-width: 1060px) {
+  .design-diffusion-panel {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .design-diffusion-button {
+    width: 100%;
+  }
+}
+
 /* ---------- Difusão · modal com formulário rolável ---------- */
 .objetivo-modal-overlay {
   align-items: flex-start !important;

@@ -8,6 +8,10 @@ import { suggestObjectives } from '../services/objectivesSuggest';
 
 const router = Router();
 
+function withoutUndefined<T extends Record<string, unknown>>(data: T): T {
+  return Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)) as T;
+}
+
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const items = await listByUser<Objective>(COLLECTIONS.objectives, req.userId);
@@ -19,14 +23,26 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { titulo, descricao, categoria, status, origem, prioridade, prazo } = req.body;
+    const {
+      titulo,
+      descricao,
+      categoria,
+      status,
+      origem,
+      prioridade,
+      prazo,
+      horizonte,
+      responsavel,
+      impacto,
+      insightOrigem,
+    } = req.body;
 
     if (!titulo || !descricao) {
       throw new AppError(400, 'titulo and descricao are required');
     }
 
     const id = generateId();
-    const objective: Objective = {
+    const objective: Objective = withoutUndefined({
       id,
       userId: req.userId,
       titulo: String(titulo),
@@ -35,10 +51,14 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       status: (status as ObjectiveStatus) ?? 'pendente',
       origem: (origem as ObjectiveOrigin) ?? 'manual',
       prioridade: prioridade != null ? Number(prioridade) : undefined,
+      horizonte: horizonte ? (String(horizonte) as Objective['horizonte']) : undefined,
       prazo: prazo ? String(prazo) : undefined,
+      responsavel: responsavel ? String(responsavel) : undefined,
+      impacto: impacto ? String(impacto) : undefined,
+      insightOrigem: insightOrigem ? String(insightOrigem) : undefined,
       createdAt: nowIso(),
       updatedAt: nowIso(),
-    };
+    });
 
     await create(COLLECTIONS.objectives, id, objective as unknown as Record<string, unknown>);
     await logActivity(req.userId, 'objective', `Objetivo criado: ${objective.titulo}`, {
@@ -70,7 +90,19 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       throw new AppError(404, 'Objective not found');
     }
 
-    const allowed = ['titulo', 'descricao', 'categoria', 'status', 'origem', 'prioridade', 'prazo'];
+    const allowed = [
+      'titulo',
+      'descricao',
+      'categoria',
+      'status',
+      'origem',
+      'prioridade',
+      'prazo',
+      'horizonte',
+      'responsavel',
+      'impacto',
+      'insightOrigem',
+    ];
     const patch: Partial<Objective> = {};
     for (const key of allowed) {
       if (req.body[key] !== undefined) {
@@ -78,7 +110,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       }
     }
 
-    const updated = await update<Objective>(COLLECTIONS.objectives, id, patch);
+    const updated = await update<Objective>(COLLECTIONS.objectives, id, withoutUndefined(patch));
     res.json(updated);
   } catch (err) {
     next(err);

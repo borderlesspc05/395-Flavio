@@ -30,6 +30,7 @@ import type { ChatMessage, InitialFormData } from '../types';
 
 const SUGGESTIONS = [
   'Com base no diagnóstico 1.1-1.5, qual solução deve entrar primeiro no MM Blueprint?',
+  'Transforme o diagnóstico em um MM Blueprint final e indique objetivos para a Difusão.',
   'Quais ações devo evitar agora segundo o Solution Pick?',
   'Monte um roadmap 0-30, 30-90 e 90-180 dias a partir do canvas.',
 ];
@@ -329,9 +330,7 @@ export function ConsultoriaIAPage() {
       const convId = result.conversationId as string;
       setActiveId(convId);
 
-      if (result.demoMode) {
-        setChatDemoModeBanner(true);
-      }
+      setChatDemoModeBanner(Boolean(result.demoMode));
 
       const assistant: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -616,12 +615,16 @@ export function ConsultoriaIAPage() {
                   <div>
                     <p className="chat-objectives-banner-title">Transforme insights em objetivos</p>
                     <p className="chat-objectives-banner-description">
-                      Use a Consultoria IA para gerar sugestões e cadastre objetivos estratégicos.
+                      Leve o diagnóstico e o MM Blueprint para a Difusão e gere objetivos prontos para execução.
                     </p>
                   </div>
                 </div>
-                <Link to="/dashboard/objetivos" className="chat-objectives-banner-button">
-                  Ver objetivos
+                <Link
+                  to="/dashboard/objetivos"
+                  state={{ generateFromDesign: true }}
+                  className="chat-objectives-banner-button"
+                >
+                  Gerar objetivos
                   <ChevronRight size={16} />
                 </Link>
                 <button
@@ -662,7 +665,9 @@ export function ConsultoriaIAPage() {
                     <Target size={18} aria-hidden />
                     <p>
                       Transforme insights em objetivos estratégicos na aba{' '}
-                      <Link to="/dashboard/objetivos">Objetivos</Link>.
+                      <Link to="/dashboard/objetivos" state={{ generateFromDesign: true }}>
+                        Objetivos
+                      </Link>.
                     </p>
                   </div>
                 )}

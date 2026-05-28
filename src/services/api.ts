@@ -11,9 +11,9 @@ import {
   normalizeSuggestResponse,
 } from './apiNormalize';
 
-/** API no Render por padrão; use VITE_USE_LOCAL_API=true + proxy Vite para backend local. */
+/** Em dev, usa API local por padrão. Para forçar remoto em dev, defina VITE_USE_LOCAL_API=false. */
 const API_BASE_URL =
-  import.meta.env.VITE_USE_LOCAL_API === 'true'
+  import.meta.env.DEV && import.meta.env.VITE_USE_LOCAL_API !== 'false'
     ? ''
     : (import.meta.env.VITE_API_BASE_URL || 'https://three95-flavio-fcha.onrender.com');
 const DEFAULT_TIMEOUT = 90000;

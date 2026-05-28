@@ -1,5 +1,10 @@
+import path from 'path';
 import dotenv from 'dotenv';
 
+// Prioriza sempre o .env da pasta server, independente do cwd usado para iniciar o processo.
+const serverEnvPath = path.resolve(__dirname, '../../.env');
+dotenv.config({ path: serverEnvPath, override: true });
+// Mantém fallback para variáveis já injetadas pelo ambiente/shell.
 dotenv.config();
 
 /** Normaliza FIREBASE_PRIVATE_KEY colada no Render/Netlify (aspas, \\n, quebras reais). */
