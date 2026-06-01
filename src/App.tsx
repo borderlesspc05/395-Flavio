@@ -10,10 +10,13 @@ import { ObjetivosPage } from './pages/ObjetivosPage';
 import { MinhaEquipePage } from './pages/MinhaEquipePage';
 import { RelatoriosPage } from './pages/RelatoriosPage';
 import { HistoricoPage } from './pages/HistoricoPage';
+import { PlansLandingPage } from './pages/PlansLandingPage';
 
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<PlansLandingPage />} />
+      <Route path="/planos" element={<PlansLandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route
@@ -33,8 +36,7 @@ export default function App() {
         <Route path="historico" element={<HistoricoPage />} />
       </Route>
       <Route path="/initial-form" element={<Navigate to="/dashboard/initial-form" replace />} />
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -103,6 +103,30 @@ Documento de validação do que foi implementado na plataforma.
 - [ ] IA **escrever** campos do diagnóstico por conversa (com confirmação antes de gravar no Firebase)
 - [ ] Amarrar canvases encerrados explicitamente no copy da Consultoria (tooltips / empty states)
 - [ ] Testes E2E do fluxo Difusão completo
+- [ ] **Planos comerciais** — enforcement no cliente/API (Starter 1 / Advanced 3 / Premium ∞ requisições paralelas)
+
+---
+
+## Checklist — sessão 29/05/2026 (Landing de planos + auth)
+
+1. [x] **Landing de planos** — `PlansLandingPage.tsx` com hero Magnus Waves, seções Fluxo e Stack, footer com links
+2. [x] **Três planos de concorrência** — **Starter** (1 requisição por vez), **Advanced** (3), **Premium** (ilimitado), com cards e visual de slots/∞
+3. [x] **Scroll reveal** — `useScrollReveal.ts` + `ScrollReveal.tsx`; conteúdo aparece ao rolar (`prefers-reduced-motion` respeitado)
+4. [x] **Visual tecnológico** — `plans-landing.css`: grid perspectiva, orbs, scanline, bronze/Newsreader+Figtree alinhados ao app
+5. [x] **Rotas** — `/` e `/planos` → landing; `/login` e `/register` mantidos; 404 redireciona para `/`
+6. [x] **CTAs na landing** — botões para criar conta (`/register`) e entrar (`/login`) no hero, cards e bloco final
+7. [x] **Voltar para a landing** — login e registro com `backTo` no `AuthLayout` (link para `/`)
+8. [x] **Botões de auth refinados** — classes `auth-btn` / `--back` / `--primary` (largura total, ícone, gradiente, seta animada)
+9. [x] **Build** — `npm run build` (front + API) sem erros de TypeScript
+
+### Arquivos principais — landing + auth
+
+| Área | Caminhos |
+|------|----------|
+| Landing | `src/pages/PlansLandingPage.tsx`, `src/styles/plans-landing.css` |
+| Animação | `src/hooks/useScrollReveal.ts`, `src/components/ScrollReveal.tsx` |
+| Rotas | `src/App.tsx`, `src/main.tsx` |
+| Auth | `src/components/AuthLayout.tsx`, `LoginPage.tsx`, `RegisterPage.tsx`, `theme-refined.css` |
 
 ---
 

@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { AuthLayout } from '../components/AuthLayout';
@@ -35,6 +36,7 @@ export function RegisterPage() {
   return (
     <AuthLayout
       title="Registro"
+      backTo={{ href: '/', label: 'Voltar para a landing' }}
       footer={
         <>
           Já tem uma conta? <Link to="/login" className="auth-link">Faça login</Link>
@@ -59,10 +61,14 @@ export function RegisterPage() {
           <input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </div>
         {error && <span className="error-message">{error}</span>}
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Criando...' : 'Criar Conta'}
-          <span className="btn-arrow">→</span>
-        </button>
+        <div className="auth-form-actions">
+          <button type="submit" className="auth-btn auth-btn--primary" disabled={loading}>
+            <span className="auth-btn-label">{loading ? 'Criando...' : 'Criar conta'}</span>
+            <span className="auth-btn-trail" aria-hidden>
+              <ArrowRight size={18} strokeWidth={2.25} />
+            </span>
+          </button>
+        </div>
       </form>
     </AuthLayout>
   );

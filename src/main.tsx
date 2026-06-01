@@ -11,6 +11,7 @@ import './styles/gate-zero-design.css';
 import './styles/brand-overrides.css';
 import './styles/magnus-waves.css';
 import './styles/action-canvas.css';
+import './styles/plans-landing.css';
 
 void initFirebaseAnalytics();
 

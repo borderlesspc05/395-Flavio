@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { AuthLayout } from '../components/AuthLayout';
@@ -28,6 +29,7 @@ export function LoginPage() {
   return (
     <AuthLayout
       title="Login"
+      backTo={{ href: '/', label: 'Voltar para a landing' }}
       footer={
         <>
           Não tem uma conta? <Link to="/register" className="auth-link">Registre-se</Link>
@@ -58,10 +60,14 @@ export function LoginPage() {
           />
         </div>
         {error && <span className="error-message">{error}</span>}
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Entrando...' : 'Entrar'}
-          <span className="btn-arrow">→</span>
-        </button>
+        <div className="auth-form-actions">
+          <button type="submit" className="auth-btn auth-btn--primary" disabled={loading}>
+            <span className="auth-btn-label">{loading ? 'Entrando...' : 'Entrar'}</span>
+            <span className="auth-btn-trail" aria-hidden>
+              <ArrowRight size={18} strokeWidth={2.25} />
+            </span>
+          </button>
+        </div>
       </form>
     </AuthLayout>
   );
