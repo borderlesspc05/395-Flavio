@@ -60,6 +60,17 @@ export const env = {
     token: process.env.WHATSAPP_TOKEN,
     phoneId: process.env.WHATSAPP_PHONE_ID,
   },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY?.trim() || undefined,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || undefined,
+    priceStarter: process.env.STRIPE_PRICE_STARTER?.trim() || undefined,
+    priceAdvanced: process.env.STRIPE_PRICE_ADVANCED?.trim() || undefined,
+    pricePremium: process.env.STRIPE_PRICE_PREMIUM?.trim() || undefined,
+  },
+  frontendUrl:
+    process.env.FRONTEND_URL?.trim() ||
+    process.env.CORS_ORIGIN?.split(',')[0]?.trim() ||
+    'http://localhost:5173',
 };
 
 export const COLLECTIONS = {
@@ -72,4 +83,5 @@ export const COLLECTIONS = {
   consultantFrameworks: 'consultantFrameworks',
   agentSettings: 'agentSettings',
   agentSkills: 'agentSkills',
+  subscriptions: 'subscriptions',
 } as const;

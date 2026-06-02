@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { Report } from '../types';
 import { listByUser, getById, COLLECTIONS } from '../services/storage';
 import { generateReport } from '../services/reports';
+import { withConcurrencyLimit } from '../services/concurrency';
 import { AppError } from '../utils/errors';
 
 const router = Router();
@@ -17,7 +18,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 router.post('/generate', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const report = await generateReport(req.userId);
+    const report = await withConcurrencyLimit(req.userId, () => generateReport(req.userId));
     res.status(201).json(report);
   } catch (err) {
     next(err);

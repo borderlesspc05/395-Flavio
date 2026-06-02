@@ -5,6 +5,7 @@ import { listByUser, getById, update, COLLECTIONS } from '../services/storage';
 import { AI_MODELS } from '../services/openrouter';
 import { handleChat } from '../services/aiChat';
 import { runBlueprintGateSuggestion } from '../services/blueprintGate';
+import { withConcurrencyLimit } from '../services/concurrency';
 
 const router = Router();
 
@@ -49,7 +50,9 @@ router.post('/blueprint-gate', async (req: Request, res: Response, next: NextFun
     if (!diagnosticContext || typeof diagnosticContext !== 'string') {
       throw new AppError(400, 'diagnosticContext is required');
     }
-    const result = await runBlueprintGateSuggestion({ diagnosticContext });
+    const result = await withConcurrencyLimit(req.userId, () =>
+      runBlueprintGateSuggestion({ diagnosticContext })
+    );
     res.json(result);
   } catch (err) {
     next(err);
@@ -65,15 +68,17 @@ router.post('/chat', async (req: Request, res: Response, next: NextFunction) => 
       throw new AppError(400, 'content is required');
     }
 
-    const result = await handleChat({
-      userId: req.userId,
-      message,
-      conversationId,
-      model,
-      diagnosticContext: typeof diagnosticContext === 'string' ? diagnosticContext : undefined,
-      gateContext: typeof gateContext === 'string' ? gateContext : undefined,
-      suggestObjectives: Boolean(suggestObjectives),
-    });
+    const result = await withConcurrencyLimit(req.userId, () =>
+      handleChat({
+        userId: req.userId,
+        message,
+        conversationId,
+        model,
+        diagnosticContext: typeof diagnosticContext === 'string' ? diagnosticContext : undefined,
+        gateContext: typeof gateContext === 'string' ? gateContext : undefined,
+        suggestObjectives: Boolean(suggestObjectives),
+      })
+    );
 
     res.json(result);
   } catch (err) {

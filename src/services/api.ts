@@ -1,7 +1,12 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { localBlueprintGateSuggest } from './blueprintGateLocal';
+import {
+  acquireClientSlot,
+  isConcurrencyLimitedUrl,
+  releaseClientSlot,
+} from './requestConcurrency';
 import {
   normalizeChatResponse,
   normalizeConversationDetail,
@@ -23,6 +28,30 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: DEFAULT_TIMEOUT,
 });
+
+type ConcurrencyAxiosConfig = InternalAxiosRequestConfig & { _concurrencyHeld?: boolean };
+
+api.interceptors.request.use(async (config) => {
+  const cfg = config as ConcurrencyAxiosConfig;
+  const path = cfg.url ?? '';
+  if (!isConcurrencyLimitedUrl(path)) return config;
+  await acquireClientSlot();
+  cfg._concurrencyHeld = true;
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => {
+    const cfg = response.config as ConcurrencyAxiosConfig;
+    if (cfg._concurrencyHeld) releaseClientSlot();
+    return response;
+  },
+  (error) => {
+    const cfg = error.config as ConcurrencyAxiosConfig | undefined;
+    if (cfg?._concurrencyHeld) releaseClientSlot();
+    return Promise.reject(error);
+  }
+);
 
 async function getUserId(): Promise<string | null> {
   if (auth.currentUser) return auth.currentUser.uid;

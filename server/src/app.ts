@@ -16,6 +16,7 @@ import agentRouter from './routes/agent';
 import reportsRouter from './routes/reports';
 import whatsappRouter from './routes/whatsapp';
 import magnusMemoryRouter from './routes/magnusMemory';
+import billingRouter, { billingWebhookHandler } from './routes/billing';
 
 initFirebase();
 
@@ -27,6 +28,14 @@ app.use(
     credentials: true,
   })
 );
+
+/** Stripe webhook precisa do body bruto (antes do express.json) */
+app.post(
+  '/api/billing/webhook',
+  express.raw({ type: 'application/json' }),
+  billingWebhookHandler
+);
+
 app.use(express.json({ limit: '2mb' }));
 
 const healthPayload = () => ({
@@ -59,6 +68,7 @@ app.get('/', (_req, res) => {
 
 app.use(resolveUserId);
 
+app.use('/api/billing', billingRouter);
 app.use('/api/objectives', objectivesRouter);
 app.use('/api/action-canvases', actionCanvasesRouter);
 app.use('/api/team-members', teamMembersRouter);

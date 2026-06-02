@@ -76,6 +76,21 @@ body {
   margin-bottom: var(--spacing-lg) !important;
 }
 
+.auth-payment-banner {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--light-blue, #ffbc7d);
+  background: rgba(81, 207, 102, 0.1);
+  border: 1px solid rgba(81, 207, 102, 0.35);
+}
+
+.auth-payment-banner strong {
+  color: #f0ebe4;
+}
+
 /* —— Auth buttons (login / registro) —— */
 .auth-toolbar {
   margin: 0 0 1rem;

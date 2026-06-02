@@ -194,3 +194,22 @@ Se o app mostrar aviso de **sugestão local** ou a rede retornar **404** em `/ap
 5. Teste no navegador: `POST https://SEU-SERVICO.onrender.com/api/ai/blueprint-gate` com body JSON (ferramenta tipo Thunder Client) — deve responder **200** com JSON, não 404.
 
 Variável **`OPENROUTER_API_KEY`** no Render continua necessária para a classificação ser feita pela **IA real** (sem chave, o servidor usa heurística no endpoint, não o cliente).
+
+## Stripe (planos + checkout)
+
+No **Render** (`server`), além das variáveis de `server/.env.example`:
+
+| Variável | Onde obter |
+|----------|------------|
+| `STRIPE_SECRET_KEY` | Stripe → Desenvolvedores → Chaves da API |
+| `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks → signing secret |
+| `STRIPE_PRICE_STARTER` / `ADVANCED` / `PREMIUM` | Catálogo de produtos → ID do preço (`price_...`) |
+| `FRONTEND_URL` | URL do Netlify (ex.: `https://395-flavio2.netlify.app`) |
+| `CORS_ORIGIN` | Inclua a mesma URL do Netlify |
+
+Webhook Stripe: `https://SEU-SERVICO.onrender.com/api/billing/webhook`  
+Eventos: `checkout.session.completed`, `customer.subscription.deleted`
+
+Detalhes: [`docs/STRIPE-PLANOS.md`](./docs/STRIPE-PLANOS.md)
+
+Sem Stripe configurado, o checkout usa `/mock-checkout` (pagamento simulado) e redireciona para `/register`.

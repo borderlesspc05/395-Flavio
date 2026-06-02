@@ -11,12 +11,14 @@ import { MinhaEquipePage } from './pages/MinhaEquipePage';
 import { RelatoriosPage } from './pages/RelatoriosPage';
 import { HistoricoPage } from './pages/HistoricoPage';
 import { PlansLandingPage } from './pages/PlansLandingPage';
+import { MockCheckoutPage } from './pages/MockCheckoutPage';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<PlansLandingPage />} />
       <Route path="/planos" element={<PlansLandingPage />} />
+      <Route path="/mock-checkout" element={<MockCheckoutPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route

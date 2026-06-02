@@ -11,6 +11,8 @@ import {
   Shield,
 } from 'lucide-react';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { PlanCheckoutButton } from '../components/PlanCheckoutButton';
+import type { PlanId } from '../constants/plans';
 
 const PLANS = [
   {
@@ -61,7 +63,7 @@ const PLANS = [
       'Suporte a squads e consultorias',
       'Memória Magnus Waves completa',
     ],
-    cta: 'Falar sobre Premium',
+    cta: 'Assinar Premium',
     highlight: false,
   },
 ] as const;
@@ -145,8 +147,8 @@ export function PlansLandingPage() {
             Ver planos
             <ArrowRight size={18} />
           </a>
-          <Link to="/register" className="plans-btn plans-btn--outline plans-btn--lg">
-            Testar gratuitamente
+          <Link to="/login" className="plans-btn plans-btn--outline plans-btn--lg">
+            Já paguei — entrar
           </Link>
         </ScrollReveal>
         <ScrollReveal className="plans-hero-metrics" delay={320}>
@@ -200,12 +202,12 @@ export function PlansLandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                to="/register"
+              <PlanCheckoutButton
+                planId={plan.id as PlanId}
                 className={`plans-btn ${plan.highlight ? 'plans-btn--primary' : 'plans-btn--outline'} plans-btn--block`}
               >
                 {plan.cta}
-              </Link>
+              </PlanCheckoutButton>
             </ScrollReveal>
           ))}
         </div>
@@ -275,10 +277,10 @@ export function PlansLandingPage() {
           <h2>Pronto para acelerar o Magnus Waves?</h2>
           <p>Comece no Starter, evolua para Advanced ou desbloqueie paralelismo ilimitado no Premium.</p>
           <div className="plans-hero-actions">
-            <Link to="/register" className="plans-btn plans-btn--primary plans-btn--lg">
-              Criar conta
+            <a href="#planos" className="plans-btn plans-btn--primary plans-btn--lg">
+              Escolher um plano
               <ArrowRight size={18} />
-            </Link>
+            </a>
             <Link to="/login" className="plans-btn plans-btn--ghost plans-btn--lg">
               Já tenho acesso
             </Link>

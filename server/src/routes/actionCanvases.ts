@@ -11,6 +11,7 @@ import { AppError } from '../utils/errors';
 import { listByUser, getById, create, update, remove, COLLECTIONS } from '../services/storage';
 import { logActivity } from '../services/activities';
 import { suggestActionCanvases } from '../services/actionCanvasSuggest';
+import { withConcurrencyLimit } from '../services/concurrency';
 
 const router = Router();
 const MAX_CANVASES = 5;
@@ -89,10 +90,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 router.post('/suggest', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { diagnosticContext, gateContext } = req.body ?? {};
-    const result = await suggestActionCanvases(req.userId, {
-      diagnosticContext: typeof diagnosticContext === 'string' ? diagnosticContext : undefined,
-      gateContext: typeof gateContext === 'string' ? gateContext : undefined,
-    });
+    const result = await withConcurrencyLimit(req.userId, () =>
+      suggestActionCanvases(req.userId, {
+        diagnosticContext: typeof diagnosticContext === 'string' ? diagnosticContext : undefined,
+        gateContext: typeof gateContext === 'string' ? gateContext : undefined,
+      })
+    );
     res.json(result);
   } catch (err) {
     next(err);

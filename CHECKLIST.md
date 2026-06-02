@@ -103,7 +103,7 @@ Documento de validação do que foi implementado na plataforma.
 - [ ] IA **escrever** campos do diagnóstico por conversa (com confirmação antes de gravar no Firebase)
 - [ ] Amarrar canvases encerrados explicitamente no copy da Consultoria (tooltips / empty states)
 - [ ] Testes E2E do fluxo Difusão completo
-- [ ] **Planos comerciais** — enforcement no cliente/API (Starter 1 / Advanced 3 / Premium ∞ requisições paralelas)
+- [x] **Planos comerciais + Stripe** — checkout, webhook, claim no login, limites Starter 1 / Advanced 3 / Premium ∞ (ver `docs/STRIPE-PLANOS.md`)
 
 ---
 

@@ -1,18 +1,35 @@
-import { FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { FormEvent, useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { AuthLayout } from '../components/AuthLayout';
+import { claimSubscriptionForUser } from '../services/claimSubscription';
+import { storePendingCheckout } from '../services/billingApi';
+import { isPlanId } from '../constants/plans';
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paymentSuccess = searchParams.get('payment') === 'success';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('payment') !== 'success') return;
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) return;
+    const planRaw = searchParams.get('plan');
+    storePendingCheckout(
+      sessionId,
+      searchParams.get('demo') === '1',
+      planRaw && isPlanId(planRaw) ? planRaw : undefined
+    );
+  }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,6 +42,7 @@ export function RegisterPage() {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
+      await claimSubscriptionForUser(cred.user.uid, cred.user.email ?? email);
       navigate('/dashboard');
     } catch {
       setError('Não foi possível criar a conta. Verifique os dados.');
@@ -43,6 +61,12 @@ export function RegisterPage() {
         </>
       }
     >
+      {paymentSuccess && (
+        <p className="auth-payment-banner" role="status">
+          Pagamento recebido. Crie sua conta com o <strong>mesmo email</strong> usado no checkout para
+          ativar o plano.
+        </p>
+      )}
       <form className="auth-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Nome</label>

@@ -5,6 +5,7 @@ import { AppError } from '../utils/errors';
 import { listByUser, getById, create, update, remove, COLLECTIONS } from '../services/storage';
 import { logActivity } from '../services/activities';
 import { suggestObjectives } from '../services/objectivesSuggest';
+import { withConcurrencyLimit } from '../services/concurrency';
 
 const router = Router();
 
@@ -75,7 +76,9 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 router.post('/suggest', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const context = req.body?.context ?? req.body?.message;
-    const suggestions = await suggestObjectives(req.userId, context);
+    const suggestions = await withConcurrencyLimit(req.userId, () =>
+      suggestObjectives(req.userId, context)
+    );
     res.json({ suggestions });
   } catch (err) {
     next(err);

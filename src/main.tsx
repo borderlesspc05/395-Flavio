@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { initFirebaseAnalytics } from './config/firebase';
 import App from './App';
+import { PlanProvider } from './context/PlanContext';
 import './index.css';
 import './styles/theme-refined.css';
 import './styles/magnus-design.css';
@@ -18,7 +19,9 @@ void initFirebaseAnalytics();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <PlanProvider>
+        <App />
+      </PlanProvider>
     </BrowserRouter>
   </StrictMode>
 );
