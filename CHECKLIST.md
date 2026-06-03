@@ -107,6 +107,110 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
+## Checklist — sessão 02/06/2026 (Stripe, checkout, deploy)
+
+### Landing e planos
+
+1. [x] **Landing pública** — `/` e `/planos` com hero, cards Starter / Advanced / Premium, fluxo Magnus Waves, CTA final
+2. [x] **Scroll reveal** — animação ao rolar (`useScrollReveal`, `ScrollReveal`, `prefers-reduced-motion`)
+3. [x] **Visual** — `plans-landing.css` (grid 3D, orbs, bronze, Newsreader + Figtree)
+4. [x] **Checkout por plano** — `PlanCheckoutButton` chama API e redireciona para pagamento
+
+### Autenticação (login / registro)
+
+5. [x] **Voltar para landing** — botão em login e registro (`AuthLayout` + `auth-btn--back`)
+6. [x] **Botões refinados** — `auth-btn--primary` com gradiente, ícone e seta
+7. [x] **Banner pós-pagamento** — mensagem no registro quando `?payment=success`
+
+### Pagamento (Stripe + mock)
+
+8. [x] **API billing** — `POST /checkout-session`, `POST /claim`, `GET /plan`, webhook `/api/billing/webhook`
+9. [x] **Stripe Checkout** — assinatura com `metadata.planId`; `success_url` → **`/register`**
+10. [x] **Checkout mock** — `/mock-checkout` quando Stripe não está configurado (dados de cartão fake)
+11. [x] **Fluxo** — plano → pagamento (Stripe ou mock) → **registro** → claim do plano → dashboard
+12. [x] **Assinaturas** — coleção `subscriptions` (email + `userId` + `planId`)
+13. [x] **Docs** — `docs/STRIPE-PLANOS.md` + seção Stripe em `DEPLOY.md`
+
+### Limites por plano (concorrência)
+
+14. [x] **Starter** — 1 requisição simultânea (IA/sugestões/relatórios)
+15. [x] **Advanced** — 3 requisições simultâneas
+16. [x] **Premium** — ilimitado
+17. [x] **Servidor** — `withConcurrencyLimit` em chat, blueprint-gate, suggest objetivos/canvas, generate relatório
+18. [x] **Cliente** — fila em `requestConcurrency.ts` + interceptor Axios; `PlanContext` carrega plano após login
+
+### Deploy e Git
+
+19. [x] **Build** — `npm run build` (front + server) OK
+20. [x] **Push** — `main` no GitHub (`fb478fe` landing/auth, `88252cb` billing)
+21. [x] **Guia deploy** — variáveis Render/Netlify/Stripe documentadas
+
+### Ajustes de UI (sessão)
+
+22. [x] **Botão mock checkout** — texto creme + ícone warm no `mock-checkout-confirm`
+
+### Validar em produção
+
+- [ ] Render: `STRIPE_*`, `FRONTEND_URL`, `CORS_ORIGIN` preenchidos + redeploy
+- [ ] Stripe: webhook apontando para `https://SUA-API.onrender.com/api/billing/webhook`
+- [ ] Netlify: `VITE_API_BASE_URL` → API Render
+- [ ] Firebase: domínio Netlify em **Authorized domains**
+- [ ] Teste E2E: plano → pagamento → registro (mesmo email) → dashboard com limite do plano
+
+### Arquivos principais — sessão 02/06
+
+| Área | Caminhos |
+|------|----------|
+| Billing API | `server/src/routes/billing.ts`, `stripeBilling.ts`, `subscriptions.ts`, `plans.ts`, `concurrency.ts` |
+| Checkout mock | `src/pages/MockCheckoutPage.tsx` |
+| Landing | `src/pages/PlansLandingPage.tsx`, `PlanCheckoutButton.tsx` |
+| Plano no app | `src/context/PlanContext.tsx`, `billingApi.ts`, `claimSubscription.ts` |
+| Limites client | `src/services/requestConcurrency.ts`, `api.ts` (interceptor) |
+
+---
+
+## Checklist — sessão 02/06/2026 (Painel administrativo)
+
+### Backend — observabilidade e admin
+
+1. [x] **Log de requisições** — middleware `requestLogger` + coleção `apiRequestLogs` (tipo, rota, status, duração)
+2. [x] **Classificação de tipos** — chat, blueprint, objetivos, canvas, relatórios, billing, memória, CRUD, etc.
+3. [x] **Classificação de assuntos** — módulos Magnus (Consultoria IA, Difusão, Domínio, Planos, Geral)
+4. [x] **Perfis de usuário** — `userProfiles` com contagem de requisições e datas de acesso
+5. [x] **API admin** — `GET /api/admin/dashboard`, `PUT /api/admin/settings/plans`
+6. [x] **Auth admin** — Firebase token + `ADMIN_EMAILS` (`middleware/adminAuth.ts`)
+7. [x] **Script seed** — `npm run seed:admin --prefix server` (conta `admin@gmail.com` / `123456` quando Firebase configurado)
+8. [x] **Env** — `ADMIN_EMAILS` documentado em `server/.env.example`
+
+### Frontend — console admin
+
+9. [x] **Rotas** — `/admin/login`, `/admin` com `AdminProtectedRoute`
+10. [x] **Login admin** — email admin redireciona para `/admin` após autenticação
+11. [x] **Layout premium** — sidebar, atmosfera bronze, Newsreader + Figtree (`admin-panel.css`)
+12. [x] **Aba Requisições** — KPIs (tipo e assunto mais usados)
+13. [x] **Gráficos** — barras por tipo, barras por assunto, donut de distribuição (`AdminBarChart`, `AdminDonutChart`)
+14. [x] **Tabela simplificada** — últimas requisições: **data**, **nome do usuário**, **tipo** (sem ID, método, rota, status)
+15. [x] **Aba Usuários** — email, nome, plano, volume, último acesso
+16. [x] **Aba Planos** — editar nome, preço (texto/centavos) e limite de concorrência na API
+
+### Deploy
+
+17. [x] **Build** — `npm run build` (front + server) OK
+18. [ ] **Push** — aguardando commit desta sessão
+19. [ ] **Produção** — definir `ADMIN_EMAILS` no Render; criar admin no Firebase (seed ou console)
+
+### Arquivos principais — painel admin
+
+| Área | Caminhos |
+|------|----------|
+| API admin | `server/src/routes/admin.ts`, `services/adminDashboard.ts`, `apiRequestLog.ts`, `users.ts` |
+| Middleware | `server/src/middleware/adminAuth.ts`, `requestLogger.ts` |
+| UI | `src/pages/AdminPage.tsx`, `AdminLoginPage.tsx`, `styles/admin-panel.css` |
+| Gráficos | `src/components/admin/AdminBarChart.tsx`, `AdminDonutChart.tsx` |
+| Client API | `src/services/adminApi.ts` |
+
+---
+
 ## Checklist — sessão 29/05/2026 (Landing de planos + auth)
 
 1. [x] **Landing de planos** — `PlansLandingPage.tsx` com hero Magnus Waves, seções Fluxo e Stack, footer com links
@@ -383,4 +487,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 19 de maio de 2026 — checklist do dia revisado após alinhamento Miro*
+*Última atualização: 02 de junho de 2026 — landing, Stripe, painel admin*

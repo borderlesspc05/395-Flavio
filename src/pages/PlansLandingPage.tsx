@@ -291,6 +291,7 @@ export function PlansLandingPage() {
       <footer className="plans-footer">
         <p>© {new Date().getFullYear()} Magnus Mind · Magnus Waves™</p>
         <div className="plans-footer-links">
+          <Link to="/admin/login">Admin</Link>
           <Link to="/login">Login</Link>
           <a href="https://magnusmind.io" target="_blank" rel="noreferrer">
             magnusmind.io

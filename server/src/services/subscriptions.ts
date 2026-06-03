@@ -1,5 +1,6 @@
 import { create, getById, update, COLLECTIONS } from './storage';
-import { DEFAULT_PLAN_ID, type PlanId, isPlanId, getConcurrencyLimit } from './plans';
+import { DEFAULT_PLAN_ID, type PlanId, isPlanId } from './plans';
+import { getConcurrencyLimitFromSettings } from './adminSettings';
 
 export interface SubscriptionRecord {
   id: string;
@@ -89,7 +90,7 @@ export async function getPlanSummaryForUser(userId: string) {
   return {
     planId,
     planName: plan.name,
-    concurrencyLimit: getConcurrencyLimit(planId),
+    concurrencyLimit: await getConcurrencyLimitFromSettings(planId),
   };
 }
 

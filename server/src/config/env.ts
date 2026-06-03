@@ -71,6 +71,10 @@ export const env = {
     process.env.FRONTEND_URL?.trim() ||
     process.env.CORS_ORIGIN?.split(',')[0]?.trim() ||
     'http://localhost:5173',
+  adminEmails: (process.env.ADMIN_EMAILS ?? 'admin@gmail.com')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
 };
 
 export const COLLECTIONS = {
@@ -84,4 +88,7 @@ export const COLLECTIONS = {
   agentSettings: 'agentSettings',
   agentSkills: 'agentSkills',
   subscriptions: 'subscriptions',
+  userProfiles: 'userProfiles',
+  apiRequestLogs: 'apiRequestLogs',
+  adminSettings: 'adminSettings',
 } as const;

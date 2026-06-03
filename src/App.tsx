@@ -12,6 +12,9 @@ import { RelatoriosPage } from './pages/RelatoriosPage';
 import { HistoricoPage } from './pages/HistoricoPage';
 import { PlansLandingPage } from './pages/PlansLandingPage';
 import { MockCheckoutPage } from './pages/MockCheckoutPage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
+import { AdminPage } from './pages/AdminPage';
+import { AdminProtectedRoute } from './components/AdminProtectedRoute';
 
 export default function App() {
   return (
@@ -21,6 +24,15 @@ export default function App() {
       <Route path="/mock-checkout" element={<MockCheckoutPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminProtectedRoute>
+            <AdminPage />
+          </AdminProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={

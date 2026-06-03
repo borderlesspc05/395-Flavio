@@ -1,12 +1,13 @@
 import { AppError } from '../utils/errors';
-import { getConcurrencyLimit, type PlanId } from './plans';
+import type { PlanId } from './plans';
 import { getPlanIdForUser } from './subscriptions';
+import { getConcurrencyLimitFromSettings } from './adminSettings';
 
 const activeByUser = new Map<string, number>();
 
 export async function getConcurrencyLimitForUser(userId: string): Promise<number | null> {
   const planId: PlanId = await getPlanIdForUser(userId);
-  return getConcurrencyLimit(planId);
+  return getConcurrencyLimitFromSettings(planId);
 }
 
 export function tryAcquireSlot(userId: string, limit: number | null): boolean {

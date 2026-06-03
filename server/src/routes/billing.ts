@@ -80,6 +80,14 @@ router.post('/claim', async (req: Request, res: Response, next: NextFunction) =>
     const subscription = linked ?? (await getSubscriptionByEmail(email));
     const summary = await getPlanSummaryForUser(userId);
 
+    const { upsertUserProfile } = await import('../services/users');
+    await upsertUserProfile({
+      userId,
+      email,
+      displayName: typeof req.body.displayName === 'string' ? req.body.displayName : undefined,
+      planId: summary.planId,
+    });
+
     res.json({
       ok: true,
       linked: Boolean(linked),

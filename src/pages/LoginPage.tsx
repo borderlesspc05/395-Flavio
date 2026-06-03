@@ -7,6 +7,7 @@ import { AuthLayout } from '../components/AuthLayout';
 import { storePendingCheckout } from '../services/billingApi';
 import { claimSubscriptionForUser } from '../services/claimSubscription';
 import { isPlanId } from '../constants/plans';
+import { isAdminEmail } from '../constants/admin';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -35,6 +36,10 @@ export function LoginPage() {
     setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
+      if (isAdminEmail(cred.user.email)) {
+        navigate('/admin');
+        return;
+      }
       await claimSubscriptionForUser(cred.user.uid, cred.user.email ?? email);
       navigate('/dashboard');
     } catch {

@@ -913,8 +913,22 @@
   gap: 0.7rem;
 }
 
-.mock-checkout-confirm {
+.mock-checkout-confirm.plans-btn--primary {
   width: 100%;
+  color: #f5f0e8;
+  background: linear-gradient(135deg, #6e5a45 0%, #af9270 48%, #c9a962 100%);
+  border-color: rgba(255, 188, 125, 0.35);
+  box-shadow: 0 6px 28px rgba(175, 146, 112, 0.4);
+}
+
+.mock-checkout-confirm.plans-btn--primary:hover {
+  color: #fffef9;
+  background: linear-gradient(135deg, #7a654f 0%, #c9a962 48%, #ffbc7d 100%);
+}
+
+.mock-checkout-confirm.plans-btn--primary svg {
+  color: #ffbc7d;
+  flex-shrink: 0;
 }
 
 .mock-checkout-back {

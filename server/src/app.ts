@@ -17,6 +17,9 @@ import reportsRouter from './routes/reports';
 import whatsappRouter from './routes/whatsapp';
 import magnusMemoryRouter from './routes/magnusMemory';
 import billingRouter, { billingWebhookHandler } from './routes/billing';
+import adminRouter from './routes/admin';
+import publicPlansRouter from './routes/publicPlans';
+import { requestLogger } from './middleware/requestLogger';
 
 initFirebase();
 
@@ -67,7 +70,10 @@ app.get('/', (_req, res) => {
 });
 
 app.use(resolveUserId);
+app.use(requestLogger);
 
+app.use('/api/plans', publicPlansRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/objectives', objectivesRouter);
 app.use('/api/action-canvases', actionCanvasesRouter);

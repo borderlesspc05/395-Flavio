@@ -105,6 +105,22 @@ export async function remove(collection: string, id: string): Promise<boolean> {
   return memoryCollection(collection).delete(id);
 }
 
+export async function listAll<T>(collection: string, orderField = 'createdAt'): Promise<T[]> {
+  const db = getFirestore();
+  if (db && isFirebaseEnabled()) {
+    const snap = await db.collection(collection).get();
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
+    return items.sort((a, b) =>
+      String((b as DocData)[orderField] ?? '').localeCompare(String((a as DocData)[orderField] ?? ''))
+    );
+  }
+
+  const col = memoryCollection(collection);
+  return (Array.from(col.values()).sort((a, b) =>
+    String(b[orderField] ?? '').localeCompare(String(a[orderField] ?? ''))
+  ) as unknown) as T[];
+}
+
 /** List frameworks for RAG (global + user-specific) */
 export async function listFrameworks(userId: string): Promise<DocData[]> {
   const db = getFirestore();

@@ -13,6 +13,7 @@ import './styles/brand-overrides.css';
 import './styles/magnus-waves.css';
 import './styles/action-canvas.css';
 import './styles/plans-landing.css';
+import './styles/admin-panel.css';
 
 void initFirebaseAnalytics();
 
