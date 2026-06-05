@@ -10,25 +10,18 @@ import {
   History,
   LogOut,
   Menu,
+  UserCircle,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
-
-const navItems = [
-  { id: 'dashboard', label: 'Hub (MID)', icon: LayoutDashboard, path: '/dashboard' },
-  { id: 'formulario', label: '1 · Diagnóstico', icon: FileText, path: '/dashboard/initial-form' },
-  { id: 'consultoria', label: '2 · Design (Blueprint)', icon: Bot, path: '/dashboard/consultoria-ia' },
-  { id: 'objetivos', label: '3 · Difusão', icon: Target, path: '/dashboard/objetivos' },
-  { id: 'equipe', label: 'Equipe', icon: Users, path: '/dashboard/minha-equipe' },
-  { id: 'relatorios', label: '4 · Domínio (MID)', icon: BarChart3, path: '/dashboard/relatorios' },
-  { id: 'historico', label: 'Loop contínuo', icon: History, path: '/dashboard/historico' },
-];
+import { useLocale } from '../context/LocaleContext';
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = 'mm.sidebar.collapsed';
 
 export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLocale();
   const mainRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -37,6 +30,17 @@ export function DashboardLayout() {
     return window.localStorage.getItem(SIDEBAR_COLLAPSE_STORAGE_KEY) === '1';
   });
   const isConsultoria = location.pathname === '/dashboard/consultoria-ia';
+
+  const navItems = [
+    { id: 'dashboard', label: t.nav.hub, icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'formulario', label: t.nav.diagnostic, icon: FileText, path: '/dashboard/initial-form' },
+    { id: 'consultoria', label: t.nav.design, icon: Bot, path: '/dashboard/consultoria-ia' },
+    { id: 'objetivos', label: t.nav.diffusion, icon: Target, path: '/dashboard/objetivos' },
+    { id: 'equipe', label: t.nav.team, icon: Users, path: '/dashboard/minha-equipe' },
+    { id: 'relatorios', label: t.nav.domain, icon: BarChart3, path: '/dashboard/relatorios' },
+    { id: 'historico', label: t.nav.loop, icon: History, path: '/dashboard/historico' },
+    { id: 'conta', label: t.nav.account, icon: UserCircle, path: '/dashboard/conta' },
+  ];
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -77,7 +81,7 @@ export function DashboardLayout() {
   return (
     <div className="dashboard-container">
       <a href="#main-content" className="mm-skip-link">
-        Ir para o conteúdo principal
+        {t.nav.skipToContent}
       </a>
       <div className="dashboard-body">
         {sidebarOpen && (
@@ -130,11 +134,11 @@ export function DashboardLayout() {
               type="button"
               className="nav-item nav-item-logout"
               onClick={handleLogout}
-              aria-label="Sair"
-              title={sidebarCollapsed ? 'Sair' : undefined}
+              aria-label={t.nav.logout}
+              title={sidebarCollapsed ? t.nav.logout : undefined}
             >
               <LogOut className="nav-icon" size={20} aria-hidden />
-              <span className="nav-label">Sair</span>
+              <span className="nav-label">{t.nav.logout}</span>
             </button>
           </nav>
         </aside>
@@ -144,7 +148,7 @@ export function DashboardLayout() {
               type="button"
               className="menu-toggle"
               onClick={() => setSidebarOpen(true)}
-              aria-label="Abrir menu de navegação"
+              aria-label={t.nav.openMenu}
               aria-expanded={sidebarOpen}
             >
               <Menu size={40} aria-hidden />

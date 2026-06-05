@@ -1,0 +1,843 @@
+/* Conta — personal vault editorial (Magnus Mind) */
+
+.account-page {
+  --acc-serif: 'Newsreader', Georgia, serif;
+  --acc-sans: 'Figtree', system-ui, sans-serif;
+  --acc-bronze: #af9270;
+  --acc-gold: #c9a962;
+  --acc-warm: #ffbc7d;
+  --acc-ink: #0c1016;
+  --acc-surface: rgba(24, 30, 40, 0.78);
+  --acc-border: rgba(175, 146, 112, 0.22);
+  --acc-text: #f4efe8;
+  --acc-muted: rgba(244, 239, 232, 0.58);
+  --acc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --acc-pad-inline: clamp(0.5rem, 2.5vw, 1.25rem);
+  --acc-pad-card: clamp(1rem, 2.8vw, 1.45rem);
+  --acc-gap: clamp(0.75rem, 2vw, 1.35rem);
+  --acc-radius: clamp(14px, 2vw, 20px);
+
+  position: relative;
+  width: 100%;
+  max-width: min(1080px, 100%);
+  margin: 0 auto;
+  padding-inline: var(--acc-pad-inline);
+  padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  box-sizing: border-box;
+  font-family: var(--acc-sans);
+  color: var(--acc-text);
+}
+
+/* —— Atmosphere —— */
+.account-atmosphere {
+  position: absolute;
+  inset: -1.5rem calc(-1 * var(--acc-pad-inline)) 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.account-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(88px);
+}
+
+.account-orb--gold {
+  width: 42vw;
+  max-width: 420px;
+  height: 42vw;
+  max-height: 420px;
+  top: -12%;
+  right: -8%;
+  background: radial-gradient(circle, rgba(201, 169, 98, 0.38), transparent 68%);
+  opacity: 0.55;
+}
+
+.account-orb--warm {
+  width: 28vw;
+  max-width: 280px;
+  height: 28vw;
+  max-height: 280px;
+  bottom: 8%;
+  left: -6%;
+  background: radial-gradient(circle, rgba(255, 188, 125, 0.22), transparent 70%);
+  opacity: 0.45;
+}
+
+.account-diagonal {
+  position: absolute;
+  top: 12%;
+  left: -20%;
+  width: 140%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(201, 169, 98, 0.35) 35%,
+    rgba(255, 188, 125, 0.2) 65%,
+    transparent
+  );
+  transform: rotate(-4deg);
+  opacity: 0.6;
+}
+
+.account-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.account-page > *:not(.account-atmosphere) {
+  position: relative;
+  z-index: 1;
+}
+
+/* —— Hero —— */
+.account-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--acc-gap);
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+  padding-bottom: clamp(0.85rem, 2vw, 1.25rem);
+}
+
+.account-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--acc-bronze);
+}
+
+.account-hero h1 {
+  margin: 0 0 0.55rem;
+  font-family: var(--acc-serif);
+  font-size: clamp(2rem, 4.5vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.account-lede {
+  margin: 0;
+  max-width: min(44ch, 100%);
+  font-size: clamp(0.9rem, 2.2vw, 1rem);
+  line-height: 1.55;
+  color: var(--acc-muted);
+}
+
+.account-hero-rule {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 169, 98, 0.35);
+  background: radial-gradient(circle at 30% 30%, rgba(201, 169, 98, 0.15), transparent 65%);
+  box-shadow: 0 0 40px rgba(201, 169, 98, 0.12);
+}
+
+/* —— Layout —— */
+.account-layout {
+  display: grid;
+  grid-template-columns: minmax(0, min(100%, 300px)) minmax(0, 1fr);
+  gap: var(--acc-gap);
+  align-items: start;
+  width: 100%;
+}
+
+.account-identity,
+.account-settings {
+  min-width: 0;
+  width: 100%;
+}
+
+/* —— Identity panel —— */
+.account-identity {
+  position: sticky;
+  top: 1rem;
+}
+
+.account-identity-frame {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--acc-pad-card);
+  border-radius: var(--acc-radius);
+  border: 1px solid rgba(201, 169, 98, 0.32);
+  background: linear-gradient(165deg, rgba(42, 52, 68, 0.9), rgba(16, 20, 28, 0.92));
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.account-avatar-ring {
+  width: clamp(72px, 18vw, 88px);
+  height: clamp(72px, 18vw, 88px);
+  margin: 0 auto 1rem;
+  padding: 3px;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg, var(--acc-bronze), var(--acc-warm), var(--acc-gold), var(--acc-bronze));
+}
+
+.account-avatar {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--acc-ink);
+  font-family: var(--acc-serif);
+  font-size: 1.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--acc-warm);
+}
+
+.account-identity-name {
+  margin: 0 0 0.25rem;
+  font-family: var(--acc-serif);
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.account-identity-email {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--acc-muted);
+  word-break: break-all;
+}
+
+.account-plan-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0 auto 0.35rem;
+  width: fit-content;
+  padding: 0.35rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.account-plan-pill--starter {
+  background: rgba(175, 146, 112, 0.2);
+  color: var(--acc-gold);
+  border: 1px solid rgba(175, 146, 112, 0.35);
+}
+
+.account-plan-pill--advanced {
+  background: rgba(255, 188, 125, 0.15);
+  color: var(--acc-warm);
+  border: 1px solid rgba(255, 188, 125, 0.35);
+}
+
+.account-plan-pill--premium {
+  background: linear-gradient(135deg, rgba(201, 169, 98, 0.25), rgba(255, 188, 125, 0.15));
+  color: #fff5e8;
+  border: 1px solid rgba(201, 169, 98, 0.45);
+}
+
+.account-plan-meta {
+  margin: 0 0 1.1rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--acc-muted);
+}
+
+.account-identity-stats {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(175, 146, 112, 0.18);
+}
+
+.account-identity-stats > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.account-identity-stats dt {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acc-muted);
+}
+
+.account-identity-stats dd {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+/* Identity skeleton */
+.account-identity-skeleton {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+
+.account-skel-avatar {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(47, 58, 76, 0.4) 25%,
+    rgba(47, 58, 76, 0.65) 50%,
+    rgba(47, 58, 76, 0.4) 75%
+  );
+  background-size: 200% 100%;
+  animation: account-shimmer 1.2s ease infinite;
+}
+
+.account-skel-line {
+  height: 12px;
+  width: 60%;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(47, 58, 76, 0.4) 25%,
+    rgba(47, 58, 76, 0.65) 50%,
+    rgba(47, 58, 76, 0.4) 75%
+  );
+  background-size: 200% 100%;
+  animation: account-shimmer 1.2s ease infinite;
+}
+
+.account-skel-line--wide {
+  width: 80%;
+  height: 16px;
+}
+
+@keyframes account-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* —— Settings panels —— */
+.account-settings {
+  display: grid;
+  gap: var(--acc-gap);
+  width: 100%;
+}
+
+.account-panel {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--acc-pad-card);
+  padding-bottom: calc(var(--acc-pad-card) + 0.1rem);
+  border-radius: clamp(14px, 2vw, 18px);
+  border: 1px solid var(--acc-border);
+  background: var(--acc-surface);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.25s var(--acc-ease), box-shadow 0.25s var(--acc-ease);
+}
+
+.account-panel:hover {
+  border-color: rgba(201, 169, 98, 0.32);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.account-panel--locale {
+  border-color: rgba(255, 188, 125, 0.2);
+}
+
+.account-panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(0.65rem, 2vw, 1rem);
+  margin-bottom: clamp(0.9rem, 2.5vw, 1.25rem);
+  flex-wrap: wrap;
+}
+
+.account-panel-index {
+  flex-shrink: 0;
+  font-family: var(--acc-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: rgba(201, 169, 98, 0.45);
+  letter-spacing: -0.02em;
+}
+
+.account-panel-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.account-panel-title svg {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  color: var(--acc-gold);
+}
+
+.account-panel-title h2 {
+  margin: 0;
+  font-family: var(--acc-serif);
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
+  font-weight: 600;
+  word-wrap: break-word;
+}
+
+.account-panel-title p {
+  margin: 0.2rem 0 0;
+  font-size: 0.84rem;
+  color: var(--acc-muted);
+  line-height: 1.45;
+}
+
+/* —— Fields —— */
+.account-fields {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-fields--security {
+  gap: 0.85rem;
+}
+
+.account-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.account-field label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 239, 232, 0.75);
+}
+
+.account-field input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: clamp(44px, 10vw, 48px);
+  padding: 0.65rem 0.95rem;
+  border-radius: 12px;
+  border: 1px solid rgba(175, 146, 112, 0.2);
+  background: rgba(10, 13, 18, 0.72);
+  color: var(--acc-text);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.account-field input::placeholder {
+  color: rgba(244, 239, 232, 0.28);
+}
+
+.account-field input:hover:not(:read-only) {
+  border-color: rgba(201, 169, 98, 0.35);
+}
+
+.account-field input:focus {
+  outline: none;
+  border-color: var(--acc-gold);
+  box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.14);
+  background: rgba(10, 13, 18, 0.88);
+}
+
+.account-field--readonly input {
+  opacity: 0.72;
+  cursor: not-allowed;
+  background: rgba(10, 13, 18, 0.5);
+}
+
+.account-field-note {
+  font-size: 0.75rem;
+  color: var(--acc-muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.account-password-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 0.85rem;
+}
+
+.account-strength {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: -0.25rem;
+}
+
+.account-strength-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(175, 146, 112, 0.15);
+  transition: background 0.3s var(--acc-ease), transform 0.3s var(--acc-ease);
+}
+
+.account-strength-bar.on {
+  background: linear-gradient(90deg, var(--acc-bronze), var(--acc-warm));
+}
+
+.account-strength-bar.on:nth-child(3) {
+  background: linear-gradient(90deg, var(--acc-gold), #8ee4a8);
+}
+
+/* —— Actions —— */
+.account-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: fit-content;
+  max-width: 100%;
+  min-height: clamp(44px, 10vw, 48px);
+  padding: 0.6rem 1.35rem;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s var(--acc-ease), box-shadow 0.18s var(--acc-ease);
+}
+
+.account-action--primary {
+  color: #1a1510;
+  background: linear-gradient(135deg, var(--acc-bronze) 0%, var(--acc-gold) 55%, var(--acc-warm) 120%);
+  box-shadow: 0 4px 18px rgba(201, 169, 98, 0.25);
+}
+
+.account-action--primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(201, 169, 98, 0.35);
+}
+
+.account-action--primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.account-action:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.account-spin {
+  animation: account-spin 0.75s linear infinite;
+}
+
+@keyframes account-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* —— Banners —— */
+.account-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 11px;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.account-banner--success {
+  background: rgba(110, 207, 143, 0.1);
+  border: 1px solid rgba(110, 207, 143, 0.28);
+  color: #b0f0c4;
+}
+
+.account-banner--error {
+  background: rgba(232, 120, 120, 0.1);
+  border: 1px solid rgba(232, 120, 120, 0.32);
+  color: #ffd0d0;
+}
+
+.account-muted {
+  margin: 0;
+  color: var(--acc-muted);
+  font-size: 0.9rem;
+}
+
+/* —— Locale cards —— */
+.account-locale-label {
+  margin: 0 0 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 239, 232, 0.75);
+}
+
+.account-locale-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  gap: clamp(0.55rem, 2vw, 0.75rem);
+  width: 100%;
+}
+
+.account-locale-card {
+  position: relative;
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: clamp(0.9rem, 2.5vw, 1.15rem) clamp(0.85rem, 2vw, 1rem);
+  border-radius: clamp(12px, 2vw, 14px);
+  border: 1px solid var(--acc-border);
+  background: rgba(10, 13, 18, 0.55);
+  color: var(--acc-text);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  overflow: hidden;
+  transition:
+    border-color 0.25s var(--acc-ease),
+    transform 0.2s var(--acc-ease),
+    background 0.25s;
+}
+
+.account-locale-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(201, 169, 98, 0.08), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.account-locale-card:hover {
+  border-color: rgba(201, 169, 98, 0.4);
+  transform: translateY(-2px);
+}
+
+.account-locale-card:hover::before {
+  opacity: 1;
+}
+
+.account-locale-card.is-active {
+  border-color: var(--acc-gold);
+  background: rgba(175, 146, 112, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(201, 169, 98, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.account-locale-monogram {
+  font-family: var(--acc-serif);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--acc-warm);
+  letter-spacing: -0.02em;
+}
+
+.account-locale-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.account-locale-code {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--acc-muted);
+}
+
+.account-locale-active {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--acc-gold);
+  color: #1a1510;
+}
+
+/* —— Reveal —— */
+.account-reveal {
+  animation: account-reveal 0.8s var(--acc-ease) both;
+}
+
+.account-reveal--1 { animation-delay: 0.05s; }
+.account-reveal--2 { animation-delay: 0.1s; }
+.account-reveal--3 { animation-delay: 0.15s; }
+.account-reveal--4 { animation-delay: 0.2s; }
+
+@keyframes account-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* —— Responsive breakpoints —— */
+
+/* Tablet: identidade em faixa horizontal */
+@media (max-width: 900px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .account-identity {
+    position: static;
+  }
+
+  .account-identity-frame {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: clamp(1rem, 3vw, 1.5rem);
+    row-gap: 0.35rem;
+    align-items: center;
+  }
+
+  .account-identity-frame > .account-avatar-ring {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    margin: 0;
+    align-self: center;
+  }
+
+  .account-identity-frame > .account-identity-name,
+  .account-identity-frame > .account-identity-email,
+  .account-identity-frame > .account-plan-pill,
+  .account-identity-frame > .account-plan-meta {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .account-identity-frame > .account-identity-name {
+    margin-bottom: 0;
+  }
+
+  .account-identity-frame > .account-identity-email {
+    margin-bottom: 0;
+  }
+
+  .account-identity-frame > .account-plan-pill {
+    margin: 0;
+    justify-self: start;
+  }
+
+  .account-identity-frame > .account-plan-meta {
+    margin-bottom: 0;
+  }
+
+  .account-identity-frame > .account-identity-stats {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    margin-top: 0.65rem;
+  }
+
+  .account-identity-frame > .account-identity-skeleton {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .account-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .account-hero-rule {
+    display: none;
+  }
+
+  .account-identity-frame {
+    display: block;
+    text-align: center;
+  }
+
+  .account-identity-frame > .account-avatar-ring {
+    margin: 0 auto 0.65rem;
+  }
+
+  .account-identity-frame > .account-identity-name,
+  .account-identity-frame > .account-identity-email,
+  .account-identity-frame > .account-plan-meta {
+    text-align: center;
+  }
+
+  .account-identity-frame > .account-plan-pill {
+    margin: 0 auto 0.35rem;
+  }
+
+  .account-identity-frame > .account-identity-stats {
+    grid-template-columns: 1fr;
+    margin-top: 0.85rem;
+  }
+
+  .account-panel-head {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .account-panel-index {
+    font-size: 1.25rem;
+  }
+
+  .account-action {
+    width: 100%;
+  }
+
+  .account-banner {
+    flex-wrap: wrap;
+  }
+
+  .account-locale-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Telas muito estreitas */
+@media (max-width: 380px) {
+  .account-page {
+    --acc-pad-inline: 0.35rem;
+    --acc-pad-card: 0.85rem;
+  }
+
+  .account-hero h1 {
+    font-size: 1.65rem;
+  }
+
+  .account-field input {
+    font-size: 16px; /* evita zoom no iOS */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-reveal,
+  .account-skel-avatar,
+  .account-skel-line {
+    animation: none;
+  }
+
+  .account-action--primary:hover:not(:disabled),
+  .account-locale-card:hover {
+    transform: none;
+  }
+}

@@ -10,6 +10,7 @@ import { ObjetivosPage } from './pages/ObjetivosPage';
 import { MinhaEquipePage } from './pages/MinhaEquipePage';
 import { RelatoriosPage } from './pages/RelatoriosPage';
 import { HistoricoPage } from './pages/HistoricoPage';
+import { AccountPage } from './pages/AccountPage';
 import { PlansLandingPage } from './pages/PlansLandingPage';
 import { MockCheckoutPage } from './pages/MockCheckoutPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="minha-equipe" element={<MinhaEquipePage />} />
         <Route path="relatorios" element={<RelatoriosPage />} />
         <Route path="historico" element={<HistoricoPage />} />
+        <Route path="conta" element={<AccountPage />} />
       </Route>
       <Route path="/initial-form" element={<Navigate to="/dashboard/initial-form" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />

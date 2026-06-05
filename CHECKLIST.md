@@ -196,7 +196,7 @@ Documento de validação do que foi implementado na plataforma.
 ### Deploy
 
 17. [x] **Build** — `npm run build` (front + server) OK
-18. [ ] **Push** — aguardando commit desta sessão
+18. [x] **Push** — `main` no GitHub (`88b5cc4` painel admin)
 19. [ ] **Produção** — definir `ADMIN_EMAILS` no Render; criar admin no Firebase (seed ou console)
 
 ### Arquivos principais — painel admin
