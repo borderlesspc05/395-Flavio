@@ -1,7 +1,12 @@
-import { env } from '../config/env';
 import { Conversation, SuggestedObjective } from '../types';
 import { generateId, nowIso } from '../utils/id';
-import { chatCompletion, mockChatReply, ChatCompletionMessage } from './openrouter';
+import {
+  chatCompletion,
+  mockChatReply,
+  getDefaultModel,
+  isLlmNotConfiguredError,
+  type ChatCompletionMessage,
+} from './llm';
 import { retrieveRelevantContext } from './rag';
 import { shouldSearchWeb, webSearch, formatSearchResults, isSearchConfigured } from './search';
 import { create, getById, update, COLLECTIONS } from './storage';
@@ -78,7 +83,7 @@ export interface ChatResponse {
   usedWebSearch?: boolean;
   usedRag?: boolean;
   invokedSkills?: string[];
-  /** true quando caiu no mock por falta de OPENROUTER_API_KEY */
+  /** true quando caiu no mock por falta de chave de IA */
   demoMode?: boolean;
 }
 
@@ -89,7 +94,7 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
     req.model ??
     (agentSettings.enabled && agentSettings.preferredModel
       ? agentSettings.preferredModel
-      : env.openrouter.defaultModel);
+      : getDefaultModel());
 
   let conversation: Conversation | null = null;
 
@@ -155,8 +160,7 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
   try {
     rawReply = await chatCompletion({ model, messages });
   } catch (err) {
-    const e = err as { code?: string; statusCode?: number };
-    if (e.code === 'OPENROUTER_NOT_CONFIGURED') {
+    if (isLlmNotConfiguredError(err)) {
       rawReply = mockChatReply(req.message, ragContext);
       demoMode = true;
     } else {

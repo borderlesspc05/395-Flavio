@@ -1,7 +1,7 @@
 import { ActionCanvas, DeliveryStatus } from '../types';
 import { env } from '../config/env';
 import { COLLECTIONS, listByUser } from './storage';
-import { chatCompletion } from './openrouter';
+import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
 import { buildMagnusWavesMemoryContext, MAGNUS_MEMORY_SYSTEM_PREAMBLE } from './magnusMemory';
 import { generateId } from '../utils/id';
 
@@ -188,7 +188,7 @@ Responda APENAS com JSON array valido (sem markdown):
 
   try {
     const raw = await chatCompletion({
-      model: env.openrouter.defaultModel,
+      model: getDefaultModel(),
       messages: [
         { role: 'system', content: 'Retorne somente JSON array valido, sem markdown.' },
         { role: 'user', content: prompt },
@@ -211,7 +211,7 @@ Responda APENAS com JSON array valido (sem markdown):
     }
   } catch (err) {
     const e = err as { code?: string };
-    if (e.code === 'OPENROUTER_NOT_CONFIGURED') {
+    if (isLlmNotConfiguredError(err)) {
       demoMode = true;
     } else {
       console.warn('[actionCanvasSuggest] AI failed:', err);

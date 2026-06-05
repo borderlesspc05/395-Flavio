@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { Conversation } from '../types';
 import { AppError } from '../utils/errors';
 import { listByUser, getById, update, COLLECTIONS } from '../services/storage';
-import { AI_MODELS } from '../services/openrouter';
+import { getAiModels, getLlmStatus } from '../services/llm';
 import { handleChat } from '../services/aiChat';
 import { runBlueprintGateSuggestion } from '../services/blueprintGate';
 import { withConcurrencyLimit } from '../services/concurrency';
@@ -10,7 +10,11 @@ import { withConcurrencyLimit } from '../services/concurrency';
 const router = Router();
 
 router.get('/models', (_req: Request, res: Response) => {
-  res.json(AI_MODELS);
+  res.json(getAiModels());
+});
+
+router.get('/status', (_req: Request, res: Response) => {
+  res.json(getLlmStatus());
 });
 
 router.get('/conversations', async (req: Request, res: Response, next: NextFunction) => {

@@ -1,7 +1,7 @@
 import { Objective, SuggestedObjective } from '../types';
 import { env } from '../config/env';
 import { COLLECTIONS, listByUser } from './storage';
-import { chatCompletion, mockChatReply } from './openrouter';
+import { chatCompletion, mockChatReply, getDefaultModel, isLlmNotConfiguredError } from './llm';
 import { retrieveRelevantContext } from './rag';
 import { buildMagnusWavesMemoryContext, MAGNUS_MEMORY_SYSTEM_PREAMBLE } from './magnusMemory';
 
@@ -98,7 +98,7 @@ Responda APENAS com JSON array valido:
 
   try {
     const raw = await chatCompletion({
-      model: env.openrouter.defaultModel,
+      model: getDefaultModel(),
       messages: [
         { role: 'system', content: 'Retorne somente JSON array, sem markdown.' },
         { role: 'user', content: prompt },
@@ -119,7 +119,7 @@ Responda APENAS com JSON array valido:
     }
   } catch (err) {
     const e = err as { code?: string };
-    if (e.code !== 'OPENROUTER_NOT_CONFIGURED') {
+    if (!isLlmNotConfiguredError(err)) {
       console.warn('[suggest] AI failed:', err);
     }
     mockChatReply(context ?? 'sugestoes');

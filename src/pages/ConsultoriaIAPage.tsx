@@ -602,8 +602,9 @@ export function ConsultoriaIAPage() {
                   <div>
                     <p className="chat-demo-mode-title">Modo demonstração (respostas fixas de teste)</p>
                     <p className="chat-demo-mode-text">
-                      O backend está sem a variável <code>OPENROUTER_API_KEY</code>. Configure a chave no
-                      ambiente do servidor (Render, .env local, etc.) para o chat usar o modelo de verdade.
+                      O backend está sem chave de IA. Configure <code>OPENAI_API_KEY</code> ou{' '}
+                      <code>OPENROUTER_API_KEY</code> no servidor (<code>server/.env</code> local ou
+                      Render) para usar o modelo real.
                     </p>
                   </div>
                 </div>

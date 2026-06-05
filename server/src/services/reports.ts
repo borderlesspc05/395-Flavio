@@ -1,7 +1,7 @@
 import { ActionCanvas, Objective, Report, ReportStats, TeamMember } from '../types';
 import { generateId, nowIso } from '../utils/id';
 import { listByUser, create, COLLECTIONS } from './storage';
-import { chatCompletion, mockChatReply } from './openrouter';
+import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
 import { env } from '../config/env';
 import { logActivity } from './activities';
 
@@ -66,7 +66,7 @@ ${dataSummary}`;
   let conteudo: string;
   try {
     conteudo = await chatCompletion({
-      model: env.openrouter.defaultModel,
+      model: getDefaultModel(),
       messages: [
         {
           role: 'system',
@@ -79,7 +79,7 @@ ${dataSummary}`;
     });
   } catch (err) {
     const e = err as { code?: string };
-    if (e.code === 'OPENROUTER_NOT_CONFIGURED') {
+    if (isLlmNotConfiguredError(err)) {
       conteudo = buildFallbackReport(stats, objectives);
     } else {
       throw err;

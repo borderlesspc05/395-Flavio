@@ -48,11 +48,22 @@ export const env = {
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY),
   },
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY?.trim() || undefined,
+    defaultModel: process.env.OPENAI_DEFAULT_MODEL ?? 'gpt-4o-mini',
+  },
   openrouter: {
     apiKey: process.env.OPENROUTER_API_KEY?.trim() || undefined,
     defaultModel: process.env.OPENROUTER_DEFAULT_MODEL ?? 'openai/gpt-4o-mini',
     siteUrl: process.env.OPENROUTER_SITE_URL ?? 'https://magnusmind.app',
     appName: process.env.OPENROUTER_APP_NAME ?? 'Magnus Mind',
+  },
+  /** auto = OpenAI se OPENAI_API_KEY existir, senão OpenRouter */
+  ai: {
+    provider: (process.env.AI_PROVIDER ?? 'auto').trim().toLowerCase() as
+      | 'auto'
+      | 'openai'
+      | 'openrouter',
   },
   serperApiKey: process.env.SERPER_API_KEY,
   tavilyApiKey: process.env.TAVILY_API_KEY,

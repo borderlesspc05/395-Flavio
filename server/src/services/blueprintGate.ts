@@ -1,6 +1,5 @@
 import { AppError, isAppError } from '../utils/errors';
-import { chatCompletion, mockChatReply } from './openrouter';
-import { env } from '../config/env';
+import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
 
 export type BlueprintPath = 'A' | 'B';
 
@@ -99,7 +98,7 @@ export async function runBlueprintGateSuggestion(
   let raw: string;
   try {
     raw = await chatCompletion({
-      model: env.openrouter.defaultModel,
+      model: getDefaultModel(),
       messages: [
         { role: 'system', content: GATE_SYSTEM },
         { role: 'user', content: userContent },
@@ -108,7 +107,7 @@ export async function runBlueprintGateSuggestion(
       maxTokens: 900,
     });
   } catch (err) {
-    if (isAppError(err) && err.code === 'OPENROUTER_NOT_CONFIGURED') {
+    if (isAppError(err) && isLlmNotConfiguredError(err)) {
       const parsed = mockGateJson(ctx);
       return {
         reply: JSON.stringify(parsed, null, 2),

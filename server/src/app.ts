@@ -20,6 +20,7 @@ import billingRouter, { billingWebhookHandler } from './routes/billing';
 import adminRouter from './routes/admin';
 import publicPlansRouter from './routes/publicPlans';
 import { requestLogger } from './middleware/requestLogger';
+import { getLlmStatus } from './services/llm';
 
 initFirebase();
 
@@ -45,6 +46,7 @@ const healthPayload = () => ({
   status: 'ok',
   service: 'Magnus Mind API',
   storage: isFirebaseEnabled() ? 'firestore' : 'memory',
+  ai: getLlmStatus(),
   timestamp: new Date().toISOString(),
 });
 
