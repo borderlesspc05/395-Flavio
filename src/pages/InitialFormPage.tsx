@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -33,6 +33,9 @@ import {
   type DiagnosticPhase,
   type DiagnosticPhaseId,
 } from '../constants/diagnosticFlow';
+import { LoopWorkspacePanel } from '../components/LoopWorkspacePanel';
+import { useCycle } from '../context/CycleContext';
+import { updateDiagnosticCycle } from '../services/diagnosticCycles';
 import { getInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
 import {
   scheduleMagnusMemorySyncFromForm,
@@ -478,6 +481,8 @@ export function InitialFormPage() {
   const [activePhaseId, setActivePhaseId] = useState<DiagnosticPhaseId>('decoding');
   const [activeLens, setActiveLens] = useState<DiagnosticLens>('performer');
   const [feedback, setFeedback] = useState<string | null>(null);
+  const { activeCycle, needsDiagnosis, clearNeedsDiagnosis, persistActiveCycleSnapshot, refreshCycles, switching } =
+    useCycle();
 
   const activePhase = useMemo(
     () => DIAGNOSTIC_PHASES.find((phase) => phase.id === activePhaseId) ?? DIAGNOSTIC_PHASES[0],
@@ -521,6 +526,30 @@ export function InitialFormPage() {
     });
     setFeedback(null);
   };
+
+  const reloadForm = useCallback(async () => {
+    if (!userId) return;
+    setData(createEmptyDiagnosticData());
+    setCompletedAt(null);
+    setDraftUpdatedAt(null);
+    setErrors({});
+    setFeedback(null);
+    setActivePhaseId(DIAGNOSTIC_PHASES[0].id);
+    try {
+      const { data: formData, completedAt: at, draftUpdatedAt: draftAt } = await getInitialForm(userId);
+      setData(formData);
+      setCompletedAt(at);
+      setDraftUpdatedAt(draftAt);
+    } catch {
+      /* mantém formulário vazio */
+    }
+    scrollProjectToTop();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId || !activeCycle?.id || switching) return;
+    void reloadForm();
+  }, [activeCycle?.id, userId, switching, reloadForm]);
 
   const selectPhase = (phase: DiagnosticPhaseId) => {
     setActivePhaseId(phase);
@@ -572,7 +601,19 @@ export function InitialFormPage() {
     setFeedback(null);
     try {
       const at = await saveInitialForm(userId, data);
-      await syncMagnusMemoryToServer({ diagnosticContext: buildDiagnosticContext(data) });
+      const diagnosticContext = buildDiagnosticContext(data);
+      await syncMagnusMemoryToServer({ diagnosticContext });
+      if (activeCycle) {
+        await updateDiagnosticCycle(activeCycle.id, {
+          status: 'active',
+          completedAt: at.toISOString(),
+          diagnosticContext,
+          formData: data,
+        });
+        await persistActiveCycleSnapshot();
+        await refreshCycles();
+        clearNeedsDiagnosis();
+      }
       setCompletedAt(at);
       scrollProjectToTop('auto');
       navigate('/dashboard', {
@@ -635,6 +676,16 @@ export function InitialFormPage() {
         </div>
       </section>
 
+      {needsDiagnosis && (
+        <div className="diagnostic-cycle-notice" role="status">
+          <Layers3 size={18} aria-hidden />
+          <span>
+            Ciclo <strong>{activeCycle?.label ?? 'atual'}</strong> aguarda diagnóstico. Preencha o formulário para a IA
+            trabalhar neste ciclo.
+          </span>
+        </div>
+      )}
+
       {feedback && (
         <div className="diagnostic-feedback" role="status">
           <CircleAlert size={18} aria-hidden />
@@ -680,10 +731,12 @@ export function InitialFormPage() {
             ))}
           </div>
         </main>
+      </div>
 
-        <aside className="diagnostic-inspector" aria-label="Resumo do diagnóstico">
-          <DiagnosticCanvasPreview data={data} />
+      <section className="diagnostic-bottom-panel" aria-label="Resumo e loop do diagnóstico">
+        <DiagnosticCanvasPreview data={data} />
 
+        <div className="diagnostic-bottom-meta">
           <section className="diagnostic-deliverables">
             <div className="diagnostic-inspector-title">
               <FileText size={17} aria-hidden />
@@ -713,8 +766,10 @@ export function InitialFormPage() {
               <span>Rascunho salvo em {draftUpdatedAt.toLocaleString('pt-BR')}</span>
             )}
           </section>
-        </aside>
-      </div>
+
+          <LoopWorkspacePanel variant="compact" userId={userId} onReset={reloadForm} />
+        </div>
+      </section>
 
       <div className="diagnostic-bottom-actions">
         <button

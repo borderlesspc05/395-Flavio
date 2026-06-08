@@ -82,6 +82,11 @@ export const env = {
     process.env.FRONTEND_URL?.trim() ||
     process.env.CORS_ORIGIN?.split(',')[0]?.trim() ||
     'http://localhost:5173',
+  email: {
+    from: process.env.EMAIL_FROM?.trim() || 'Magnus Mind <onboarding@resend.dev>',
+    resendApiKey: process.env.RESEND_API_KEY?.trim() || undefined,
+    smtpHost: process.env.SMTP_HOST?.trim() || undefined,
+  },
   adminEmails: (process.env.ADMIN_EMAILS ?? 'admin@gmail.com')
     .split(',')
     .map((e) => e.trim().toLowerCase())

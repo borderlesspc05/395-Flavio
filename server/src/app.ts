@@ -19,6 +19,7 @@ import magnusMemoryRouter from './routes/magnusMemory';
 import billingRouter, { billingWebhookHandler } from './routes/billing';
 import adminRouter from './routes/admin';
 import publicPlansRouter from './routes/publicPlans';
+import workspaceRouter from './routes/workspace';
 import { requestLogger } from './middleware/requestLogger';
 import { getLlmStatus } from './services/llm';
 
@@ -86,6 +87,7 @@ app.use('/api/magnus-memory', magnusMemoryRouter);
 app.use('/api/agent', agentRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/whatsapp', whatsappRouter);
+app.use('/api/workspace', workspaceRouter);
 
 app.use((_req, res) => {
   res.status(404).json({

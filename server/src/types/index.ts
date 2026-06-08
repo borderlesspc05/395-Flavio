@@ -19,6 +19,7 @@ export interface ActionCanvasRisk {
 export interface ActionCanvas {
   id: string;
   userId: string;
+  cycleId?: string;
   nomeIniciativa: string;
   objetivoEspecifico: string;
   owner: string;
@@ -38,6 +39,7 @@ export type ObjectiveOrigin = 'manual' | 'ia';
 export interface Objective {
   id: string;
   userId: string;
+  cycleId?: string;
   titulo: string;
   descricao: string;
   categoria: string;

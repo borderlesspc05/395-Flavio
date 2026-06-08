@@ -61,9 +61,12 @@ function buildCanvasPayload(
   const signOff = normalizeSignOff(body.signOff ?? existing?.signOff);
   const fechado = signOff !== 'pendente';
 
+  const cycleId = body.cycleId ? String(body.cycleId) : existing?.cycleId;
+
   return {
     id: existing?.id ?? generateId(),
     userId,
+    cycleId,
     nomeIniciativa: String(body.nomeIniciativa ?? existing?.nomeIniciativa ?? ''),
     objetivoEspecifico: String(body.objetivoEspecifico ?? existing?.objetivoEspecifico ?? ''),
     owner: String(body.owner ?? existing?.owner ?? ''),
@@ -80,7 +83,8 @@ function buildCanvasPayload(
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const items = await listByUser<ActionCanvas>(COLLECTIONS.actionCanvases, req.userId);
+    const cycleId = typeof req.query.cycleId === 'string' ? req.query.cycleId : undefined;
+    const items = await listByUser<ActionCanvas>(COLLECTIONS.actionCanvases, req.userId, 'createdAt', cycleId);
     res.json(items);
   } catch (err) {
     next(err);

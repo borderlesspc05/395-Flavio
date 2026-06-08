@@ -1,4 +1,4 @@
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { createEmptyDiagnosticData, getAllDiagnosticFields, getFieldKeys } from '../constants/diagnosticFlow';
 import { db } from '../config/firebase';
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
@@ -67,6 +67,14 @@ export async function saveInitialFormDraft(userId: string, data: InitialFormData
     { merge: true }
   );
   return new Date();
+}
+
+export async function clearInitialForm(userId: string) {
+  const ref = doc(db, COLLECTION, userId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    await deleteDoc(ref);
+  }
 }
 
 export async function saveInitialForm(userId: string, data: InitialFormData) {

@@ -16,6 +16,7 @@ import { MockCheckoutPage } from './pages/MockCheckoutPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
 import { AdminPage } from './pages/AdminPage';
 import { AdminProtectedRoute } from './components/AdminProtectedRoute';
+import { EmployeeProfilePage } from './pages/EmployeeProfilePage';
 
 export default function App() {
   return (
@@ -25,6 +26,8 @@ export default function App() {
       <Route path="/mock-checkout" element={<MockCheckoutPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/colaborador/:memberId" element={<EmployeeProfilePage />} />
+      <Route path="/colaborador" element={<EmployeeProfilePage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route
         path="/admin"

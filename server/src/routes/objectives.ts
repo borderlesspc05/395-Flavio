@@ -15,7 +15,8 @@ function withoutUndefined<T extends Record<string, unknown>>(data: T): T {
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const items = await listByUser<Objective>(COLLECTIONS.objectives, req.userId);
+    const cycleId = typeof req.query.cycleId === 'string' ? req.query.cycleId : undefined;
+    const items = await listByUser<Objective>(COLLECTIONS.objectives, req.userId, 'createdAt', cycleId);
     res.json(items);
   } catch (err) {
     next(err);
@@ -36,6 +37,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       responsavel,
       impacto,
       insightOrigem,
+      cycleId,
     } = req.body;
 
     if (!titulo || !descricao) {
@@ -57,6 +59,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       responsavel: responsavel ? String(responsavel) : undefined,
       impacto: impacto ? String(impacto) : undefined,
       insightOrigem: insightOrigem ? String(insightOrigem) : undefined,
+      cycleId: cycleId ? String(cycleId) : undefined,
       createdAt: nowIso(),
       updatedAt: nowIso(),
     });

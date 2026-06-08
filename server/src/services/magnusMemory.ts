@@ -11,6 +11,7 @@ export interface MagnusMemorySnapshot {
   userId: string;
   diagnosticContext?: string;
   gateContext?: string;
+  cycleHistory?: string[];
   diagnosticUpdatedAt?: string;
   gateUpdatedAt?: string;
   updatedAt: string;
@@ -176,6 +177,13 @@ export async function buildMagnusWavesMemoryContext(
   if (objectives.length) {
     sections.push(
       `## Objetivos estratégicos (${objectives.length})\n${formatObjectivesForMemory(objectives)}`
+    );
+  }
+
+  const history = snapshot?.cycleHistory?.filter((h) => h.trim()) ?? [];
+  if (history.length) {
+    sections.push(
+      `## Histórico de ciclos de diagnóstico (${history.length} arquivados)\nUse como memória longitudinal — o ciclo atual está acima.\n\n${history.join('\n\n')}`
     );
   }
 

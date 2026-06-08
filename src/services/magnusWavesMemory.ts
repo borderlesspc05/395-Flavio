@@ -2,6 +2,8 @@ import { buildDiagnosticContext } from '../constants/diagnosticFlow';
 import { buildGateContextAppendix } from '../constants/blueprintFlow';
 import { getBlueprintGate } from './blueprintGate';
 import { getInitialForm } from './initialForm';
+import { getActiveCycleIdLocal } from './cycleWorkspace';
+import { getDiagnosticCycle } from './diagnosticCycles';
 import { actionCanvasesApi, objectivesApi } from './api';
 import type { ActionCanvas, Objective } from '../types';
 
@@ -60,15 +62,19 @@ function formatObjectivesBrief(list: Objective[]): string {
 }
 
 export async function loadMagnusWavesMemory(userId: string): Promise<MagnusWavesMemory> {
-  const [{ data, completedAt }, gate, canvasesRaw, objectivesRaw] = await Promise.all([
+  const activeCycleId = getActiveCycleIdLocal();
+  const [{ data, completedAt }, gate, canvasesRaw, objectivesRaw, activeCycle] = await Promise.all([
     getInitialForm(userId),
     getBlueprintGate(userId).catch(() => null),
     actionCanvasesApi.list().catch(() => [] as ActionCanvas[]),
     objectivesApi.list().catch(() => [] as Objective[]),
+    activeCycleId ? getDiagnosticCycle(activeCycleId).catch(() => null) : Promise.resolve(null),
   ]);
 
-  const diagnosticComplete = Boolean(completedAt);
-  const diagnosticContext = diagnosticComplete ? buildDiagnosticContext(data) : '';
+  const diagnosticComplete = Boolean(completedAt) || Boolean(activeCycle?.completedAt);
+  const liveContext = buildDiagnosticContext(data);
+  const cycleContext = activeCycle?.diagnosticContext?.trim() ?? '';
+  const diagnosticContext = liveContext.trim() || cycleContext;
   const selectedPath = gate?.selectedPath;
   const gateSkipped = Boolean(gate?.skipped) && !selectedPath;
   const gateContext = selectedPath
@@ -93,7 +99,10 @@ export async function loadMagnusWavesMemory(userId: string): Promise<MagnusWaves
 
   const sections: string[] = [
     '# Memória Magnus Waves (consultoria integrada)',
-    'Use diagnóstico, design e difusão como fonte única. Action Canvas encerrados são compromissos de execução.',
+    activeCycle
+      ? `## Ciclo ativo: ${activeCycle.label} (${activeCycle.status})`
+      : 'Use diagnóstico, design e difusão como fonte única.',
+    'Action Canvas encerrados são compromissos de execução deste ciclo.',
   ];
 
   if (diagnosticContext) {

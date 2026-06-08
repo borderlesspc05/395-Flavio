@@ -1,0 +1,213 @@
+.loop-workspace {
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(26, 21, 16, 0.04), rgba(175, 146, 112, 0.06));
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.loop-workspace--compact {
+  padding: 0.9rem 1rem;
+  font-size: 0.92rem;
+}
+
+.diagnostic-bottom-panel .loop-workspace {
+  border-color: rgba(175, 146, 112, 0.22);
+  background: rgba(17, 23, 33, 0.72);
+  color: #f3ead8;
+}
+
+.diagnostic-bottom-panel .loop-workspace__header p,
+.diagnostic-bottom-panel .loop-workspace__check {
+  color: rgba(241, 235, 224, 0.72);
+}
+
+.diagnostic-bottom-panel .loop-workspace__header h2 {
+  color: #f3ead8;
+}
+
+.diagnostic-bottom-panel .loop-workspace__btn--ghost {
+  color: rgba(241, 235, 224, 0.78);
+  border-color: rgba(175, 146, 112, 0.28);
+}
+
+.diagnostic-bottom-panel .loop-workspace__btn--primary {
+  background: linear-gradient(135deg, #c9a87c, #af9270);
+  border-color: #af9270;
+  color: #1a1510;
+}
+
+.loop-workspace__header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  color: var(--text-primary, #1a1510);
+}
+
+.loop-workspace__header h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.loop-workspace--compact .loop-workspace__header h2 {
+  font-size: 0.95rem;
+}
+
+.loop-workspace__header p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b5f52);
+  line-height: 1.45;
+}
+
+.loop-workspace__cycles-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b5f52);
+}
+
+.loop-workspace__cycle-list {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.loop-workspace__cycle-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.loop-workspace__options,
+.loop-workspace__sector-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.loop-workspace__sectors {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.loop-workspace__sectors legend {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: var(--text-muted, #6b5f52);
+}
+
+.loop-workspace__sector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.35rem 0.75rem;
+}
+
+.loop-workspace__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.loop-workspace__check input {
+  margin-top: 0.15rem;
+  accent-color: #af9270;
+}
+
+.loop-workspace__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.loop-workspace__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.loop-workspace__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.loop-workspace__btn--primary {
+  background: #1a1510;
+  color: #f8f4ef;
+  border-color: #1a1510;
+}
+
+.loop-workspace__btn--secondary {
+  background: rgba(175, 146, 112, 0.15);
+  color: #1a1510;
+  border-color: rgba(175, 146, 112, 0.35);
+}
+
+.loop-workspace__btn--ghost {
+  background: transparent;
+  color: #6b5f52;
+  border-color: rgba(107, 95, 82, 0.25);
+}
+
+.loop-workspace__message {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #4a6741;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(74, 103, 65, 0.1);
+}
+
+.loop-workspace .spinning {
+  animation: loop-spin 0.9s linear infinite;
+}
+
+@keyframes loop-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.equipe-email-notice {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  background: rgba(175, 146, 112, 0.12);
+  color: #4a3f34;
+  border: 1px solid rgba(175, 146, 112, 0.25);
+}
+
+@media (max-width: 640px) {
+  .loop-workspace__actions {
+    flex-direction: column;
+  }
+
+  .loop-workspace__btn {
+    justify-content: center;
+    width: 100%;
+  }
+}

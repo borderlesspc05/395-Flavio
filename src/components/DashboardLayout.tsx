@@ -15,6 +15,7 @@ import {
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useLocale } from '../context/LocaleContext';
+import { CycleSelector } from './CycleSelector';
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = 'mm.sidebar.collapsed';
 
@@ -153,6 +154,7 @@ export function DashboardLayout() {
             >
               <Menu size={40} aria-hidden />
             </button>
+            <CycleSelector />
           </header>
           <main
             ref={mainRef}

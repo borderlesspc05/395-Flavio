@@ -211,6 +211,65 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
+## Checklist — sessão 02/06/2026 (Ciclos, loop contínuo e Firestore)
+
+### Ciclos de diagnóstico e workspace
+
+1. [x] **Ciclo ativo** — `CycleContext` com troca, novo ciclo e snapshot do workspace
+2. [x] **Persistência Firestore** — `diagnosticCycles` + `userWorkspace/{uid}` com fallback `localStorage` (`mm.activeCycleId`)
+3. [x] **Seletor no header** — `CycleSelector` no dashboard para escolher o ciclo em execução
+4. [x] **API por ciclo** — objetivos e Action Canvas filtram por `cycleId` no servidor (`objectives`, `actionCanvases`)
+5. [x] **Painel de loop** — `LoopWorkspacePanel` com limpar diagnóstico, novo ciclo e opções avançadas
+6. [x] **Reset no backend** — rotas `workspace` + serviço `workspace.ts` (reset, delete por usuário, histórico Magnus)
+7. [x] **Diagnóstico inicial** — `InitialFormPage` com Human-to-Business Canvas no rodapé e gravação ao concluir o ciclo
+8. [x] **Correção Firestore** — sanitização de `undefined` em `gateSummary` ao atualizar ciclo (`updateDiagnosticCycle`)
+9. [x] **Regras Firestore** — `firestore.rules` + `firebase.json` para `userWorkspace` e `diagnosticCycles` (doc `docs/FIRESTORE-RULES.md`)
+10. [x] **UI Histórico (Loop 4.2)** — `HistoricoPage` redesenhada: layout 2 colunas, timeline e painel de ciclos (`historico-loop.css`)
+
+### Arquivos principais — ciclos e loop
+
+| Área | Caminhos |
+|------|----------|
+| Contexto / UI | `src/context/CycleContext.tsx`, `CycleSelector.tsx`, `LoopWorkspacePanel.tsx` |
+| Cliente | `src/services/diagnosticCycles.ts`, `cycleWorkspace.ts`, `workspaceLoop.ts` |
+| Servidor | `server/src/routes/workspace.ts`, `server/src/services/workspace.ts` |
+| Firestore | `firestore.rules`, `firebase.json`, `docs/FIRESTORE-RULES.md` |
+
+---
+
+## Checklist — sessão 02/06/2026 (Equipe, e-mail Resend e perfil do colaborador)
+
+### Equipe, convite e envio transacional
+
+1. [x] **E-mail de desenvolvimento** — `POST /api/team-members/:id/development-email` com resumo personalizado (destaques + melhorias)
+2. [x] **Serviço Resend** — `server/src/services/email.ts` (envio real) e fallback modo demonstração no console
+3. [x] **Resumo por membro** — `teamDevelopmentEmail.ts` cruza objetivos e entregas do Action Canvas pelo nome do responsável
+4. [x] **Correção API equipe** — `teamApi.sendDevelopmentEmail` passa `userId` via `withUserId` (evita 404 com `demo-user`)
+5. [x] **Env documentado** — `RESEND_API_KEY`, `EMAIL_FROM`, `FRONTEND_URL` em `server/.env.example`
+6. [x] **UI Equipe / Difusão** — `MinhaEquipePage` com envio por membro, avisos demo/sucesso/erro e estilos `equipe-diffusao.css`
+7. [x] **Perfil público do colaborador** — rota `/colaborador/:memberId` com `EmployeeProfilePage` (mock: destaques, objetivos, entregas, confirmação de leitura)
+8. [x] **Link no convite** — e-mail HTML aponta para **Ver meu perfil de desenvolvimento** (`/colaborador/{id}`)
+9. [x] **Dados mock** — `src/data/mockEmployeeProfile.ts` + `employee-profile.css` (visual editorial cream/bronze)
+10. [x] **Validação local** — envio com `RESEND_API_KEY` no `server/.env` + reinício do servidor; fluxo testado com sucesso
+
+### Validar em produção (equipe + e-mail)
+
+- [ ] Render: `RESEND_API_KEY`, `EMAIL_FROM`, `FRONTEND_URL` no painel + redeploy da API
+- [ ] Resend: domínio verificado para enviar a qualquer membro (teste com `onboarding@resend.dev` só para e-mail da conta)
+- [ ] Netlify: deploy do front com rotas `/colaborador/*`
+- [ ] Firebase: publicar `firestore.rules` (`firebase deploy --only firestore:rules`)
+- [ ] Próximo passo: API pública do perfil com dados reais do ciclo (substituir mock)
+
+### Arquivos principais — equipe e convite
+
+| Área | Caminhos |
+|------|----------|
+| E-mail | `server/src/services/email.ts`, `teamDevelopmentEmail.ts`, `routes/teamMembers.ts` |
+| Perfil | `src/pages/EmployeeProfilePage.tsx`, `src/data/mockEmployeeProfile.ts`, `employee-profile.css` |
+| Equipe UI | `src/pages/MinhaEquipePage.tsx`, `src/services/api.ts` |
+
+---
+
 ## Checklist — sessão 29/05/2026 (Landing de planos + auth)
 
 1. [x] **Landing de planos** — `PlansLandingPage.tsx` com hero Magnus Waves, seções Fluxo e Stack, footer com links
@@ -487,4 +546,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 02 de junho de 2026 — landing, Stripe, painel admin*
+*Última atualização: 02 de junho de 2026 — ciclos, loop contínuo, Firestore, e-mail Resend e perfil do colaborador*

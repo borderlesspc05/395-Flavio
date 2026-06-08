@@ -5,6 +5,7 @@ import { initFirebaseAnalytics } from './config/firebase';
 import App from './App';
 import { PlanProvider } from './context/PlanContext';
 import { LocaleProvider } from './context/LocaleContext';
+import { CycleProvider } from './context/CycleContext';
 import './index.css';
 import './styles/theme-refined.css';
 import './styles/magnus-design.css';
@@ -17,6 +18,11 @@ import './styles/plans-landing.css';
 import './styles/admin-panel.css';
 import './styles/mid-dashboard.css';
 import './styles/account-page.css';
+import './styles/loop-workspace.css';
+import './styles/cycle-selector.css';
+import './styles/equipe-diffusao.css';
+import './styles/historico-loop.css';
+import './styles/employee-profile.css';
 
 void initFirebaseAnalytics();
 
@@ -25,7 +31,9 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <LocaleProvider>
         <PlanProvider>
-          <App />
+          <CycleProvider>
+            <App />
+          </CycleProvider>
         </PlanProvider>
       </LocaleProvider>
     </BrowserRouter>

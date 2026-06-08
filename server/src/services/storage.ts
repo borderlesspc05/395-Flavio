@@ -17,26 +17,29 @@ function memoryCollection(name: string): Map<string, DocData> {
 export async function listByUser<T>(
   collection: string,
   userId: string,
-  orderField = 'createdAt'
+  orderField = 'createdAt',
+  cycleId?: string
 ): Promise<T[]> {
   const db = getFirestore();
+  let items: T[] = [];
+
   if (db && isFirebaseEnabled()) {
     const snap = await db
       .collection(collection)
       .where('userId', '==', userId)
       .get();
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
-    return items.sort((a, b) =>
-      String((b as DocData)[orderField] ?? '').localeCompare(String((a as DocData)[orderField] ?? ''))
-    );
+    items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
+  } else {
+    const col = memoryCollection(collection);
+    items = Array.from(col.values()).filter((d) => d.userId === userId) as unknown as T[];
   }
 
-  const col = memoryCollection(collection);
-  return (Array.from(col.values())
-    .filter((d) => d.userId === userId)
-    .sort((a, b) =>
-      String(b[orderField] ?? '').localeCompare(String(a[orderField] ?? ''))
-    ) as unknown) as T[];
+  const sorted = items.sort((a, b) =>
+    String((b as DocData)[orderField] ?? '').localeCompare(String((a as DocData)[orderField] ?? ''))
+  );
+
+  if (!cycleId) return sorted;
+  return sorted.filter((item) => (item as DocData).cycleId === cycleId);
 }
 
 export async function getById<T>(
@@ -91,6 +94,28 @@ export async function update<T>(
 
   memoryCollection(collection).set(id, updated as DocData);
   return updated;
+}
+
+export async function deleteByUser(collection: string, userId: string): Promise<number> {
+  const db = getFirestore();
+  if (db && isFirebaseEnabled()) {
+    const snap = await db.collection(collection).where('userId', '==', userId).get();
+    if (snap.empty) return 0;
+    const batch = db.batch();
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    return snap.size;
+  }
+
+  const col = memoryCollection(collection);
+  let removed = 0;
+  for (const [id, doc] of col.entries()) {
+    if (doc.userId === userId) {
+      col.delete(id);
+      removed++;
+    }
+  }
+  return removed;
 }
 
 export async function remove(collection: string, id: string): Promise<boolean> {

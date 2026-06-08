@@ -4,6 +4,7 @@ import { generateId, nowIso } from '../utils/id';
 import { AppError } from '../utils/errors';
 import { listByUser, getById, create, update, remove, COLLECTIONS } from '../services/storage';
 import { logActivity } from '../services/activities';
+import { sendTeamMemberDevelopmentEmail } from '../services/teamDevelopmentEmail';
 
 const router = Router();
 
@@ -69,6 +70,27 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
     const updated = await update<TeamMember>(COLLECTIONS.teamMembers, id, patch);
     res.json(updated);
   } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/development-email', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = String(req.params.id);
+    const cycleId =
+      typeof req.query.cycleId === 'string'
+        ? req.query.cycleId
+        : typeof req.body?.cycleId === 'string'
+          ? req.body.cycleId
+          : undefined;
+    const result = await sendTeamMemberDevelopmentEmail(req.userId, id, cycleId);
+    res.json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Failed to send email';
+    if (msg.includes('not found') || msg.includes('no email')) {
+      next(new AppError(400, msg));
+      return;
+    }
     next(err);
   }
 });

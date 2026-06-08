@@ -11,10 +11,13 @@ import {
   Star,
   Users,
   Pencil,
+  Send,
   Trash2,
   X,
 } from 'lucide-react';
+import axios from 'axios';
 import { teamApi } from '../services/api';
+import { useCycle } from '../context/CycleContext';
 import type { TeamMember } from '../types';
 
 type FormState = {
@@ -116,6 +119,10 @@ export function MinhaEquipePage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [emailSendingId, setEmailSendingId] = useState<string | null>(null);
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
+  const [emailNoticeType, setEmailNoticeType] = useState<'success' | 'error' | 'demo'>('success');
+  const { activeCycle } = useCycle();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -214,6 +221,47 @@ export function MinhaEquipePage() {
     await load();
   };
 
+  const sendDevelopmentEmail = async (member: TeamMember) => {
+    if (!member.email?.trim()) {
+      setEmailNotice('Cadastre o e-mail do membro para enviar o resumo de desenvolvimento.');
+      return;
+    }
+    if (
+      !window.confirm(
+        `Enviar e-mail de desenvolvimento para ${member.name} (${member.email})? O membro verá destaques e pontos de melhoria ligados a ele.`
+      )
+    ) {
+      return;
+    }
+    setEmailSendingId(member.id);
+    setEmailNotice(null);
+    try {
+      const result = await teamApi.sendDevelopmentEmail(member.id);
+      if (result.demoMode) {
+        setEmailNoticeType('demo');
+        setEmailNotice(
+          `Modo demonstração: e-mail simulado para ${member.email}. Configure RESEND_API_KEY no servidor para envio real.`
+        );
+      } else {
+        setEmailNoticeType('success');
+        setEmailNotice(`E-mail enviado para ${member.email} com o panorama do ciclo ${activeCycle?.label ?? 'atual'}.`);
+      }
+    } catch (err) {
+      setEmailNoticeType('error');
+      const payload = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string; error?: string } | undefined)
+        : undefined;
+      const detail = payload?.message || payload?.error || (err instanceof Error ? err.message : '');
+      setEmailNotice(
+        detail
+          ? `Falha ao enviar e-mail: ${detail}`
+          : 'Não foi possível enviar o e-mail. Verifique se o servidor está ativo e o membro pertence à sua conta.'
+      );
+    } finally {
+      setEmailSendingId(null);
+    }
+  };
+
   return (
     <div className="minha-equipe">
       <header className="equipe-header">
@@ -225,7 +273,8 @@ export function MinhaEquipePage() {
             <div>
               <h1 className="equipe-title">Equipe · Difusão</h1>
               <p className="equipe-subtitle">
-                Contexto humano para Make the Move — donos, ritmo e imprint na execução
+                People Sprint da Difusão — vincule donos, envie desenvolvimento por e-mail e alinhe entregas ao ciclo{' '}
+                <strong>{activeCycle?.label ?? 'atual'}</strong>.
               </p>
             </div>
           </div>
@@ -235,6 +284,12 @@ export function MinhaEquipePage() {
           </button>
         </div>
       </header>
+
+      {emailNotice && (
+        <p className={`equipe-email-notice is-${emailNoticeType}`} role="status">
+          {emailNotice}
+        </p>
+      )}
 
       <div className="equipe-stats-grid">
         <div className="stat-card">
@@ -399,6 +454,24 @@ export function MinhaEquipePage() {
                       {STATUS_LABELS[member.status]}
                     </span>
                     <div className="member-actions">
+                      <button
+                        type="button"
+                        className="action-button"
+                        onClick={() => sendDevelopmentEmail(member)}
+                        disabled={emailSendingId === member.id}
+                        aria-label="Enviar e-mail de desenvolvimento"
+                        title={
+                          member.email
+                            ? 'Enviar resumo de desenvolvimento por e-mail'
+                            : 'Cadastre o e-mail do membro'
+                        }
+                      >
+                        {emailSendingId === member.id ? (
+                          <Loader2 size={16} className="spinner" />
+                        ) : (
+                          <Send size={16} />
+                        )}
+                      </button>
                       <button type="button" className="action-button" onClick={() => openEdit(member)} aria-label="Editar">
                         <Pencil size={16} />
                       </button>
@@ -436,6 +509,9 @@ export function MinhaEquipePage() {
               }}
             >
               {formErrors.submit && <p className="field-error">{formErrors.submit}</p>}
+              <p className="membro-modal-hint">
+                O e-mail é usado para enviar o resumo de desenvolvimento ligado ao ciclo ativo.
+              </p>
               <div className="membro-form-row">
                 <div className="membro-form-field">
                   <label>

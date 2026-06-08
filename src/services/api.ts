@@ -68,6 +68,20 @@ async function withUserId<T>(fn: (userId: string | null) => Promise<T>): Promise
   return fn(userId);
 }
 
+function getActiveCycleId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem('mm.activeCycleId');
+}
+
+function scopeParams(userId: string | null, extra?: Record<string, string>) {
+  const cycleId = getActiveCycleId();
+  return {
+    ...(extra ?? {}),
+    ...(userId ? { userId } : {}),
+    ...(cycleId ? { cycleId } : {}),
+  };
+}
+
 export const magnusMemoryApi = {
   sync: (data: { diagnosticContext?: string; gateContext?: string }) =>
     withUserId((userId) =>
@@ -81,13 +95,17 @@ export const actionCanvasesApi = {
   list: () =>
     withUserId((userId) =>
       api
-        .get('/api/action-canvases', { params: userId ? { userId } : {} })
+        .get('/api/action-canvases', { params: scopeParams(userId) })
         .then((r) => r.data as import('../types').ActionCanvas[])
     ),
   create: (data: unknown) =>
     withUserId((userId) =>
       api
-        .post('/api/action-canvases', { userId: userId || 'demo-user', ...(data as object) })
+        .post('/api/action-canvases', {
+          userId: userId || 'demo-user',
+          cycleId: getActiveCycleId() || undefined,
+          ...(data as object),
+        })
         .then((r) => r.data as import('../types').ActionCanvas)
     ),
   update: (id: string, data: unknown) =>
@@ -123,9 +141,17 @@ export const actionCanvasesApi = {
 
 export const objectivesApi = {
   list: (params?: Record<string, string>) =>
-    withUserId((userId) => api.get('/api/objectives', { params: { ...params, ...(userId ? { userId } : {}) } }).then((r) => r.data)),
+    withUserId((userId) =>
+      api.get('/api/objectives', { params: scopeParams(userId, params) }).then((r) => r.data)
+    ),
   create: (data: unknown) =>
-    withUserId((userId) => api.post('/api/objectives', { userId: userId || 'demo-user', ...(data as object) }).then((r) => r.data)),
+    withUserId((userId) =>
+      api.post('/api/objectives', {
+        userId: userId || 'demo-user',
+        cycleId: getActiveCycleId() || undefined,
+        ...(data as object),
+      }).then((r) => r.data)
+    ),
   update: (id: string, data: unknown) =>
     api.patch(`/api/objectives/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/api/objectives/${id}`).then((r) => r.data),
@@ -145,6 +171,31 @@ export const teamApi = {
   update: (id: string, data: unknown) =>
     api.patch(`/api/team-members/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/api/team-members/${id}`).then((r) => r.data),
+  sendDevelopmentEmail: (id: string) =>
+    withUserId((userId) =>
+      api
+        .post(
+          `/api/team-members/${id}/development-email`,
+          { userId: userId || undefined, cycleId: getActiveCycleId() || undefined },
+          { params: scopeParams(userId) }
+        )
+        .then((r) => r.data as { ok: boolean; demoMode: boolean; preview?: string })
+    ),
+};
+
+export const workspaceApi = {
+  reset: (options: {
+    objectives?: boolean;
+    actionCanvases?: boolean;
+    reports?: boolean;
+    conversations?: boolean;
+    magnusMemory?: boolean;
+  }) =>
+    api
+      .post('/api/workspace/reset', options)
+      .then((r) => r.data as { ok: boolean; removed: Record<string, number> }),
+  archiveCycle: (payload: { cycleNumber: number; label: string; diagnosticContext: string }) =>
+    api.post('/api/workspace/archive-cycle', payload).then((r) => r.data as { ok: boolean }),
 };
 
 export const aiApi = {
