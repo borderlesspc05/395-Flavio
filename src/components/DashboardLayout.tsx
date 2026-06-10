@@ -30,7 +30,8 @@ export function DashboardLayout() {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(SIDEBAR_COLLAPSE_STORAGE_KEY) === '1';
   });
-  const isConsultoria = location.pathname === '/dashboard/consultoria-ia';
+  const isConsultoriaChat = location.pathname === '/dashboard/consultoria-ia';
+  const isDesignPage = location.pathname === '/dashboard/design';
 
   const navItems = [
     { id: 'dashboard', label: t.nav.hub, icon: LayoutDashboard, path: '/dashboard' },
@@ -114,6 +115,8 @@ export function DashboardLayout() {
               const Icon = item.icon;
               const active =
                 location.pathname === item.path ||
+                (item.id === 'consultoria' &&
+                  (location.pathname === '/dashboard/design' || location.pathname === '/dashboard/consultoria-ia')) ||
                 (item.path === '/dashboard' &&
                   (location.pathname === '/dashboard' || location.pathname === '/dashboard/'));
               return (
@@ -143,7 +146,9 @@ export function DashboardLayout() {
             </button>
           </nav>
         </aside>
-        <div className={`dashboard-main-wrapper ${isConsultoria ? 'consultoria-ia-active' : ''}`}>
+        <div
+          className={`dashboard-main-wrapper ${isConsultoriaChat ? 'consultoria-ia-active' : ''} ${isDesignPage ? 'design-page-active' : ''}`}
+        >
           <header className="dashboard-header">
             <button
               type="button"
@@ -160,7 +165,7 @@ export function DashboardLayout() {
             ref={mainRef}
             id="main-content"
             tabIndex={-1}
-            className={`dashboard-main ${isConsultoria ? 'consultoria-ia-active' : ''}`}
+            className={`dashboard-main ${isConsultoriaChat ? 'consultoria-ia-active' : ''} ${isDesignPage ? 'design-page-active' : ''}`}
           >
             <Outlet />
           </main>

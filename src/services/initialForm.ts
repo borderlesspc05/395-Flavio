@@ -2,6 +2,13 @@ import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firest
 import { createEmptyDiagnosticData, getAllDiagnosticFields, getFieldKeys } from '../constants/diagnosticFlow';
 import { db } from '../config/firebase';
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
+import { SELECTED_SOLUTION_ACTIONS_KEY } from '../types/solutionPick';
+
+const PRESERVED_EXTENSION_KEYS = [
+  SELECTED_SOLUTION_ACTIONS_KEY,
+  'solucaoSelecionadaDesign',
+  'solucoesPrioritarias',
+] as const;
 
 const COLLECTION = 'initialForms';
 
@@ -24,7 +31,7 @@ function normalizeFormData(raw: Record<string, unknown> | undefined): InitialFor
     }
   }
 
-  return {
+  const result: InitialFormData = {
     ...normalized,
     organizacao: String(normalized.organizacao ?? ''),
     produtoServico: String(normalized.produtoServico ?? ''),
@@ -32,6 +39,17 @@ function normalizeFormData(raw: Record<string, unknown> | undefined): InitialFor
     fatoresExternos: String(normalized.fatoresExternos ?? ''),
     mudancasRecentes: String(normalized.mudancasRecentes ?? ''),
   };
+
+  if (raw) {
+    for (const key of PRESERVED_EXTENSION_KEYS) {
+      const value = raw[key];
+      if (typeof value === 'string' && value.trim()) {
+        result[key] = value;
+      }
+    }
+  }
+
+  return result;
 }
 
 export async function getInitialForm(userId: string) {

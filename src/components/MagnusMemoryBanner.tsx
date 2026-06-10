@@ -6,9 +6,11 @@ interface MagnusMemoryBannerProps {
   statusLabel?: string;
   loading?: boolean;
   compact?: boolean;
+  /** Só chips em linha — sem título nem caixa pesada */
+  minimal?: boolean;
 }
 
-export function MagnusMemoryBanner({ meta, statusLabel, loading, compact }: MagnusMemoryBannerProps) {
+export function MagnusMemoryBanner({ meta, statusLabel, loading, compact, minimal }: MagnusMemoryBannerProps) {
   if (loading) {
     return (
       <div className="magnus-memory-banner magnus-memory-banner--loading" aria-busy="true">
@@ -50,6 +52,27 @@ export function MagnusMemoryBanner({ meta, statusLabel, loading, compact }: Magn
       icon: Target,
     },
   ];
+
+  if (minimal) {
+    return (
+      <div className="magnus-memory-banner magnus-memory-banner--minimal" role="list" aria-label="Contexto na memória">
+        {chips.map((chip) => {
+          const Icon = chip.icon;
+          return (
+            <span
+              key={chip.label}
+              role="listitem"
+              className={`magnus-memory-chip ${chip.ok ? 'is-on' : 'is-off'}`}
+              title={chip.label}
+            >
+              <Icon size={12} aria-hidden />
+              <span className="magnus-memory-chip-label">{chip.label}</span>
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className={`magnus-memory-banner ${compact ? 'magnus-memory-banner--compact' : ''}`}>

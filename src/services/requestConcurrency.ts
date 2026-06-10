@@ -53,6 +53,7 @@ export async function runWithClientConcurrency<T>(fn: () => Promise<T>): Promise
 export const CONCURRENCY_LIMITED_PATHS = [
   '/api/ai/chat',
   '/api/ai/blueprint-gate',
+  '/api/ai/solution-pick-suggest',
   '/api/objectives/suggest',
   '/api/action-canvases/suggest',
   '/api/reports/generate',

@@ -1,0 +1,319 @@
+/* Design — Onda 2 · planos em containers (grid) + scroll no main */
+
+.dashboard-main-wrapper.design-page-active {
+  min-height: 0;
+  height: 100%;
+}
+
+.dashboard-main.design-page-active {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  position: relative;
+  z-index: 1;
+}
+
+.design-plans-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2.5rem;
+}
+
+.design-plans-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.design-plans-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 188, 125, 0.85);
+  font-weight: 700;
+}
+
+.design-plans-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 1.65rem;
+  color: #f3ead8;
+}
+
+.design-plans-header p {
+  margin: 0;
+  color: rgba(241, 235, 224, 0.72);
+  line-height: 1.55;
+  max-width: 40rem;
+}
+
+.design-plans-progress {
+  text-align: center;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(175, 146, 112, 0.1);
+}
+
+.design-plans-progress strong {
+  display: block;
+  font-size: 1.5rem;
+  color: #ffbc7d;
+}
+
+.design-plans-progress span {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(241, 235, 224, 0.65);
+}
+
+.design-plans-notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.design-plans-notice.is-success {
+  background: rgba(74, 107, 66, 0.18);
+  border: 1px solid rgba(74, 107, 66, 0.35);
+  color: #b8dba8;
+}
+
+.design-plans-notice.is-error {
+  background: rgba(143, 74, 66, 0.18);
+  border: 1px solid rgba(143, 74, 66, 0.35);
+  color: #f0c4bf;
+}
+
+.design-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.design-plan-card {
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  border-radius: 16px;
+  background: rgba(17, 23, 33, 0.78);
+  padding: 1rem;
+  min-width: 0;
+}
+
+.design-plan-card.is-validated {
+  border-color: rgba(74, 107, 66, 0.45);
+}
+
+.design-plan-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.design-plan-card-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 188, 125, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.design-plan-validated {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #9fd18f;
+  white-space: nowrap;
+}
+
+.design-plan-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.design-plan-field span {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: rgba(241, 235, 224, 0.75);
+}
+
+.design-plan-field input,
+.design-plan-field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(175, 146, 112, 0.25);
+  border-radius: 10px;
+  background: rgba(8, 12, 20, 0.65);
+  color: #f3ead8;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+}
+
+.design-plan-field input:focus,
+.design-plan-field textarea:focus {
+  outline: none;
+  border-color: rgba(255, 188, 125, 0.45);
+  box-shadow: 0 0 0 3px rgba(175, 146, 112, 0.15);
+}
+
+.design-plan-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.design-plan-deliveries {
+  margin: 0.5rem 0 0.85rem;
+  padding: 0.65rem;
+  border-radius: 10px;
+  background: rgba(175, 146, 112, 0.08);
+}
+
+.design-plan-deliveries h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(241, 235, 224, 0.7);
+}
+
+.design-plan-deliveries ul {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.84rem;
+  color: rgba(241, 235, 224, 0.78);
+  line-height: 1.45;
+}
+
+.design-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.design-plan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.3);
+  background: transparent;
+  color: #f3ead8;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.design-plan-btn.is-ghost:hover {
+  background: rgba(175, 146, 112, 0.1);
+}
+
+.design-plan-btn.is-primary {
+  background: rgba(175, 146, 112, 0.22);
+  border-color: rgba(175, 146, 112, 0.45);
+}
+
+.design-plan-btn.is-danger {
+  border-color: rgba(143, 74, 66, 0.4);
+  color: #f0c4bf;
+}
+
+.design-plans-footer {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.design-plans-conclude {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.25rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #af9270, #8a7358);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.design-plans-conclude:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.design-plans-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: rgba(241, 235, 224, 0.8);
+}
+
+.design-plans-empty h1 {
+  margin: 0.75rem 0 0.5rem;
+  color: #f3ead8;
+}
+
+.design-plans-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #ffbc7d;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.design-plans-link:hover {
+  text-decoration: underline;
+}
+
+.design-plans-page .spin {
+  animation: design-spin 0.9s linear infinite;
+}
+
+@keyframes design-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .design-plans-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .design-plan-row {
+    grid-template-columns: 1fr;
+  }
+
+  .design-plans-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .design-plans-conclude,
+  .design-plans-footer .design-plan-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -10,6 +10,7 @@ import './index.css';
 import './styles/theme-refined.css';
 import './styles/magnus-design.css';
 import './styles/consultoria-responsive.css';
+import './styles/consultoria-refined.css';
 import './styles/gate-zero-design.css';
 import './styles/brand-overrides.css';
 import './styles/magnus-waves.css';
@@ -23,6 +24,8 @@ import './styles/cycle-selector.css';
 import './styles/equipe-diffusao.css';
 import './styles/historico-loop.css';
 import './styles/employee-profile.css';
+import './styles/solution-pick.css';
+import './styles/design-plans.css';
 
 void initFirebaseAnalytics();
 

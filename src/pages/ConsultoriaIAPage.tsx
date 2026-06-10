@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { buildDiagnosticContext } from '../constants/diagnosticFlow';
@@ -21,7 +21,6 @@ import {
   Pencil,
   Plus,
   Send,
-  Sparkles,
   Target,
   User,
   X,
@@ -32,10 +31,10 @@ import { agentApi, aiApi, type AgentSkillDto } from '../services/api';
 import type { ChatMessage, InitialFormData } from '../types';
 
 const SUGGESTIONS = [
-  'Com base no diagnóstico 1.1-1.5, qual solução deve entrar primeiro no MM Blueprint?',
-  'Transforme o diagnóstico em um MM Blueprint final e indique objetivos para a Difusão.',
-  'Quais ações devo evitar agora segundo o Solution Pick?',
-  'Monte um roadmap 0-30, 30-90 e 90-180 dias a partir do canvas.',
+  'Qual solução priorizar no Blueprint?',
+  'Montar MM Blueprint e objetivos para Difusão',
+  'O que evitar agora no Solution Pick?',
+  'Roadmap 0-30, 30-90 e 90-180 dias',
 ];
 
 interface AiModel {
@@ -88,6 +87,7 @@ export function ConsultoriaIAPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
+  const location = useLocation();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingConv, setLoadingConv] = useState(false);
@@ -100,7 +100,6 @@ export function ConsultoriaIAPage() {
   const [diagnosticComplete, setDiagnosticComplete] = useState<boolean | null>(null);
   const [diagnosticData, setDiagnosticData] = useState<InitialFormData | null>(null);
   const [memoryMeta, setMemoryMeta] = useState<MagnusWavesMemoryMeta | null>(null);
-  const [memoryStatus, setMemoryStatus] = useState('');
   const [gateDoc, setGateDoc] = useState<BlueprintGateDoc | null>(null);
   const [gateLoading, setGateLoading] = useState(false);
   /** Com diagnóstico completo: `gate` = só tela Gate Zero; `chat` = só chat (persistido por utilizador). */
@@ -128,6 +127,15 @@ export function ConsultoriaIAPage() {
       .then((list) => setSkills(list))
       .catch(() => setSkills([]));
   }, []);
+
+  useEffect(() => {
+    const state = location.state as { prefillMessage?: string } | null;
+    if (!state?.prefillMessage) return;
+    setInput(state.prefillMessage);
+    setUiPhase('chat');
+    const uid = auth.currentUser?.uid;
+    if (uid) writeConsultoriaGateUiPhase(uid, 'chat');
+  }, [location.state]);
 
   const insertSkillSlug = (slug: string) => {
     const el = inputRef.current;
@@ -187,11 +195,9 @@ export function ConsultoriaIAPage() {
             void syncMagnusMemoryFromFirebase();
             void loadMagnusWavesMemory(user.uid).then((m) => {
               setMemoryMeta(m.meta);
-              setMemoryStatus(m.statusLabel);
             });
           } else {
             setMemoryMeta(null);
-            setMemoryStatus('');
           }
           if (completedAt) {
             setGateLoading(true);
@@ -244,7 +250,6 @@ export function ConsultoriaIAPage() {
       writeConsultoriaGateUiPhase(uid, 'chat');
       void loadMagnusWavesMemory(uid).then((m) => {
         setMemoryMeta(m.meta);
-        setMemoryStatus(m.statusLabel);
       });
     }
     setUiPhase('chat');
@@ -499,98 +504,97 @@ export function ConsultoriaIAPage() {
         </aside>
 
         <div className="chat-main">
-          <header className="chat-header">
-            <button
-              type="button"
-              className="history-toggle"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Abrir histórico"
-            >
-              <MessageSquare size={20} />
-            </button>
-            <div className="chat-header-content">
-              {editingTitle && activeId ? (
-                <div className="chat-title-edit">
-                  <input
-                    className="chat-title-input"
-                    value={titleDraft}
-                    onChange={(e) => setTitleDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveTitle();
-                      if (e.key === 'Escape') setEditingTitle(false);
-                    }}
-                  />
-                  <div className="chat-title-actions">
-                    <button type="button" className="chat-title-action-button" onClick={saveTitle}>
-                      <Check size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      className="chat-title-action-button"
-                      onClick={() => setEditingTitle(false)}
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="chat-title-wrapper">
-                  <h1 className="chat-title">{chatTitle}</h1>
-                  {activeId && (
-                    <button
-                      type="button"
-                      className="chat-title-edit-button"
-                      onClick={() => {
-                        setTitleDraft(chatTitle);
-                        setEditingTitle(true);
+          <header className="chat-header chat-header--slim">
+            <div className="chat-header-left">
+              <button
+                type="button"
+                className="history-toggle"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Abrir histórico"
+              >
+                <MessageSquare size={18} />
+              </button>
+              <button type="button" className="chat-new-inline" onClick={startNewChat} aria-label="Nova conversa">
+                <Plus size={18} />
+              </button>
+              <div className="chat-header-content">
+                {editingTitle && activeId ? (
+                  <div className="chat-title-edit">
+                    <input
+                      className="chat-title-input"
+                      value={titleDraft}
+                      onChange={(e) => setTitleDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveTitle();
+                        if (e.key === 'Escape') setEditingTitle(false);
                       }}
-                      aria-label="Editar título"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                  )}
-                </div>
-              )}
-              <p className="chat-subtitle">Consultor estratégico Magnus Mind</p>
+                    />
+                    <div className="chat-title-actions">
+                      <button type="button" className="chat-title-action-button" onClick={saveTitle}>
+                        <Check size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="chat-title-action-button"
+                        onClick={() => setEditingTitle(false)}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="chat-title-wrapper">
+                    <h1 className="chat-title">{chatTitle}</h1>
+                    {activeId && (
+                      <button
+                        type="button"
+                        className="chat-title-edit-button"
+                        onClick={() => {
+                          setTitleDraft(chatTitle);
+                          setEditingTitle(true);
+                        }}
+                        aria-label="Editar título"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="chat-header-actions">
               {diagnosticComplete === true &&
                 uiPhase === 'chat' &&
                 (gateDoc?.selectedPath || gateDoc?.skipped) && (
                   <button
                     type="button"
-                    className="chat-gate-revisit-button"
+                    className="chat-header-icon-btn"
                     onClick={openGateRevision}
+                    title="Refazer Gate Zero"
                   >
-                    <GitBranch size={15} aria-hidden />
-                    Refazer escolha (Gate Zero)
+                    <GitBranch size={16} aria-hidden />
                   </button>
                 )}
-            </div>
-            <div className="chat-model-selector">
-              <label className="chat-model-label">
-                <Sparkles size={14} />
-                Modelo
-              </label>
-              <select
-                className="chat-model-select"
-                value={selectedModel}
-                onChange={(e) => handleModelChange(e.target.value)}
-              >
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+              <div className="chat-model-selector">
+                <select
+                  className="chat-model-select"
+                  value={selectedModel}
+                  onChange={(e) => handleModelChange(e.target.value)}
+                  aria-label="Modelo de IA"
+                >
+                  {models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </header>
 
-          {diagnosticComplete === true && uiPhase === 'chat' && (
-            <div className="consultoria-memory-wrap">
-              <MagnusMemoryBanner
-                meta={memoryMeta}
-                statusLabel={memoryStatus}
-                compact
-              />
+          {diagnosticComplete === true && uiPhase === 'chat' && memoryMeta && (
+            <div className="consultoria-memory-wrap consultoria-memory-wrap--minimal">
+              <MagnusMemoryBanner meta={memoryMeta} minimal />
             </div>
           )}
 
@@ -672,42 +676,22 @@ export function ConsultoriaIAPage() {
             {loadingConv ? (
               <div className="chat-loading">Carregando conversa...</div>
             ) : messages.length === 0 ? (
-              <div className="chat-empty">
-                <div className="chat-empty-icon">
-                  <Bot size={48} />
+              <div className="chat-empty chat-empty--refined">
+                <div className="chat-empty-intro">
+                  <p className="chat-empty-eyebrow">Consultoria estratégica</p>
+                  <h2 className="chat-empty-title">Como posso ajudar?</h2>
+                  <p className="chat-empty-description">
+                    {gateDoc?.selectedPath || gateDoc?.skipped
+                      ? 'Diagnóstico e Gate Zero no contexto. Escolha uma sugestão ou escreva sua pergunta.'
+                      : 'Confirme o Gate Zero para liberar o Blueprint completo.'}
+                  </p>
                 </div>
-                <h2 className="chat-empty-title">Onda 2 — Design · MM Blueprint</h2>
-                <p className="chat-empty-description">
-                  {gateDoc?.selectedPath || gateDoc?.skipped ? (
-                    <>
-                      O contexto do diagnóstico e do <strong>Gate Zero</strong> já entram nas respostas.
-                      Use as sugestões abaixo ou escreva sua própria pergunta.
-                    </>
-                  ) : (
-                    <>
-                      Confirme o <strong>Gate Zero</strong> (Caminho A ou B) na etapa anterior. Depois, a
-                      IA conduz o Blueprint: Outcome Forge → Build → Impact Evaluation — com clareza para
-                      agir, sem atalhos que ignorem o diagnóstico.
-                    </>
-                  )}
-                </p>
-                {showObjectivesBanner && (
-                  <div className="chat-empty-objectives-hint">
-                    <Target size={18} aria-hidden />
-                    <p>
-                      Transforme insights em objetivos estratégicos na aba{' '}
-                      <Link to="/dashboard/objetivos" state={{ generateFromDesign: true }}>
-                        Objetivos
-                      </Link>.
-                    </p>
-                  </div>
-                )}
-                <div className="chat-suggestions">
+                <div className="chat-suggestions chat-suggestions--grid">
                   {SUGGESTIONS.map((s) => (
                     <button
                       key={s}
                       type="button"
-                      className="suggestion-button"
+                      className="suggestion-button suggestion-button--pill"
                       onClick={() => sendMessage(s)}
                       disabled={loading}
                     >
@@ -795,7 +779,7 @@ export function ConsultoriaIAPage() {
                 ref={inputRef}
                 type="text"
                 className="chat-input"
-                placeholder="Digite sua pergunta — ou use /skill para ativar habilidades"
+                placeholder="Pergunte algo… (/skill para habilidades)"
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={(e) => {

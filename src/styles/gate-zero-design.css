@@ -49,7 +49,7 @@
   max-width: 38rem;
 }
 
-.consultoria-ia .suggestion-button {
+.consultoria-ia .suggestion-button:not(.suggestion-button--pill) {
   font-family: 'Figtree', system-ui, sans-serif;
   border-radius: 999px;
   border: 1px solid rgba(175, 146, 112, 0.28);
@@ -60,7 +60,7 @@
     box-shadow 0.25s ease;
 }
 
-.consultoria-ia .suggestion-button:hover:not(:disabled) {
+.consultoria-ia .suggestion-button:not(.suggestion-button--pill):hover:not(:disabled) {
   transform: translateY(-2px);
   border-color: rgba(255, 188, 125, 0.45);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);

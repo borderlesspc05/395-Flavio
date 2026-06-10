@@ -270,6 +270,64 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
+## Checklist — sessão 02/06/2026 (Solution Pick, Design e Consultoria IA)
+
+### Onda 2 — Solution Pick (etapa 1.5)
+
+1. [x] **API** — `POST /api/ai/solution-pick-suggest` + `server/src/services/solutionPickSuggest.ts` (~10 sugestões com score)
+2. [x] **UI** — `SolutionPickPanel.tsx`: lista com score, seleção (máx. 5), botão **Ir para Design**
+3. [x] **Persistência** — campo `selectedSolutionActionsJson` em `InitialFormData` (`solutionPick.ts`)
+4. [x] **Helpers** — `buildDiagnosticContextThroughTeamScan`, exclusão do 1.5 na validação de fases (`diagnosticFlow.ts`)
+5. [x] **Estilos** — `solution-pick.css`
+6. [x] **Correção seleção** — toggle com `setData` funcional (evita estado desatualizado ao clicar)
+
+### Onda 2 — Design (planos de ação)
+
+7. [x] **Página** — `DesignPlansPage.tsx` em `/dashboard/design`: cards editáveis, validar, chat IA opcional
+8. [x] **Fluxo** — concluir Design cria Action Canvases e navega para Difusão (`/dashboard/objetivos`)
+9. [x] **Rota e waves** — `App.tsx` + `magnusWaves.ts` apontam Design para `/dashboard/design`
+10. [x] **Estilos** — `design-plans.css` (grid 2 colunas de containers, tema bronze)
+11. [x] **Bug Solution Pick → Design** — `normalizeFormData` preserva `selectedSolutionActionsJson`; fallback via `navigate` state + `sessionStorage`
+12. [x] **Scroll** — classe `design-page-active` separada de `consultoria-ia-active` (main rola normalmente)
+13. [x] **Layout** — containers lado a lado restaurados (com scroll corrigido)
+
+### Consultoria IA — redesign e empty state
+
+14. [x] **Layout clean** — histórico em drawer, header slim, mais área de chat (`consultoria-refined.css`)
+15. [x] **Memória minimal** — `MagnusMemoryBanner` com prop `minimal` (só chips)
+16. [x] **Empty state** — bloco intro agrupado; sugestões em grid 2×2
+17. [x] **Cards azuis** — sugestões com gradiente/borda azul como antes (hover com elevação)
+18. [x] **Gate Zero CSS** — não sobrescreve mais `.suggestion-button--pill` com estilo bronze
+
+### Diagnóstico e limpeza de UI
+
+19. [x] **Removido** — prévia Human-to-Business Canvas / resumo executivo no rodapé de `InitialFormPage.tsx`
+
+### Qualidade
+
+20. [x] **Build** — `npm run build` (front + server) OK após as alterações
+21. [ ] **Commit / push** — alterações desta sessão ainda locais (não commitadas em 02/06)
+
+### Validar manualmente
+
+- [ ] Solution Pick: gerar sugestões → selecionar ações → **Ir para Design**
+- [ ] Design: editar planos → validar todos → **Concluir Design** → ver canvases na Difusão
+- [ ] Consultoria IA: empty state com cards azuis e textos centralizados
+- [ ] E-mail Resend em produção (Render) se ainda não deployado
+
+### Arquivos principais — Solution Pick e Design
+
+| Área | Caminhos |
+|------|----------|
+| Solution Pick API | `server/src/services/solutionPickSuggest.ts`, `server/src/routes/ai.ts` |
+| Solution Pick UI | `src/components/SolutionPickPanel.tsx`, `src/styles/solution-pick.css` |
+| Design | `src/pages/DesignPlansPage.tsx`, `src/styles/design-plans.css` |
+| Persistência | `src/services/solutionPick.ts`, `src/services/initialForm.ts` |
+| Layout dashboard | `src/components/DashboardLayout.tsx` (`design-page-active`) |
+| Consultoria | `src/pages/ConsultoriaIAPage.tsx`, `src/styles/consultoria-refined.css` |
+
+---
+
 ## Checklist — sessão 29/05/2026 (Landing de planos + auth)
 
 1. [x] **Landing de planos** — `PlansLandingPage.tsx` com hero Magnus Waves, seções Fluxo e Stack, footer com links
@@ -546,4 +604,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 02 de junho de 2026 — ciclos, loop contínuo, Firestore, e-mail Resend e perfil do colaborador*
+*Última atualização: 02 de junho de 2026 — Stripe, ciclos, equipe/e-mail, Solution Pick, Design e Consultoria IA*

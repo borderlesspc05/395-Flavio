@@ -1328,10 +1328,51 @@ export function getAllDiagnosticFieldKeys(): string[] {
   return getAllDiagnosticFields().flatMap(getFieldKeys);
 }
 
+const SOLUTION_PICK_PHASE_ID: DiagnosticPhaseId = 'solutionPick';
+
 export function getRequiredDiagnosticFieldKeys(): string[] {
   return getAllDiagnosticFields()
     .filter((field) => field.required)
     .flatMap(getFieldKeys);
+}
+
+/** Campos obrigatórios exceto Solution Pick manual (1.5 é guiado por IA + seleção). */
+export function getRequiredDiagnosticFieldKeysExcludingSolutionPick(): string[] {
+  return DIAGNOSTIC_PHASES.filter((p) => p.id !== SOLUTION_PICK_PHASE_ID)
+    .flatMap((phase) =>
+      phase.blocks.flatMap((block) =>
+        block.fields.filter((field) => field.required).flatMap(getFieldKeys)
+      )
+    );
+}
+
+export function buildDiagnosticContextThroughTeamScan(data: InitialFormData): string {
+  const lines: string[] = ['# Magnus Waves - Diagnóstico 1.1 a 1.4'];
+
+  for (const phase of DIAGNOSTIC_PHASES) {
+    if (phase.id === SOLUTION_PICK_PHASE_ID) break;
+    const phaseLines: string[] = [];
+    for (const block of phase.blocks) {
+      const answers: string[] = [];
+      for (const field of block.fields) {
+        for (const key of getFieldKeys(field)) {
+          const value = formatValue(data[key]);
+          if (value) answers.push(`- ${fieldLabel(field, key)}: ${value}`);
+        }
+      }
+      if (answers.length) {
+        phaseLines.push(`\n## ${phase.step} ${phase.shortTitle} / ${block.title}\n${answers.join('\n')}`);
+      }
+    }
+    if (phaseLines.length) lines.push(...phaseLines);
+  }
+
+  return lines.join('\n').trim();
+}
+
+export function isPhasesThroughTeamScanComplete(data: InitialFormData): boolean {
+  const keys = getRequiredDiagnosticFieldKeysExcludingSolutionPick();
+  return keys.every((key) => isDiagnosticValueAnswered(data[key]));
 }
 
 export function createEmptyDiagnosticData(): InitialFormData {

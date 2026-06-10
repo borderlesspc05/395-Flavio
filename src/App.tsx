@@ -6,6 +6,7 @@ import { DashboardLayout } from './components/DashboardLayout';
 import { DashboardHome } from './pages/DashboardHome';
 import { InitialFormPage } from './pages/InitialFormPage';
 import { ConsultoriaIAPage } from './pages/ConsultoriaIAPage';
+import { DesignPlansPage } from './pages/DesignPlansPage';
 import { ObjetivosPage } from './pages/ObjetivosPage';
 import { MinhaEquipePage } from './pages/MinhaEquipePage';
 import { RelatoriosPage } from './pages/RelatoriosPage';
@@ -47,6 +48,7 @@ export default function App() {
       >
         <Route index element={<DashboardHome />} />
         <Route path="initial-form" element={<InitialFormPage />} />
+        <Route path="design" element={<DesignPlansPage />} />
         <Route path="consultoria-ia" element={<ConsultoriaIAPage />} />
         <Route path="objetivos" element={<ObjetivosPage />} />
         <Route path="minha-equipe" element={<MinhaEquipePage />} />

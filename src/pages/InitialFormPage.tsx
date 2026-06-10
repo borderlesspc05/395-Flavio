@@ -13,19 +13,17 @@ import {
   Layers3,
   Save,
   Sparkles,
-  Target,
   Users,
 } from 'lucide-react';
 import { auth } from '../config/firebase';
 import {
   DIAGNOSTIC_LENSES,
   DIAGNOSTIC_PHASES,
-  SOLUTION_RULES,
   buildDiagnosticContext,
   createEmptyDiagnosticData,
   getDiagnosticCompletion,
   getFieldKeys,
-  getRequiredDiagnosticFieldKeys,
+  getRequiredDiagnosticFieldKeysExcludingSolutionPick,
   isDiagnosticValueAnswered,
   type DiagnosticField,
   type DiagnosticFieldType,
@@ -34,6 +32,8 @@ import {
   type DiagnosticPhaseId,
 } from '../constants/diagnosticFlow';
 import { LoopWorkspacePanel } from '../components/LoopWorkspacePanel';
+import { SolutionPickPanel } from '../components/SolutionPickPanel';
+import { parseSelectedSolutionActions } from '../services/solutionPick';
 import { useCycle } from '../context/CycleContext';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
 import { getInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
@@ -75,14 +75,6 @@ function parseScaleBounds(field: DiagnosticField) {
     min: Number.isFinite(min) ? min : 1,
     max: Number.isFinite(max) ? max : 5,
   };
-}
-
-function getFirstAnswered(data: InitialFormData, keys: string[]) {
-  for (const key of keys) {
-    const value = data[key];
-    if (isDiagnosticValueAnswered(value)) return valueAsText(value);
-  }
-  return 'Aguardando resposta';
 }
 
 function buildFieldPhaseIndex() {
@@ -301,51 +293,6 @@ function DiagnosticFieldControl({
   );
 }
 
-function DiagnosticCanvasPreview({ data }: { data: InitialFormData }) {
-  const tiles = [
-    {
-      label: 'Decoding',
-      value: getFirstAnswered(data, ['desafioPrincipal', 'organizacao', 'produtoServico']),
-    },
-    {
-      label: 'Gap Scan',
-      value: getFirstAnswered(data, ['criticidadeGap', 'distanciaAtualDesejado', 'desiredStateFuncionamento']),
-    },
-    {
-      label: 'System Scan',
-      value: getFirstAnswered(data, ['processosCriticos', 'processosGeramRetrabalhoErro', 'sistemaPremiaComportamento']),
-    },
-    {
-      label: 'Team Scan',
-      value: getFirstAnswered(data, ['trilhaProvavelTeamScan', 'hipotesesTeamScan', 'evidenciasHipotesesTeamScan']),
-    },
-    {
-      label: 'Solution Pick',
-      value: getFirstAnswered(data, ['solucaoSelecionadaDesign', 'bloqueioPrincipalResumo', 'quickWins30Dias']),
-    },
-  ];
-
-  return (
-    <section className="diagnostic-canvas-preview" aria-label="Prévia do Human-to-Business Canvas">
-      <div className="diagnostic-canvas-header">
-        <img src="/icone-magnusmind.svg" alt="" aria-hidden />
-        <div>
-          <p>Human-to-Business Canvas</p>
-          <span>Resumo executivo das 5 etapas</span>
-        </div>
-      </div>
-      <div className="diagnostic-canvas-grid">
-        {tiles.map((tile) => (
-          <article key={tile.label} className="diagnostic-canvas-tile">
-            <h3>{tile.label}</h3>
-            <p>{tile.value}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function PhaseNav({
   activePhase,
   data,
@@ -434,37 +381,6 @@ function PhaseHeader({
         </div>
       )}
     </header>
-  );
-}
-
-function SolutionRulesPanel() {
-  return (
-    <section className="diagnostic-rules-panel" aria-label="Motor de regras Solution Pick">
-      <div className="diagnostic-rules-header">
-        <Target size={18} aria-hidden />
-        <div>
-          <h2>Motor de regras SE-ENTÃO</h2>
-          <p>Referência para a IA decidir o que resolver primeiro e o que evitar agora.</p>
-        </div>
-      </div>
-      <div className="diagnostic-rules-grid">
-        {SOLUTION_RULES.map((rule) => (
-          <article key={`${rule.metric}-${rule.trigger}`} className="diagnostic-rule">
-            <div>
-              <span>{rule.metric}</span>
-              <strong>{rule.trigger}</strong>
-            </div>
-            <p>{rule.logic}</p>
-            <small>{rule.avoid}</small>
-            <ul>
-              {rule.prioritize.slice(0, 3).map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -558,19 +474,30 @@ export function InitialFormPage() {
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
-    for (const key of getRequiredDiagnosticFieldKeys()) {
+    for (const key of getRequiredDiagnosticFieldKeysExcludingSolutionPick()) {
       if (!isDiagnosticValueAnswered(data[key])) {
         nextErrors[key] = 'Preencha este campo para concluir o diagnóstico.';
       }
+    }
+    if (parseSelectedSolutionActions(data).length === 0) {
+      nextErrors.solutionPick = 'Selecione ao menos uma ação no Solution Pick.';
     }
     setErrors(nextErrors);
 
     const firstMissing = Object.keys(nextErrors)[0];
     if (firstMissing) {
-      const phase = fieldPhaseIndex.get(firstMissing);
-      if (phase) selectPhase(phase);
-      else scrollProjectToTop();
-      setFeedback('Ainda existem campos-chave pendentes antes de concluir o Human-to-Business Canvas.');
+      if (firstMissing === 'solutionPick') {
+        selectPhase('solutionPick');
+      } else {
+        const phase = fieldPhaseIndex.get(firstMissing);
+        if (phase) selectPhase(phase);
+        else scrollProjectToTop();
+      }
+      setFeedback(
+        firstMissing === 'solutionPick'
+          ? 'Selecione ações no Solution Pick antes de concluir o diagnóstico.'
+          : 'Ainda existem campos-chave pendentes nas etapas 1.1 a 1.4.'
+      );
       return false;
     }
     return true;
@@ -699,8 +626,19 @@ export function InitialFormPage() {
         <main className="diagnostic-main">
           <PhaseHeader phase={activePhase} activeLens={activeLens} onLensChange={setActiveLens} />
 
-          {activePhase.id === 'solutionPick' && <SolutionRulesPanel />}
-
+          {activePhase.id === 'solutionPick' ? (
+            <SolutionPickPanel
+              data={data}
+              userId={userId}
+              onDataChange={setData}
+              onSaveDraft={async (payload) => {
+                if (!userId) return;
+                const at = await saveInitialFormDraft(userId, payload);
+                setDraftUpdatedAt(at);
+                scheduleMagnusMemorySyncFromForm(payload);
+              }}
+            />
+          ) : (
           <div className="diagnostic-blocks">
             {activePhase.blocks.map((block) => (
               <section key={block.id} className="diagnostic-block">
@@ -730,12 +668,11 @@ export function InitialFormPage() {
               </section>
             ))}
           </div>
+          )}
         </main>
       </div>
 
       <section className="diagnostic-bottom-panel" aria-label="Resumo e loop do diagnóstico">
-        <DiagnosticCanvasPreview data={data} />
-
         <div className="diagnostic-bottom-meta">
           <section className="diagnostic-deliverables">
             <div className="diagnostic-inspector-title">

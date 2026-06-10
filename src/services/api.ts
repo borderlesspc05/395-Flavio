@@ -252,6 +252,22 @@ export const aiApi = {
           throw err;
         })
     ),
+  suggestSolutionPick: (diagnosticContext: string) =>
+    withUserId((userId) =>
+      api
+        .post(
+          '/api/ai/solution-pick-suggest',
+          { diagnosticContext, userId: userId || undefined },
+          { timeout: CHAT_TIMEOUT }
+        )
+        .then(
+          (r) =>
+            r.data as {
+              suggestions: import('../types/solutionPick').SuggestedSolutionAction[];
+              demoMode?: boolean;
+            }
+        )
+    ),
 };
 
 /** Resposta do Gate Zero (classificação IA) */

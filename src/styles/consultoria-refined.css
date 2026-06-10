@@ -1,0 +1,380 @@
+/* Consultoria IA — layout clean / editorial */
+
+.consultoria-ia .consultoria-container {
+  background: transparent;
+}
+
+/* Histórico sempre em drawer — chat ocupa 100% */
+.consultoria-ia .history-toggle {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(175, 146, 112, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(241, 235, 224, 0.85);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.consultoria-ia .history-toggle:hover {
+  border-color: rgba(175, 146, 112, 0.4);
+  background: rgba(175, 146, 112, 0.1);
+}
+
+.consultoria-ia .chat-new-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(175, 146, 112, 0.2);
+  background: transparent;
+  color: rgba(241, 235, 224, 0.75);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.consultoria-ia .chat-new-inline:hover {
+  color: #ffbc7d;
+  border-color: rgba(255, 188, 125, 0.35);
+}
+
+.consultoria-ia .chat-history-sidebar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: min(280px, 88vw) !important;
+  min-width: 0 !important;
+  max-width: 280px !important;
+  height: 100dvh;
+  transform: translateX(-100%);
+  z-index: 1001;
+  border-right: 1px solid rgba(175, 146, 112, 0.15);
+  background: rgba(12, 16, 24, 0.98) !important;
+  backdrop-filter: blur(12px);
+  box-shadow: 12px 0 40px rgba(0, 0, 0, 0.45);
+}
+
+.consultoria-ia .chat-history-sidebar.open {
+  transform: translateX(0);
+}
+
+.consultoria-ia .history-header {
+  padding: 0.85rem 1rem !important;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.12);
+}
+
+.consultoria-ia .history-title {
+  font-size: 0.95rem !important;
+}
+
+.consultoria-ia .history-list {
+  padding: 0.5rem !important;
+}
+
+.consultoria-ia .history-item {
+  border-radius: 10px !important;
+  margin-bottom: 0.35rem;
+  padding: 0.65rem 0.75rem !important;
+}
+
+/* Header slim */
+.consultoria-ia .chat-header--slim {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 1rem !important;
+  min-height: 52px;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.1) !important;
+  background: rgba(10, 14, 22, 0.72) !important;
+  backdrop-filter: blur(8px);
+}
+
+.consultoria-ia .chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.consultoria-ia .chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.consultoria-ia .chat-header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  background: transparent;
+  color: rgba(175, 146, 112, 0.9);
+  cursor: pointer;
+}
+
+.consultoria-ia .chat-header-icon-btn:hover {
+  background: rgba(175, 146, 112, 0.12);
+}
+
+.consultoria-ia .chat-header--slim .chat-title {
+  font-size: 1rem !important;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.consultoria-ia .chat-header--slim .chat-subtitle,
+.consultoria-ia .chat-gate-revisit-button {
+  display: none !important;
+}
+
+.consultoria-ia .chat-model-selector {
+  flex: 0 0 auto !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.consultoria-ia .chat-model-label {
+  display: none;
+}
+
+.consultoria-ia .chat-model-select {
+  max-width: 148px;
+  padding: 0.4rem 0.65rem !important;
+  font-size: 0.78rem !important;
+  border-radius: 9px !important;
+  border: 1px solid rgba(175, 146, 112, 0.22) !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: rgba(241, 235, 224, 0.9) !important;
+}
+
+/* Memória minimal */
+.consultoria-ia .consultoria-memory-wrap--minimal {
+  padding: 0.35rem 1rem 0.25rem !important;
+}
+
+.consultoria-ia .magnus-memory-banner--minimal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.consultoria-ia .magnus-memory-banner--minimal .magnus-memory-chip {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.68rem;
+}
+
+.consultoria-ia .magnus-memory-chip-label {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Área de mensagens */
+.consultoria-ia .chat-messages {
+  padding: 0.75rem 1rem 0.5rem !important;
+}
+
+.consultoria-ia .messages-container {
+  max-width: 720px;
+  margin: 0 auto;
+  gap: 0.85rem !important;
+}
+
+.consultoria-ia .message-bubble {
+  max-width: min(88%, 520px) !important;
+  border-radius: 14px !important;
+}
+
+.consultoria-ia .ai-message .message-bubble {
+  background: rgba(22, 28, 38, 0.85) !important;
+  border: 1px solid rgba(175, 146, 112, 0.12) !important;
+}
+
+.consultoria-ia .user-message .message-bubble {
+  background: rgba(175, 146, 112, 0.15) !important;
+  border: 1px solid rgba(175, 146, 112, 0.25) !important;
+}
+
+/* Empty state refinado */
+.consultoria-ia .chat-empty--refined {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 1.25rem 1.25rem 2rem !important;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 0;
+}
+
+.consultoria-ia .chat-empty-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.35rem;
+  width: 100%;
+}
+
+.consultoria-ia .chat-empty-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(107, 179, 255, 0.9);
+  font-weight: 700;
+}
+
+.consultoria-ia .chat-empty--refined .chat-empty-title {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(1.35rem, 2.6vw, 1.7rem) !important;
+  font-weight: 600;
+  margin: 0 !important;
+  line-height: 1.15;
+  color: #f3ead8;
+}
+
+.consultoria-ia .chat-empty--refined .chat-empty-description {
+  font-size: 0.9rem !important;
+  color: rgba(241, 235, 224, 0.65) !important;
+  margin: 0 !important;
+  max-width: 34ch;
+  line-height: 1.55;
+}
+
+.consultoria-ia .chat-suggestions--grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem !important;
+  width: 100%;
+  max-width: 600px !important;
+  margin: 0;
+}
+
+.consultoria-ia .suggestion-button--pill {
+  min-height: 62px !important;
+  padding: 0.8rem 1rem !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  line-height: 1.32 !important;
+  letter-spacing: 0.01em;
+  border-radius: 14px !important;
+  border: 1px solid rgba(67, 147, 255, 0.46) !important;
+  background:
+    linear-gradient(180deg, rgba(7, 34, 79, 0.92) 0%, rgba(6, 27, 68, 0.94) 100%),
+    radial-gradient(circle at 8% 20%, rgba(91, 170, 255, 0.16), transparent 58%) !important;
+  color: #c5e0ff !important;
+  box-shadow:
+    0 10px 24px rgba(3, 15, 40, 0.38),
+    inset 0 0 0 1px rgba(139, 202, 255, 0.08),
+    0 0 0 1px rgba(54, 140, 255, 0.1) !important;
+  text-align: left;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.consultoria-ia .suggestion-button--pill:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  border-color: rgba(99, 176, 255, 0.72) !important;
+  background:
+    linear-gradient(180deg, rgba(9, 40, 88, 0.95) 0%, rgba(7, 32, 78, 0.96) 100%),
+    radial-gradient(circle at 8% 20%, rgba(91, 170, 255, 0.22), transparent 58%) !important;
+  color: #e8f3ff !important;
+  box-shadow:
+    0 14px 28px rgba(3, 18, 46, 0.45),
+    inset 0 0 0 1px rgba(162, 214, 255, 0.2),
+    0 0 20px rgba(84, 162, 255, 0.22) !important;
+}
+
+/* Input área */
+.consultoria-ia .chat-input-container {
+  padding: 0.65rem 1rem 0.85rem !important;
+  border-top: 1px solid rgba(175, 146, 112, 0.08);
+  background: rgba(8, 12, 18, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.consultoria-ia .chat-input-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.consultoria-ia .chat-input {
+  padding: 0.75rem 1rem !important;
+  font-size: 0.92rem !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(175, 146, 112, 0.18) !important;
+  background: rgba(0, 0, 0, 0.28) !important;
+}
+
+.consultoria-ia .chat-send-button {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(145deg, #af9270, #8a7358) !important;
+  border: none !important;
+}
+
+/* Banners mais discretos */
+.consultoria-ia .chat-demo-mode-banner,
+.consultoria-ia .chat-objectives-banner {
+  margin: 0.5rem 1rem 0 !important;
+  padding: 0.65rem 0.85rem !important;
+  font-size: 0.85rem;
+  border-radius: 12px !important;
+}
+
+.consultoria-ia .chat-error {
+  margin: 0.5rem 1rem !important;
+  padding: 0.65rem !important;
+  border-radius: 10px !important;
+}
+
+.consultoria-ia .suggestion-button--pill:active:not(:disabled) {
+  transform: translateY(0) !important;
+}
+
+@media (max-width: 640px) {
+  .consultoria-ia .chat-empty--refined {
+    padding: 1rem 1rem 1.5rem !important;
+    justify-content: flex-start;
+    padding-top: 1.5rem !important;
+  }
+
+  .consultoria-ia .chat-empty-intro {
+    margin-bottom: 1rem;
+  }
+
+  .consultoria-ia .chat-suggestions--grid {
+    grid-template-columns: 1fr;
+    max-width: 100% !important;
+  }
+
+  .consultoria-ia .chat-model-select {
+    max-width: 120px;
+  }
+}

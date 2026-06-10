@@ -5,6 +5,7 @@ import { listByUser, getById, update, COLLECTIONS } from '../services/storage';
 import { getAiModels, getLlmStatus } from '../services/llm';
 import { handleChat } from '../services/aiChat';
 import { runBlueprintGateSuggestion } from '../services/blueprintGate';
+import { suggestSolutionPickActions } from '../services/solutionPickSuggest';
 import { withConcurrencyLimit } from '../services/concurrency';
 
 const router = Router();
@@ -48,6 +49,21 @@ router.get('/conversations/:id', async (req: Request, res: Response, next: NextF
 });
 
 /** Gate Zero — não persiste conversa; só retorna classificação sugerida */
+router.post('/solution-pick-suggest', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { diagnosticContext } = req.body;
+    if (!diagnosticContext || typeof diagnosticContext !== 'string') {
+      throw new AppError(400, 'diagnosticContext is required');
+    }
+    const result = await withConcurrencyLimit(req.userId, () =>
+      suggestSolutionPickActions(diagnosticContext)
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/blueprint-gate', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { diagnosticContext } = req.body;
