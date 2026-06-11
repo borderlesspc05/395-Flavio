@@ -8,6 +8,8 @@ export interface UserProfile {
   email: string;
   displayName?: string;
   planId?: PlanId;
+  /** Se definido, sobrescreve o limite do plano (null = ilimitado). */
+  concurrencyOverride?: number | null;
   requestCount: number;
   firstSeenAt: string;
   lastSeenAt: string;
@@ -18,6 +20,7 @@ export async function upsertUserProfile(data: {
   email?: string;
   displayName?: string;
   planId?: PlanId;
+  concurrencyOverride?: number | null;
 }): Promise<UserProfile> {
   if (!data.userId || data.userId === 'demo-user') {
     throw new Error('Invalid userId for profile');
@@ -31,6 +34,10 @@ export async function upsertUserProfile(data: {
     email: data.email?.trim().toLowerCase() ?? existing?.email ?? '',
     displayName: data.displayName ?? existing?.displayName,
     planId: data.planId ?? existing?.planId,
+    concurrencyOverride:
+      data.concurrencyOverride !== undefined
+        ? data.concurrencyOverride
+        : existing?.concurrencyOverride,
     requestCount: existing?.requestCount ?? 0,
     firstSeenAt: existing?.firstSeenAt ?? now,
     lastSeenAt: now,

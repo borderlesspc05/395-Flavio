@@ -5,13 +5,14 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { AuthLayout } from '../components/AuthLayout';
 import { claimSubscriptionForUser } from '../services/claimSubscription';
-import { storePendingCheckout } from '../services/billingApi';
+import { readPendingCheckout, storePendingCheckout } from '../services/billingApi';
 import { isPlanId } from '../constants/plans';
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const paymentSuccess = searchParams.get('payment') === 'success';
+  const sessionFromUrl = searchParams.get('session_id');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,6 +31,15 @@ export function RegisterPage() {
       planRaw && isPlanId(planRaw) ? planRaw : undefined
     );
   }, [searchParams]);
+
+  useEffect(() => {
+    const pending = readPendingCheckout();
+    const allowed =
+      (paymentSuccess && Boolean(sessionFromUrl)) || Boolean(pending?.sessionId);
+    if (!allowed) {
+      navigate('/planos', { replace: true, state: { notice: 'checkout_required' } });
+    }
+  }, [paymentSuccess, sessionFromUrl, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,8 +63,9 @@ export function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Registro"
-      backTo={{ href: '/', label: 'Voltar para a landing' }}
+      title="Criar conta"
+      subtitle="Use o mesmo email do pagamento"
+      backTo={{ href: '/planos', label: 'Voltar' }}
       footer={
         <>
           Já tem uma conta? <Link to="/login" className="auth-link">Faça login</Link>

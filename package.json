@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "npm run dev --prefix server",
     "build": "tsc && vite build",
     "postbuild": "npm run build:api",
     "preview": "vite preview",

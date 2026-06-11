@@ -79,7 +79,9 @@ export async function linkSubscriptionToUser(
 export async function getPlanIdForUser(userId: string): Promise<PlanId> {
   const { listByUser } = await import('./storage');
   const items = await listByUser<SubscriptionRecord>(COLLECTIONS.subscriptions, userId);
-  const active = items.find((s) => s.status === 'active' && isPlanId(s.planId));
+  const active = items.find(
+    (s) => (s.status === 'active' || s.status === 'past_due') && isPlanId(s.planId)
+  );
   if (active) return active.planId;
   return DEFAULT_PLAN_ID;
 }
@@ -87,11 +89,53 @@ export async function getPlanIdForUser(userId: string): Promise<PlanId> {
 export async function getPlanSummaryForUser(userId: string) {
   const planId = await getPlanIdForUser(userId);
   const plan = (await import('./plans')).PLANS[planId];
+  const { getConcurrencyLimitForUser } = await import('./concurrency');
   return {
     planId,
     planName: plan.name,
-    concurrencyLimit: await getConcurrencyLimitFromSettings(planId),
+    concurrencyLimit: await getConcurrencyLimitForUser(userId),
   };
+}
+
+export async function setSubscriptionPlanForEmail(
+  email: string,
+  planId: PlanId,
+  userId?: string
+): Promise<SubscriptionRecord> {
+  const record = await upsertSubscriptionFromCheckout({ email, planId });
+  if (userId) {
+    await linkSubscriptionToUser(email, userId);
+  }
+  return record;
+}
+
+export async function updateSubscriptionByStripeId(
+  stripeSubscriptionId: string,
+  patch: { status?: SubscriptionRecord['status']; planId?: PlanId }
+): Promise<void> {
+  const { getFirestore, isFirebaseEnabled } = await import('./firebase');
+  const db = getFirestore();
+  const now = new Date().toISOString();
+
+  if (db && isFirebaseEnabled()) {
+    const snap = await db
+      .collection(COLLECTIONS.subscriptions)
+      .where('stripeSubscriptionId', '==', stripeSubscriptionId)
+      .limit(1)
+      .get();
+    if (!snap.empty) {
+      const doc = snap.docs[0];
+      await update(COLLECTIONS.subscriptions, doc.id, { ...patch, updatedAt: now });
+      return;
+    }
+  }
+
+  const { listAll } = await import('./storage');
+  const all = await listAll<SubscriptionRecord>(COLLECTIONS.subscriptions);
+  const match = all.find((s) => s.stripeSubscriptionId === stripeSubscriptionId);
+  if (match) {
+    await update(COLLECTIONS.subscriptions, match.id, { ...patch, updatedAt: now });
+  }
 }
 
 export async function cancelSubscriptionByStripeId(stripeSubscriptionId: string): Promise<void> {

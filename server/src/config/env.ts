@@ -107,4 +107,5 @@ export const COLLECTIONS = {
   userProfiles: 'userProfiles',
   apiRequestLogs: 'apiRequestLogs',
   adminSettings: 'adminSettings',
+  supportTickets: 'supportTickets',
 } as const;

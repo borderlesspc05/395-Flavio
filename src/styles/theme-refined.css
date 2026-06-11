@@ -71,6 +71,11 @@ body {
   overflow-y: auto;
 }
 
+/* Corrige legado (index.css) que alinhava o card no topo */
+.auth-page .auth-container {
+  align-items: center !important;
+}
+
 .auth-form-heading {
   font-size: var(--font-size-xl) !important;
   margin-bottom: var(--spacing-lg) !important;

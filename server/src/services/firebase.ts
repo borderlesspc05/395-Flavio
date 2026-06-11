@@ -53,3 +53,9 @@ export function getFirestore(): admin.firestore.Firestore | null {
   if (useMemoryFallback) return null;
   return admin.firestore();
 }
+
+export function getAuth(): admin.auth.Auth | null {
+  if (!initialized) initFirebase();
+  if (useMemoryFallback) return null;
+  return admin.auth();
+}

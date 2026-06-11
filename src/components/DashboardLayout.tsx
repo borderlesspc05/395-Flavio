@@ -16,6 +16,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useLocale } from '../context/LocaleContext';
 import { CycleSelector } from './CycleSelector';
+import { SupportChatWidget } from './SupportChatWidget';
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = 'mm.sidebar.collapsed';
 
@@ -171,6 +172,7 @@ export function DashboardLayout() {
           </main>
         </div>
       </div>
+      <SupportChatWidget />
     </div>
   );
 }

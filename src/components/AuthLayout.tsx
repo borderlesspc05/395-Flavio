@@ -4,41 +4,40 @@ import { CursorGlowBackground } from './CursorGlowBackground';
 
 interface AuthLayoutProps {
   title: string;
+  subtitle?: string;
   children: React.ReactNode;
-  footer: React.ReactNode;
+  footer?: React.ReactNode;
   backTo?: { href: string; label: string };
 }
 
-export function AuthLayout({ title, children, footer, backTo }: AuthLayoutProps) {
+export function AuthLayout({ title, subtitle, children, footer, backTo }: AuthLayoutProps) {
   return (
-    <div className="auth-page">
+    <div className="auth-page auth-page--refined">
       <CursorGlowBackground />
+      {backTo && (
+        <Link to={backTo.href} className="auth-page-back">
+          <ArrowLeft size={16} aria-hidden />
+          <span>{backTo.label}</span>
+        </Link>
+      )}
       <div className="auth-container">
-        <div className="auth-card auth-card-vivid">
-          <div className="auth-logo">
+        <div className="auth-card auth-card-vivid auth-card--compact">
+          <header className="auth-card-head">
             <img
               src="/icone-magnusmind.svg"
-              alt="Magnus Mind Icon"
-              className="logo-icon"
-              style={{ width: 80, height: 80 }}
+              alt=""
+              className="auth-card-mark"
+              width={44}
+              height={44}
             />
-            <h1 className="auth-title">magnus mind</h1>
-          </div>
-          {backTo && (
-            <nav className="auth-toolbar" aria-label="Navegação da página">
-              <Link to={backTo.href} className="auth-btn auth-btn--back">
-                <span className="auth-btn-icon" aria-hidden>
-                  <ArrowLeft size={18} strokeWidth={2} />
-                </span>
-                <span className="auth-btn-label">{backTo.label}</span>
-              </Link>
-            </nav>
-          )}
-          <h2 className="auth-title auth-form-heading">
-            {title}
-          </h2>
+            <div className="auth-card-head-copy">
+              <p className="auth-eyebrow">Magnus Mind</p>
+              <h1 className="auth-form-heading">{title}</h1>
+              {subtitle ? <p className="auth-card-sub">{subtitle}</p> : null}
+            </div>
+          </header>
           {children}
-          <p className="auth-footer">{footer}</p>
+          {footer ? <p className="auth-footer">{footer}</p> : null}
         </div>
       </div>
     </div>

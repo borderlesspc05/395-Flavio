@@ -8,6 +8,7 @@ import {
 import { aiApi } from '../services/api';
 import {
   parseSelectedSolutionActions,
+  reconcileSelectedWithSuggestions,
   stashSelectedSolutionActions,
   withSelectedSolutionActions,
 } from '../services/solutionPick';
@@ -46,7 +47,10 @@ export function SolutionPickPanel({ data, userId, onDataChange, onSaveDraft }: P
   const [error, setError] = useState<string | null>(null);
   const [goingDesign, setGoingDesign] = useState(false);
 
-  const selected = useMemo(() => parseSelectedSolutionActions(data), [data]);
+  const selected = useMemo(
+    () => reconcileSelectedWithSuggestions(parseSelectedSolutionActions(data), suggestions),
+    [data, suggestions]
+  );
   const selectedIds = useMemo(() => new Set(selected.map((s) => s.id)), [selected]);
   const phasesReady = isPhasesThroughTeamScanComplete(data);
 
@@ -75,28 +79,52 @@ export function SolutionPickPanel({ data, userId, onDataChange, onSaveDraft }: P
     }
   }, [phasesReady, suggestions.length, loading, loadSuggestions]);
 
-  const toggle = (action: SuggestedSolutionAction) => {
+  useEffect(() => {
+    if (suggestions.length === 0) return;
     onDataChange((prev) => {
-      const current = parseSelectedSolutionActions(prev);
+      const raw = parseSelectedSolutionActions(prev);
+      const reconciled = reconcileSelectedWithSuggestions(raw, suggestions);
+      if (
+        reconciled.length === raw.length &&
+        reconciled.every((item, index) => item.id === raw[index]?.id)
+      ) {
+        return prev;
+      }
+      return withSelectedSolutionActions(prev, reconciled);
+    });
+  }, [suggestions, onDataChange]);
+
+  const toggle = (action: SuggestedSolutionAction) => {
+    let limitReached = false;
+    onDataChange((prev) => {
+      const raw = parseSelectedSolutionActions(prev);
+      const current = reconcileSelectedWithSuggestions(raw, suggestions);
       const exists = current.some((s) => s.id === action.id);
       if (exists) {
-        setError(null);
         return withSelectedSolutionActions(
           prev,
           current.filter((s) => s.id !== action.id)
         );
       }
       if (current.length >= MAX_SELECT) {
-        setError(`Selecione no máximo ${MAX_SELECT} ações para o Design.`);
+        limitReached = true;
+        if (raw.length !== current.length) {
+          return withSelectedSolutionActions(prev, current);
+        }
         return prev;
       }
-      setError(null);
       return withSelectedSolutionActions(prev, [...current, action]);
     });
+    setError(
+      limitReached ? `Selecione no máximo ${MAX_SELECT} ações para o Design.` : null
+    );
   };
 
   const goToDesign = async () => {
-    const currentSelected = parseSelectedSolutionActions(data);
+    const currentSelected = reconcileSelectedWithSuggestions(
+      parseSelectedSolutionActions(data),
+      suggestions
+    );
     if (currentSelected.length === 0) {
       setError('Selecione ao menos uma ação para seguir ao Design.');
       return;

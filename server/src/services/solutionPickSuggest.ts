@@ -1,5 +1,4 @@
 import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
-import { generateId } from '../utils/id';
 
 export interface SuggestedSolutionActionDraft {
   id: string;
@@ -179,7 +178,7 @@ function normalizeAction(raw: unknown, index: number): SuggestedSolutionActionDr
   const score = Math.min(100, Math.max(0, Number(o.score ?? 50) || 50));
 
   return {
-    id: String(o.id ?? `sol-${index + 1}-${generateId().slice(0, 6)}`),
+    id: `sol-${index + 1}`,
     titulo,
     descricao: String(o.descricao ?? o.description ?? titulo).trim(),
     score,
@@ -250,7 +249,8 @@ Responda APENAS com JSON array valido (sem markdown), 10 itens:
           .map((item, i) => normalizeAction(item, i))
           .filter((a): a is SuggestedSolutionActionDraft => Boolean(a))
           .sort((a, b) => b.score - a.score)
-          .slice(0, 10);
+          .slice(0, 10)
+          .map((s, i) => ({ ...s, id: `sol-${i + 1}` }));
         if (suggestions.length >= 3) {
           return { suggestions };
         }

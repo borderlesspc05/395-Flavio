@@ -11,7 +11,11 @@ import {
   BarChart3,
   Sparkles,
   Layers,
+  MessageCircle,
 } from 'lucide-react';
+import { AdminNotificationsBell } from '../components/admin/AdminNotificationsBell';
+import { AdminSupportPanel } from '../components/admin/AdminSupportPanel';
+import { AdminUsersPanel } from '../components/admin/AdminUsersPanel';
 import { auth } from '../config/firebase';
 import {
   adminApi,
@@ -19,12 +23,14 @@ import {
   type PlanSettingsMap,
 } from '../services/adminApi';
 import type { PlanId } from '../constants/plans';
+import type { AdminNotification } from '../types/adminNotifications';
 import { AdminBarChart } from '../components/admin/AdminBarChart';
 import { AdminDonutChart } from '../components/admin/AdminDonutChart';
 
-type TabId = 'users' | 'requests' | 'settings';
+type TabId = 'users' | 'requests' | 'settings' | 'support';
 
 const PLAN_IDS: PlanId[] = ['starter', 'advanced', 'premium'];
+const NOTIF_POLL_MS = 20000;
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -34,6 +40,18 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      const payload = await adminApi.getNotifications();
+      setNotifications(payload.notifications);
+      setUnreadSupportCount(payload.unreadSupportCount);
+    } catch {
+      /* polling silencioso */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,6 +70,20 @@ export function AdminPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void loadNotifications();
+    const id = window.setInterval(() => void loadNotifications(), NOTIF_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    if (tab !== 'support') return;
+    setUnreadSupportCount(0);
+    void adminApi.markAllSupportRead();
+  }, [tab]);
+
+  const goToTab = (next: TabId) => setTab(next);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -135,6 +167,17 @@ export function AdminPage() {
             <Settings size={18} />
             Planos
           </button>
+          <button
+            type="button"
+            className={`admin-nav-item ${tab === 'support' ? 'is-active' : ''}`}
+            onClick={() => setTab('support')}
+          >
+            <MessageCircle size={18} />
+            <span>Suporte</span>
+            {unreadSupportCount > 0 && tab !== 'support' && (
+              <span className="admin-nav-dot" aria-label="Mensagens não lidas" />
+            )}
+          </button>
         </nav>
 
         <div className="admin-sidebar-foot">
@@ -155,17 +198,24 @@ export function AdminPage() {
               {tab === 'requests' && 'Requisições & uso'}
               {tab === 'users' && 'Cadastros'}
               {tab === 'settings' && 'Valores dos planos'}
+              {tab === 'support' && 'Suporte ao usuário'}
             </h1>
           </div>
-          <button
-            type="button"
-            className="admin-btn admin-btn--ghost"
-            onClick={() => void load()}
-            disabled={loading}
-          >
-            <RefreshCw size={16} className={loading ? 'admin-spin' : ''} />
-            Atualizar
-          </button>
+          <div className="admin-topbar-actions">
+            <AdminNotificationsBell notifications={notifications} onNavigate={goToTab} />
+            <button
+              type="button"
+              className="admin-btn admin-btn--ghost"
+              onClick={() => {
+                void load();
+                void loadNotifications();
+              }}
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={loading ? 'admin-spin' : ''} />
+              Atualizar
+            </button>
+          </div>
         </header>
 
         {error && (
@@ -289,45 +339,10 @@ export function AdminPage() {
             )}
 
             {tab === 'users' && (
-              <section className="admin-card admin-reveal">
-                <header className="admin-card-head">
-                  <h2>Pessoas que usam o app</h2>
-                  <p>Email, plano e volume de uso</p>
-                </header>
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Email</th>
-                        <th>Nome</th>
-                        <th>Plano</th>
-                        <th>Requisições</th>
-                        <th>Último acesso</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.users.length === 0 ? (
-                        <tr>
-                          <td colSpan={5}>Nenhum usuário registrado ainda.</td>
-                        </tr>
-                      ) : (
-                        data.users.map((u) => (
-                          <tr key={u.userId}>
-                            <td>{u.email || '—'}</td>
-                            <td>{u.displayName || '—'}</td>
-                            <td>
-                              <span className="admin-badge">{String(u.planId)}</span>
-                            </td>
-                            <td>{u.requestCount}</td>
-                            <td>{new Date(u.lastSeenAt).toLocaleString('pt-BR')}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+              <AdminUsersPanel users={data.users} onRefresh={() => void load()} />
             )}
+
+            {tab === 'support' && <AdminSupportPanel />}
 
             {tab === 'settings' && planDraft && (
               <section className="admin-card admin-reveal">

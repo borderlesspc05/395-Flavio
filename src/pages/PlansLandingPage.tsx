@@ -9,7 +9,10 @@ import {
   Zap,
   GitBranch,
   Shield,
+  Instagram,
 } from 'lucide-react';
+
+const INSTAGRAM_URL = 'https://www.instagram.com/magnusmind.io/';
 import { ScrollReveal } from '../components/ScrollReveal';
 import { PlanCheckoutButton } from '../components/PlanCheckoutButton';
 import type { PlanId } from '../constants/plans';
@@ -121,11 +124,8 @@ export function PlansLandingPage() {
           <a href="#tecnologia">Tecnologia</a>
         </nav>
         <div className="plans-nav-cta">
-          <Link to="/login" className="plans-btn plans-btn--ghost">
+          <Link to="/login" className="plans-btn plans-btn--primary">
             Entrar
-          </Link>
-          <Link to="/register" className="plans-btn plans-btn--primary">
-            Criar conta
           </Link>
         </div>
       </header>
@@ -295,6 +295,10 @@ export function PlansLandingPage() {
           <Link to="/login">Login</Link>
           <a href="https://magnusmind.io" target="_blank" rel="noreferrer">
             magnusmind.io
+          </a>
+          <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="plans-footer-instagram">
+            <Instagram size={15} aria-hidden />
+            @magnusmind.io
           </a>
         </div>
       </footer>

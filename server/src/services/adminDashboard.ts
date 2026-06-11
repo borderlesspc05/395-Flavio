@@ -8,6 +8,7 @@ import {
   getRequestTypeLabel,
 } from './apiRequestLog';
 import { getPlanSettings } from './adminSettings';
+import { PLANS, type PlanId } from './plans';
 
 export async function getAdminDashboardData() {
   const [users, subscriptions, requestLogs, planSettings] = await Promise.all([
@@ -24,9 +25,15 @@ export async function getAdminDashboardData() {
 
   const mergedUsers = users.map((u) => {
     const sub = subsByUserId.get(u.userId);
+    const planId = (sub?.planId ?? u.planId ?? 'starter') as PlanId;
+    const concurrencyLimit =
+      u.concurrencyOverride !== undefined
+        ? u.concurrencyOverride
+        : (planSettings[planId]?.concurrencyLimit ?? PLANS[planId].concurrencyLimit);
     return {
       ...u,
-      planId: sub?.planId ?? u.planId ?? 'starter',
+      planId,
+      concurrencyLimit,
       subscriptionStatus: sub?.status ?? 'none',
       email: u.email || sub?.email || '—',
     };
@@ -34,11 +41,14 @@ export async function getAdminDashboardData() {
 
   for (const sub of subscriptions) {
     if (sub.userId && !mergedUsers.find((u) => u.userId === sub.userId)) {
+      const planId = sub.planId as PlanId;
       mergedUsers.push({
         id: sub.userId,
         userId: sub.userId,
         email: sub.email,
-        planId: sub.planId,
+        planId,
+        concurrencyLimit:
+          planSettings[planId]?.concurrencyLimit ?? PLANS[planId].concurrencyLimit,
         requestCount: 0,
         firstSeenAt: sub.createdAt,
         lastSeenAt: sub.updatedAt,

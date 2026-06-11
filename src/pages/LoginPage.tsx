@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -51,13 +51,9 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      title="Login"
-      backTo={{ href: '/', label: 'Voltar para a landing' }}
-      footer={
-        <>
-          Não tem uma conta? <Link to="/register" className="auth-link">Registre-se</Link>
-        </>
-      }
+      title="Entrar"
+      subtitle="Acesse sua conta Magnus Waves"
+      backTo={{ href: '/', label: 'Voltar' }}
     >
       {paymentSuccess && (
         <p className="auth-payment-banner" role="status">

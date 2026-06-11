@@ -306,7 +306,7 @@ Documento de validação do que foi implementado na plataforma.
 ### Qualidade
 
 20. [x] **Build** — `npm run build` (front + server) OK após as alterações
-21. [ ] **Commit / push** — alterações desta sessão ainda locais (não commitadas em 02/06)
+21. [x] **Commit / push** — sessão Solution Pick / Design enviada (`582bef8`)
 
 ### Validar manualmente
 
@@ -548,6 +548,42 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
+## Checklist — sessão 11/06/2026 (Stripe, admin, suporte e acesso)
+
+1. [x] **Solution Pick** — correção da seleção: reconciliação com a lista atual, IDs estáveis (`sol-1`…`sol-10`) e toggle sem bug de limite fantasma
+2. [x] **Admin — notificações** — sininho no topo com alertas de novo usuário, mensagem de suporte e requisição na API (`AdminNotificationsBell`, `GET /api/admin/notifications`)
+3. [x] **Admin — Suporte** — bolinha dourada no menu quando há mensagem não lida; some ao abrir a aba (`markAllReadByAdmin`)
+4. [x] **Chat de suporte** — widget flutuante no app, API `supportChat`, painel **Suporte** no console admin
+5. [x] **Landing** — link oficial do Instagram [@magnusmind.io](https://www.instagram.com/magnusmind.io/) no rodapé
+6. [x] **Stripe Checkout real** — redirecionamento para `checkout.stripe.com`, `locale: pt-BR` e guia em `docs/STRIPE-PLANOS.md`
+7. [x] **Acesso** — removidos “Criar conta” da landing e “Registre-se” do login; entrada só para quem já tem conta
+8. [x] **Registro pós-pagamento** — `/register` bloqueada sem `payment=success` + `session_id` (fluxo Stripe → criar conta)
+9. [x] **Admin — criar usuário** — formulário com email, senha, plano e limite de requisições (`POST /api/admin/users`, Firebase Admin)
+10. [x] **Admin — editar limites** — tabela com plano e requisições simultâneas editáveis por usuário (`PATCH /api/admin/users/:id`)
+11. [x] **Limites por plano** — Starter 1 · Advanced 3 · Premium ilimitado via `concurrency.ts` + claim após checkout
+12. [x] **Assinatura recorrente** — webhooks `customer.subscription.updated`, `invoice.payment_failed` e cancelamento (`subscription.deleted`)
+13. [x] **Login redesenhado** — card menor, centralizado, botão voltar fora do card (`auth-refined.css`, `AuthLayout`)
+14. [x] **Dev Stripe** — log `Stripe: configurado` no boot da API e script `npm run dev:api` na raiz do projeto
+
+### Validar manualmente — 11/06
+
+- [ ] Checkout Stripe → registro → dashboard com plano correto
+- [ ] Admin: sininho, bolinha Suporte, criar/editar usuário com limite
+- [ ] Widget de suporte no app e resposta no admin
+- [ ] Solution Pick: selecionar/deselecionar após atualizar sugestões
+
+### Arquivos principais — sessão 11/06
+
+| Área | Caminhos |
+|------|----------|
+| Solution Pick | `src/components/SolutionPickPanel.tsx`, `src/services/solutionPick.ts`, `server/src/services/solutionPickSuggest.ts` |
+| Stripe / billing | `server/src/services/stripeBilling.ts`, `docs/STRIPE-PLANOS.md`, `server/src/routes/billing.ts` |
+| Admin notif. / users | `src/components/admin/AdminNotificationsBell.tsx`, `AdminUsersPanel.tsx`, `server/src/services/adminNotifications.ts`, `adminUsers.ts` |
+| Suporte | `src/components/SupportChatWidget.tsx`, `server/src/services/supportChat.ts`, `server/src/routes/support.ts` |
+| Auth / landing | `src/styles/auth-refined.css`, `src/pages/LoginPage.tsx`, `src/pages/RegisterPage.tsx`, `src/pages/PlansLandingPage.tsx` |
+
+---
+
 ## Estrutura do projeto
 
 ```
@@ -604,4 +640,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 02 de junho de 2026 — Stripe, ciclos, equipe/e-mail, Solution Pick, Design e Consultoria IA*
+*Última atualização: 11 de junho de 2026 — Stripe real, admin (notif./usuários), suporte, acesso e login*

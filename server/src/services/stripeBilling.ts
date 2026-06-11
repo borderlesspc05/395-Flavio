@@ -50,6 +50,7 @@ export async function createCheckoutSession(planId: string): Promise<{ url: stri
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
+    locale: 'pt-BR',
     payment_method_types: ['card'],
     line_items: [{ price: priceIdForPlan(planId), quantity: 1 }],
     success_url: `${env.frontendUrl}/register?payment=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -155,6 +156,36 @@ export async function handleStripeWebhook(
           typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
         stripeCheckoutSessionId: session.id,
       });
+      break;
+    }
+    case 'customer.subscription.updated': {
+      const sub = event.data.object as {
+        id: string;
+        status: string;
+        metadata?: { planId?: string };
+      };
+      const { updateSubscriptionByStripeId } = await import('./subscriptions');
+      const status =
+        sub.status === 'active'
+          ? 'active'
+          : sub.status === 'past_due' || sub.status === 'unpaid'
+            ? 'past_due'
+            : 'cancelled';
+      const patch: { status: 'active' | 'past_due' | 'cancelled'; planId?: import('./plans').PlanId } =
+        { status };
+      if (sub.metadata?.planId && isPlanId(sub.metadata.planId)) {
+        patch.planId = sub.metadata.planId;
+      }
+      await updateSubscriptionByStripeId(sub.id, patch);
+      break;
+    }
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as { subscription?: string | null };
+      const subId = typeof invoice.subscription === 'string' ? invoice.subscription : undefined;
+      if (subId) {
+        const { updateSubscriptionByStripeId } = await import('./subscriptions');
+        await updateSubscriptionByStripeId(subId, { status: 'past_due' });
+      }
       break;
     }
     case 'customer.subscription.deleted': {
