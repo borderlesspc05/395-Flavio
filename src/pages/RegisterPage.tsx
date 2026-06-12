@@ -7,6 +7,7 @@ import { AuthLayout } from '../components/AuthLayout';
 import { claimSubscriptionForUser } from '../services/claimSubscription';
 import { readPendingCheckout, storePendingCheckout } from '../services/billingApi';
 import { isPlanId } from '../constants/plans';
+import { clearWorkspaceEntered } from '../services/projectWorkspace';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -53,7 +54,8 @@ export function RegisterPage() {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
       await claimSubscriptionForUser(cred.user.uid, cred.user.email ?? email);
-      navigate('/dashboard');
+      clearWorkspaceEntered();
+      navigate('/escolher-projeto');
     } catch {
       setError('Não foi possível criar a conta. Verifique os dados.');
     } finally {

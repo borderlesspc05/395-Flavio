@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   ArrowRight,
+  BarChart3,
   Bot,
   Calendar,
   Download,
@@ -494,7 +495,7 @@ export function ObjetivosPage() {
           <button
             type="button"
             className="objetivos-header-btn objetivos-header-btn--blueprint"
-            onClick={() => navigate('/dashboard/consultoria-ia')}
+            onClick={() => navigate('/dashboard/minha-equipe?tab=consultoria')}
             title="Abrir Consultoria IA e MM Blueprint (Onda 2 — Design)"
           >
             <GitBranch size={16} aria-hidden />
@@ -972,6 +973,35 @@ export function ObjetivosPage() {
           </div>
         </div>
       )}
+
+      <section className="mid-diffusion-panel" aria-labelledby="mid-conclude-title">
+        <div className="mid-diffusion-panel-copy">
+          <span className="mid-diffusion-eyebrow">Onda 3 → Onda 4</span>
+          <h2 id="mid-conclude-title" className="mid-diffusion-title">
+            Concluir MID
+          </h2>
+          <p className="mid-diffusion-subtitle">
+            Finalize a Difusão e vá para o Domínio: o Magnus Intelligence Dashboard gera o relatório
+            Kirkpatrick com o que foi executado neste ciclo.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="mid-diffusion-conclude"
+          onClick={() =>
+            navigate('/dashboard/relatorios', {
+              state: {
+                autoGenerate: true,
+                midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio (MID)…',
+              },
+            })
+          }
+        >
+          <BarChart3 size={18} aria-hidden />
+          Concluir MID e gerar relatório
+          <ArrowRight size={16} aria-hidden />
+        </button>
+      </section>
     </div>
   );
 }

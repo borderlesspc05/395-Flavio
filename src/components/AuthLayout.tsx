@@ -8,9 +8,10 @@ interface AuthLayoutProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   backTo?: { href: string; label: string };
+  cardClassName?: string;
 }
 
-export function AuthLayout({ title, subtitle, children, footer, backTo }: AuthLayoutProps) {
+export function AuthLayout({ title, subtitle, children, footer, backTo, cardClassName }: AuthLayoutProps) {
   return (
     <div className="auth-page auth-page--refined">
       <CursorGlowBackground />
@@ -21,7 +22,7 @@ export function AuthLayout({ title, subtitle, children, footer, backTo }: AuthLa
         </Link>
       )}
       <div className="auth-container">
-        <div className="auth-card auth-card-vivid auth-card--compact">
+        <div className={`auth-card auth-card-vivid auth-card--compact${cardClassName ? ` ${cardClassName}` : ''}`}>
           <header className="auth-card-head">
             <img
               src="/icone-magnusmind.svg"

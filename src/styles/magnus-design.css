@@ -340,6 +340,16 @@ textarea:focus-visible,
 
 /* —— Inner pages layout width —— */
 .objetivos-page,
+.relatorios-mid-notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(74, 107, 66, 0.35);
+  background: rgba(74, 107, 66, 0.12);
+  color: #b8dba8;
+  font-size: 0.9rem;
+}
+
 .relatorios-page,
 .historico-page,
 .minha-equipe-page,

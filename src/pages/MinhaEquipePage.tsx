@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Briefcase,
+  Bot,
   Calendar,
   Loader2,
   Mail,
@@ -16,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import axios from 'axios';
+import { ConsultoriaIAPage } from './ConsultoriaIAPage';
 import { teamApi } from '../services/api';
 import { useCycle } from '../context/CycleContext';
 import type { TeamMember } from '../types';
@@ -110,6 +113,9 @@ function initials(name: string) {
 }
 
 export function MinhaEquipePage() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') === 'consultoria' ? 'consultoria' : 'membros';
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -263,7 +269,39 @@ export function MinhaEquipePage() {
   };
 
   return (
-    <div className="minha-equipe">
+    <div className={`minha-equipe ${tab === 'consultoria' ? 'minha-equipe--consultoria' : ''}`}>
+      <div className="equipe-tabs" role="tablist" aria-label="Equipe e consultoria">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'membros'}
+          className={tab === 'membros' ? 'is-active' : ''}
+          onClick={() => setSearchParams({})}
+        >
+          <Users size={16} aria-hidden />
+          Membros
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'consultoria'}
+          className={tab === 'consultoria' ? 'is-active' : ''}
+          onClick={() => setSearchParams({ tab: 'consultoria' })}
+        >
+          <Bot size={16} aria-hidden />
+          Consultoria IA · Blueprint
+        </button>
+      </div>
+
+      {tab === 'consultoria' ? (
+        <div className="equipe-consultoria-embed">
+          <ConsultoriaIAPage
+            embedded
+            onBlueprintCommitted={() => navigate('/dashboard/design')}
+          />
+        </div>
+      ) : (
+        <>
       <header className="equipe-header">
         <div className="header-content">
           <div className="header-title-group">
@@ -610,6 +648,8 @@ export function MinhaEquipePage() {
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

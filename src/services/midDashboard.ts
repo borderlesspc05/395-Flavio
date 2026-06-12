@@ -410,7 +410,7 @@ function buildEvolution(input: BuildMidInput, progress: SprintProgress): MidEvol
       label: 'Confirmar Gate Zero',
       priority: 'alta',
       description: 'Definir Caminho A ou B no MM Blueprint antes de escalar execução.',
-      route: '/dashboard/consultoria-ia',
+      route: '/dashboard/minha-equipe?tab=consultoria',
     });
   } else if (waveId === 'difusao') {
     items.push({

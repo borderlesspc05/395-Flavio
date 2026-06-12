@@ -11,12 +11,14 @@ import {
   LogOut,
   Menu,
   UserCircle,
+  Layers,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useLocale } from '../context/LocaleContext';
 import { CycleSelector } from './CycleSelector';
 import { SupportChatWidget } from './SupportChatWidget';
+import { clearWorkspaceEntered } from '../services/projectWorkspace';
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = 'mm.sidebar.collapsed';
 
@@ -31,16 +33,20 @@ export function DashboardLayout() {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(SIDEBAR_COLLAPSE_STORAGE_KEY) === '1';
   });
-  const isConsultoriaChat = location.pathname === '/dashboard/consultoria-ia';
+  const isEquipeConsultoria =
+    location.pathname === '/dashboard/minha-equipe' &&
+    new URLSearchParams(location.search).get('tab') === 'consultoria';
+  const isConsultoriaChat = isEquipeConsultoria || location.pathname === '/dashboard/consultoria-ia';
   const isDesignPage = location.pathname === '/dashboard/design';
 
   const navItems = [
-    { id: 'dashboard', label: t.nav.hub, icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'dashboard', label: t.nav.hub, icon: LayoutDashboard, path: '/dashboard/inicio' },
+    { id: 'ciclos', label: 'Projetos', icon: Layers, path: '/escolher-projeto' },
     { id: 'formulario', label: t.nav.diagnostic, icon: FileText, path: '/dashboard/initial-form' },
-    { id: 'consultoria', label: t.nav.design, icon: Bot, path: '/dashboard/consultoria-ia' },
+    { id: 'consultoria', label: t.nav.design, icon: Bot, path: '/dashboard/design' },
     { id: 'objetivos', label: t.nav.diffusion, icon: Target, path: '/dashboard/objetivos' },
-    { id: 'equipe', label: t.nav.team, icon: Users, path: '/dashboard/minha-equipe' },
     { id: 'relatorios', label: t.nav.domain, icon: BarChart3, path: '/dashboard/relatorios' },
+    { id: 'equipe', label: t.nav.team, icon: Users, path: '/dashboard/minha-equipe' },
     { id: 'historico', label: t.nav.loop, icon: History, path: '/dashboard/historico' },
     { id: 'conta', label: t.nav.account, icon: UserCircle, path: '/dashboard/conta' },
   ];
@@ -77,6 +83,7 @@ export function DashboardLayout() {
   };
 
   const handleLogout = async () => {
+    clearWorkspaceEntered();
     await signOut(auth);
     navigate('/login');
   };
@@ -116,10 +123,9 @@ export function DashboardLayout() {
               const Icon = item.icon;
               const active =
                 location.pathname === item.path ||
-                (item.id === 'consultoria' &&
-                  (location.pathname === '/dashboard/design' || location.pathname === '/dashboard/consultoria-ia')) ||
-                (item.path === '/dashboard' &&
-                  (location.pathname === '/dashboard' || location.pathname === '/dashboard/'));
+                (item.id === 'ciclos' && location.pathname === '/escolher-projeto') ||
+                (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
+                (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe');
               return (
                 <button
                   key={item.id}

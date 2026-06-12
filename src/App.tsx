@@ -4,8 +4,9 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardLayout } from './components/DashboardLayout';
 import { DashboardHome } from './pages/DashboardHome';
+import { ProjectSelectPage } from './pages/ProjectSelectPage';
+import { ProjectGate } from './components/ProjectGate';
 import { InitialFormPage } from './pages/InitialFormPage';
-import { ConsultoriaIAPage } from './pages/ConsultoriaIAPage';
 import { DesignPlansPage } from './pages/DesignPlansPage';
 import { ObjetivosPage } from './pages/ObjetivosPage';
 import { MinhaEquipePage } from './pages/MinhaEquipePage';
@@ -39,17 +40,32 @@ export default function App() {
         }
       />
       <Route
+        path="/escolher-projeto"
+        element={
+          <ProtectedRoute>
+            <ProjectSelectPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardLayout />
+            <ProjectGate>
+              <DashboardLayout />
+            </ProjectGate>
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardHome />} />
+        <Route index element={<Navigate to="/dashboard/inicio" replace />} />
+        <Route path="ciclos" element={<Navigate to="/escolher-projeto" replace />} />
+        <Route path="inicio" element={<DashboardHome />} />
         <Route path="initial-form" element={<InitialFormPage />} />
         <Route path="design" element={<DesignPlansPage />} />
-        <Route path="consultoria-ia" element={<ConsultoriaIAPage />} />
+        <Route
+          path="consultoria-ia"
+          element={<Navigate to="/dashboard/minha-equipe?tab=consultoria" replace />}
+        />
         <Route path="objetivos" element={<ObjetivosPage />} />
         <Route path="minha-equipe" element={<MinhaEquipePage />} />
         <Route path="relatorios" element={<RelatoriosPage />} />

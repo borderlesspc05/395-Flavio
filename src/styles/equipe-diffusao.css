@@ -6,6 +6,66 @@
   padding-bottom: 2.5rem;
 }
 
+.minha-equipe--consultoria {
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding-bottom: 0;
+}
+
+.equipe-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.equipe-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(17, 23, 33, 0.6);
+  color: rgba(241, 235, 224, 0.75);
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.equipe-tabs button:hover {
+  background: rgba(175, 146, 112, 0.12);
+  color: #f3ead8;
+}
+
+.equipe-tabs button.is-active {
+  border-color: rgba(255, 188, 125, 0.45);
+  background: rgba(175, 146, 112, 0.2);
+  color: #ffbc7d;
+}
+
+.equipe-consultoria-embed {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.minha-equipe--consultoria .equipe-consultoria-embed {
+  margin: 0 -1.25rem;
+}
+
+@media (min-width: 769px) {
+  .minha-equipe--consultoria .equipe-consultoria-embed {
+    margin: 0;
+  }
+}
+
 .minha-equipe .equipe-header {
   margin-bottom: 1.5rem;
   padding: 1.35rem 1.5rem;

@@ -61,6 +61,7 @@ export function RelatoriosPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ReportDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [midNotice, setMidNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -97,9 +98,12 @@ export function RelatoriosPage() {
   }, []);
 
   useEffect(() => {
-    const state = location.state as { autoGenerate?: boolean } | null;
+    const state = location.state as { autoGenerate?: boolean; midConcludeNotice?: string } | null;
     if (!state?.autoGenerate || autoGenerateHandled.current) return;
     autoGenerateHandled.current = true;
+    if (state.midConcludeNotice) {
+      setMidNotice(state.midConcludeNotice);
+    }
     navigate(location.pathname, { replace: true, state: {} });
     void handleGenerate();
   }, [location, navigate, handleGenerate]);
@@ -258,6 +262,12 @@ export function RelatoriosPage() {
           </div>
         </div>
       </header>
+
+      {midNotice && (
+        <p className="relatorios-mid-notice" role="status">
+          {midNotice}
+        </p>
+      )}
 
       <section className="relatorios-generate-section">
         <h2 className="section-title">Gerar novo relatório</h2>

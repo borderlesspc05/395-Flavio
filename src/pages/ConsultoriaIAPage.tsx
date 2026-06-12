@@ -81,7 +81,12 @@ function mapMessages(raw: ServerMessage[], conversationId: string): ChatMessage[
     }));
 }
 
-export function ConsultoriaIAPage() {
+type ConsultoriaIAPageProps = {
+  embedded?: boolean;
+  onBlueprintCommitted?: () => void;
+};
+
+export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: ConsultoriaIAPageProps = {}) {
   const [models, setModels] = useState<AiModel[]>([]);
   const [conversations, setConversations] = useState<ConvSummary[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -252,8 +257,12 @@ export function ConsultoriaIAPage() {
         setMemoryMeta(m.meta);
       });
     }
+    if (onBlueprintCommitted) {
+      onBlueprintCommitted();
+      return;
+    }
     setUiPhase('chat');
-  }, []);
+  }, [onBlueprintCommitted]);
 
   const openGateRevision = useCallback(() => {
     const uid = auth.currentUser?.uid;
@@ -302,8 +311,20 @@ export function ConsultoriaIAPage() {
       setActiveId(id);
       setSelectedModel(conv.model || conv.currentModelId || selectedModel);
       setTitleDraft(conv.title || 'Nova conversa');
-    } catch {
-      setError('Não foi possível carregar a conversa.');
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      if (ax.response?.status === 404) {
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        if (activeId === id) {
+          setActiveId(null);
+          setMessages([]);
+          setTitleDraft('Nova conversa');
+          setEditingTitle(false);
+        }
+        setError('Esta conversa não existe mais ou pertence a outra sessão. Inicie uma nova conversa.');
+      } else {
+        setError('Não foi possível carregar a conversa. Verifique se a API está ativa e tente novamente.');
+      }
     } finally {
       setLoadingConv(false);
     }
@@ -430,7 +451,7 @@ export function ConsultoriaIAPage() {
     <div
       className={`consultoria-ia${
         showConsultoriaGate && !gateLoading ? ' consultoria-ia--gate-phase' : ''
-      }`}
+      }${embedded ? ' consultoria-ia--embedded' : ''}`}
     >
       {diagnosticComplete === false && (
         <div className="consultoria-gate-banner" style={{ margin: '0 1rem 0', maxWidth: 1200 }}>

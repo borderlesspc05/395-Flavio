@@ -34,7 +34,7 @@ interface CycleContextValue {
   needsDiagnosis: boolean;
   refreshCycles: () => Promise<void>;
   switchCycle: (cycleId: string) => Promise<void>;
-  startNewCycle: () => Promise<{ ok: boolean; message?: string }>;
+  startNewCycle: (options?: { label?: string }) => Promise<{ ok: boolean; message?: string }>;
   clearNeedsDiagnosis: () => void;
   persistActiveCycleSnapshot: () => Promise<void>;
 }
@@ -176,7 +176,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
     [userId, activeCycle, switching]
   );
 
-  const startNewCycle = useCallback(async () => {
+  const startNewCycle = useCallback(async (options?: { label?: string }) => {
     if (!userId) return { ok: false, message: 'Usuário não autenticado.' };
 
     try {
@@ -204,9 +204,11 @@ export function CycleProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      const label = options?.label?.trim();
       const next = await createDiagnosticCycle(userId, {
         status: 'draft',
         diagnosticContext: '',
+        ...(label ? { label } : {}),
       });
       await setActiveCycleId(userId, next.id);
       await loadCycleIntoWorkspace(

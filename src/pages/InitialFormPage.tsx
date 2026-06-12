@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   ArrowRight,
@@ -386,6 +386,7 @@ function PhaseHeader({
 
 export function InitialFormPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<InitialFormData>(() => createEmptyDiagnosticData());
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -397,6 +398,9 @@ export function InitialFormPage() {
   const [activePhaseId, setActivePhaseId] = useState<DiagnosticPhaseId>('decoding');
   const [activeLens, setActiveLens] = useState<DiagnosticLens>('performer');
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [showCycleNameModal, setShowCycleNameModal] = useState(false);
+  const [cycleName, setCycleName] = useState('');
+  const [cycleNameError, setCycleNameError] = useState<string | null>(null);
   const { activeCycle, needsDiagnosis, clearNeedsDiagnosis, persistActiveCycleSnapshot, refreshCycles, switching } =
     useCycle();
 
@@ -521,17 +525,34 @@ export function InitialFormPage() {
     }
   };
 
-  const handleSubmit = async (ev: FormEvent) => {
-    ev.preventDefault();
+  const openCycleNameModal = () => {
     if (!userId || !validate()) return;
+    const fromCreate = (location.state as { newProjectName?: string } | null)?.newProjectName?.trim();
+    const current = activeCycle?.label?.trim() ?? '';
+    const isAutoLabel = /^Ciclo \d+/i.test(current);
+    setCycleName(fromCreate || (isAutoLabel ? '' : current));
+    setCycleNameError(null);
+    setShowCycleNameModal(true);
+  };
+
+  const completeDiagnostic = async (projectName: string) => {
+    if (!userId) return;
+    const trimmedName = projectName.trim();
+    if (trimmedName.length < 2) {
+      setCycleNameError('Informe um nome com pelo menos 2 caracteres.');
+      return;
+    }
+
     setSaving(true);
     setFeedback(null);
+    setCycleNameError(null);
     try {
       const at = await saveInitialForm(userId, data);
       const diagnosticContext = buildDiagnosticContext(data);
       await syncMagnusMemoryToServer({ diagnosticContext });
       if (activeCycle) {
         await updateDiagnosticCycle(activeCycle.id, {
+          label: trimmedName,
           status: 'active',
           completedAt: at.toISOString(),
           diagnosticContext,
@@ -541,15 +562,16 @@ export function InitialFormPage() {
         await refreshCycles();
         clearNeedsDiagnosis();
       }
+      setShowCycleNameModal(false);
       setCompletedAt(at);
       scrollProjectToTop('auto');
-      navigate('/dashboard', {
+      navigate('/dashboard/design', {
         state: {
           postDiagnosticNotice: {
-            title: 'Diagnóstico concluído com sucesso',
+            title: `Projeto "${trimmedName}" iniciado`,
             message:
-              'Seu Human-to-Business Canvas foi salvo com as 5 etapas Magnus Waves e já pode orientar o MM Blueprint.',
-            nextStepLabel: 'Próximo passo recomendado: Design (MM Blueprint)',
+              'Seu Human-to-Business Canvas foi salvo. Valide os planos de ação ou use o Blueprint na Equipe.',
+            nextStepLabel: 'Próximo passo: validar planos no Design',
             completedAt: at.toISOString(),
           },
         },
@@ -560,6 +582,11 @@ export function InitialFormPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSubmit = (ev: FormEvent) => {
+    ev.preventDefault();
+    openCycleNameModal();
   };
 
   if (loading) {
@@ -735,6 +762,68 @@ export function InitialFormPage() {
           <ArrowRight size={16} aria-hidden />
         </button>
       </div>
+
+      {showCycleNameModal && (
+        <div className="cycle-name-modal" role="presentation">
+          <button
+            type="button"
+            className="cycle-name-modal__backdrop"
+            aria-label="Fechar"
+            onClick={() => !saving && setShowCycleNameModal(false)}
+          />
+          <div
+            className="cycle-name-modal__dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cycle-name-title"
+          >
+            <span className="cycle-name-modal__kicker">Último passo</span>
+            <h2 id="cycle-name-title">Nome do seu projeto</h2>
+            <p>
+              Este nome identifica o ciclo em todo o Magnus Waves — hub de projetos, seletor de ciclos e
+              relatórios.
+            </p>
+            <label className="cycle-name-modal__field">
+              <span>Nome do projeto</span>
+              <input
+                type="text"
+                value={cycleName}
+                onChange={(e) => {
+                  setCycleName(e.target.value);
+                  setCycleNameError(null);
+                }}
+                placeholder="Ex: Transformação Comercial 2026"
+                maxLength={80}
+                autoFocus
+                disabled={saving}
+              />
+            </label>
+            {cycleNameError && (
+              <p className="cycle-name-modal__error" role="alert">
+                {cycleNameError}
+              </p>
+            )}
+            <div className="cycle-name-modal__actions">
+              <button
+                type="button"
+                className="cycle-name-modal__ghost"
+                disabled={saving}
+                onClick={() => setShowCycleNameModal(false)}
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                className="cycle-name-modal__primary"
+                disabled={saving}
+                onClick={() => void completeDiagnostic(cycleName)}
+              >
+                {saving ? 'Salvando...' : 'Definir e concluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

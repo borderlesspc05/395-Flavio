@@ -31,6 +31,16 @@ export const api = axios.create({
 
 type ConcurrencyAxiosConfig = InternalAxiosRequestConfig & { _concurrencyHeld?: boolean };
 
+/** Garante que rotas com resolveUserId no servidor recebam o Firebase UID (não demo-user). */
+api.interceptors.request.use(async (config) => {
+  const userId = await getUserId();
+  if (userId) {
+    config.headers = config.headers ?? {};
+    (config.headers as Record<string, string>)['x-user-id'] = userId;
+  }
+  return config;
+});
+
 api.interceptors.request.use(async (config) => {
   const cfg = config as ConcurrencyAxiosConfig;
   const path = cfg.url ?? '';
@@ -207,7 +217,11 @@ export const aiApi = {
         .then((r) => normalizeConversationsList(r.data))
     ),
   conversation: (id: string) =>
-    api.get(`/api/ai/conversations/${id}`).then((r) => normalizeConversationDetail(r.data)),
+    withUserId((userId) =>
+      api
+        .get(`/api/ai/conversations/${id}`, { params: userId ? { userId } : {} })
+        .then((r) => normalizeConversationDetail(r.data))
+    ),
   chat: (data: {
     conversationId?: string;
     content: string;
@@ -233,9 +247,17 @@ export const aiApi = {
         .then((r) => normalizeChatResponse(r.data))
     ),
   updateTitle: (id: string, title: string) =>
-    api.patch(`/api/ai/conversations/${id}/title`, { title }).then((r) => r.data),
+    withUserId((userId) =>
+      api
+        .patch(`/api/ai/conversations/${id}/title`, { title, userId: userId || undefined })
+        .then((r) => r.data)
+    ),
   updateModel: (id: string, modelId: string) =>
-    api.patch(`/api/ai/conversations/${id}/model`, { model: modelId }).then((r) => r.data),
+    withUserId((userId) =>
+      api
+        .patch(`/api/ai/conversations/${id}/model`, { model: modelId, userId: userId || undefined })
+        .then((r) => r.data)
+    ),
   blueprintGateSuggest: (diagnosticContext: string) =>
     withUserId((userId) =>
       api

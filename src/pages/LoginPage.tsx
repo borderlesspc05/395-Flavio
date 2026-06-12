@@ -8,6 +8,7 @@ import { storePendingCheckout } from '../services/billingApi';
 import { claimSubscriptionForUser } from '../services/claimSubscription';
 import { isPlanId } from '../constants/plans';
 import { isAdminEmail } from '../constants/admin';
+import { clearWorkspaceEntered } from '../services/projectWorkspace';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -41,7 +42,8 @@ export function LoginPage() {
         return;
       }
       await claimSubscriptionForUser(cred.user.uid, cred.user.email ?? email);
-      navigate('/dashboard');
+      clearWorkspaceEntered();
+      navigate('/escolher-projeto');
     } catch {
       setError('Email ou senha inválidos.');
     } finally {

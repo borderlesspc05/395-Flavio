@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Layers, Loader2, Plus } from 'lucide-react';
+import { ChevronDown, FolderKanban, Layers, Loader2, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCycle } from '../context/CycleContext';
 
@@ -94,6 +94,17 @@ export function CycleSelector() {
                 </span>
               </button>
             ))}
+            <button
+              type="button"
+              className="cycle-selector__hub"
+              onClick={() => {
+                setOpen(false);
+                navigate('/escolher-projeto');
+              }}
+            >
+              <FolderKanban size={14} />
+              Escolher projeto
+            </button>
             <button type="button" className="cycle-selector__new" onClick={handleNewCycle} disabled={busy}>
               <Plus size={14} />
               Novo ciclo

@@ -584,6 +584,120 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
+## Checklist — sessão 02/06/2026 (dia completo)
+
+> Tudo implementado nesta sessão de desenvolvimento — **ainda não commitado** no Git (validar localmente antes de deploy).
+
+### Resumo do dia
+
+| # | Tema | Status |
+|---|------|--------|
+| 1 | Reorganizar fluxo: Consultoria na Equipe + Design com validação | ✅ |
+| 2 | Tela de escolha de projeto (card estilo login) antes do dashboard | ✅ |
+| 3 | Nome do projeto (criar + concluir diagnóstico) | ✅ |
+| 4 | Concluir MID → página de relatórios com geração automática | ✅ |
+| 5 | Correção Consultoria IA — carregar conversas do histórico | ✅ |
+
+### 1. Reorganização do fluxo Magnus Waves (Equipe + Design)
+
+- [x] **Consultoria IA / MM Blueprint** — movida para **Equipe** (`/dashboard/minha-equipe?tab=consultoria`), aba **Consultoria IA · Blueprint**
+- [x] **Design (Onda 2)** — sidebar aponta para `/dashboard/design` (validação de planos, não mais o chat)
+- [x] **Redirect legado** — `/dashboard/consultoria-ia` → Equipe → consultoria
+- [x] **`ConsultoriaIAPage`** — props `embedded` e `onBlueprintCommitted`; ao concluir Gate Zero navega para Design
+- [x] **`MinhaEquipePage`** — abas **Membros** | **Consultoria IA · Blueprint** com chat em tela cheia na aba consultoria
+- [x] **`DesignPlansPage`** — layout dividido: editor de planos + **preview Action Canvas** (`ActionCanvasPreview.tsx`)
+- [x] **Sincronização** — validar plano cria canvas na API; edições seguintes sincronizam automaticamente (debounce)
+- [x] **Concluir Design** — envia planos para Difusão (`/dashboard/objetivos`)
+- [x] **Concluir canvas (diagnóstico)** — navega para `/dashboard/design` (não mais só o hub)
+- [x] **Botão “Conversar com IA”** no Design — abre Equipe → consultoria com mensagem pré-preenchida
+- [x] **DashboardLayout** — Domínio (MID) abaixo de Difusão na sidebar; estado ativo da Equipe inclui aba consultoria
+
+### 2. Escolha de projeto ao entrar (card estilo login)
+
+- [x] **`ProjectSelectPage`** — tela `/escolher-projeto` fora do dashboard, mesmo visual do login (`AuthLayout` + card central)
+- [x] **Fluxo pós-login** — Login e registro vão para `/escolher-projeto` (não entram direto no dashboard)
+- [x] **`ProjectGate`** — bloqueia `/dashboard/*` até o usuário escolher ou criar um projeto (`sessionStorage`)
+- [x] **Lista de ciclos** — itens clicáveis no card com status e próximo passo (Diagnóstico / Design / Difusão / Domínio)
+- [x] **Novo projeto** — cria ciclo em branco e abre o diagnóstico
+- [x] **`cycleRouting.ts`** — após escolher, redireciona para a tela certa do fluxo daquele ciclo
+- [x] **Trocar projeto** — menu **Projetos** na sidebar e **Escolher projeto** no seletor de ciclos → `/escolher-projeto`
+- [x] **Logout** — limpa flag de workspace; próximo login exige nova escolha
+- [x] **Hub MID** — painel executivo em `/dashboard/inicio` (ícone Hub na sidebar)
+- [x] Removido hub de ciclos dentro do dashboard (`CycleHubPage` → substituído pela tela de escolha)
+
+### 3. Nome do projeto
+
+- [x] **Escolha de projeto (final do card)** — campo **Nome do projeto** + **Criar e iniciar diagnóstico** ao criar ciclo novo
+- [x] **Modal “Nome do seu projeto”** — ao clicar **Concluir canvas**, confirma ou ajusta o nome (pré-preenchido se já definiu na entrada)
+- [x] **Persistência** — nome salvo em `diagnosticCycles.label` no Firestore
+- [x] **Exibição** — nome aparece na escolha de projetos, seletor de ciclos e avisos pós-diagnóstico
+- [x] Labels automáticos (`Ciclo N · data`) não são reaproveitados — usuário define o nome do projeto
+
+### 4. Concluir MID → relatório Domínio
+
+- [x] **Bloco “Concluir MID”** no fim da página Difusão (`ObjetivosPage`)
+- [x] **Sign-off SIM** no Action Canvas — encerra canvas e vai para `/dashboard/relatorios` com geração automática
+- [x] **`RelatoriosPage`** — `autoGenerate` no `location.state` dispara **Gerar relatório completo** e abre o documento
+- [x] Aviso visual na página de relatórios quando veio da conclusão da Difusão / sign-off
+
+### 5. Navegação e links atualizados
+
+- [x] `LoginPage`, `RegisterPage`, `AdminProtectedRoute`, `AdminPage` → `/escolher-projeto`
+- [x] `DashboardHome` — hub em `/dashboard/inicio`
+- [x] `HistoricoPage`, `midDashboard.ts`, `ObjetivosPage` — links de blueprint/consultoria corrigidos
+- [x] `App.tsx` — rotas `escolher-projeto`, `inicio`, redirect `dashboard/ciclos`
+
+### 6. Consultoria IA — correção “Não foi possível carregar a conversa”
+
+- [x] **Causa** — `GET /api/ai/conversations/:id` não enviava `userId`; servidor usava `demo-user` → 404
+- [x] **Interceptor global** — header `x-user-id` em todas as requisições quando logado (`api.ts`)
+- [x] **`aiApi.conversation`** — passa `userId` na query
+- [x] **`aiApi.updateTitle` / `updateModel`** — passam `userId` no body
+- [x] **UX** — conversa 404 removida do histórico; mensagem orienta a iniciar nova conversa
+- [x] Chat, histórico e edição de título/modelo funcionando na aba **Equipe → Consultoria IA**
+
+### 7. Estilos e UI
+
+- [x] `design-plans.css` — workspace editor + preview, cards ativos, preview Action Canvas (`ac-preview`)
+- [x] `equipe-diffusao.css` — abas equipe, embed consultoria em altura total
+- [x] `consultoria-responsive.css` — modo `consultoria-ia--embedded`
+- [x] `project-select.css` — lista + campo nome no final do card de auth
+- [x] `action-canvas.css` — painel **Concluir MID** na Difusão
+- [x] `cycle-selector.css` — link **Escolher projeto**
+- [x] `AuthLayout` — prop `cardClassName` para card mais largo na escolha de projetos
+
+### Validar manualmente — 02/06/2026
+
+- [ ] Login → card de escolha (sem sidebar) → clicar projeto → entra no dashboard na tela correta do ciclo
+- [ ] **Novo projeto** — preencher nome no final do card → criar → diagnóstico abre com ciclo nomeado
+- [ ] Diagnóstico → **Concluir canvas** → modal confirma/ajusta nome → Design com planos do Solution Pick
+- [ ] Design: editar plano → preview atualiza → **Validar e criar canvas** → sincroniza na API
+- [ ] Equipe → aba **Consultoria IA · Blueprint** → enviar mensagem → abrir conversa no histórico (sem erro)
+- [ ] Equipe → Gate Zero concluído → redireciona para Design
+- [ ] Difusão → Action Canvas sign-off **SIM** → relatórios com geração automática
+- [ ] Difusão → **Concluir MID e gerar relatório** → mesma página de relatórios
+- [ ] Trocar projeto pelo seletor ou menu Projetos → volta ao card de escolha
+- [ ] Logout → login de novo → exige escolha de projeto outra vez
+
+### Arquivos principais — sessão 02/06/2026
+
+| Área | Caminhos |
+|------|----------|
+| Escolha de projeto | `src/pages/ProjectSelectPage.tsx`, `src/components/ProjectGate.tsx`, `src/services/projectWorkspace.ts`, `src/services/cycleRouting.ts` |
+| Design + preview | `src/pages/DesignPlansPage.tsx`, `src/components/ActionCanvasPreview.tsx`, `src/styles/design-plans.css` |
+| Equipe + IA | `src/pages/MinhaEquipePage.tsx`, `src/pages/ConsultoriaIAPage.tsx`, `src/services/api.ts`, `src/styles/equipe-diffusao.css` |
+| Diagnóstico / nome ciclo | `src/pages/InitialFormPage.tsx`, `src/context/CycleContext.tsx` |
+| MID / relatório | `src/pages/ObjetivosPage.tsx`, `src/pages/RelatoriosPage.tsx`, `src/components/ActionCanvasPanel.tsx` |
+| Rotas / nav | `src/App.tsx`, `src/components/DashboardLayout.tsx`, `src/components/CycleSelector.tsx` |
+| Auth / entrada | `src/pages/LoginPage.tsx`, `src/pages/RegisterPage.tsx`, `src/styles/project-select.css` |
+
+### Estatísticas do diff (não commitado)
+
+- **29 arquivos** alterados · **~1014** linhas adicionadas · **~152** removidas
+- **6 arquivos novos:** `ActionCanvasPreview`, `ProjectGate`, `ProjectSelectPage`, `cycleRouting`, `projectWorkspace`, `project-select.css`
+
+---
+
 ## Estrutura do projeto
 
 ```
@@ -640,4 +754,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 11 de junho de 2026 — Stripe real, admin (notif./usuários), suporte, acesso e login*
+*Última atualização: 02 de junho de 2026 — fluxo Equipe/Design, escolha de projeto, nome do ciclo, Concluir MID, fix Consultoria IA*

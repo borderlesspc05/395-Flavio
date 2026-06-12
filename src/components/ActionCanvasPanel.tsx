@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -125,6 +126,7 @@ interface ActionCanvasPanelProps {
 }
 
 export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCanvasPanelProps) {
+  const navigate = useNavigate();
   const [canvases, setCanvases] = useState<ActionCanvas[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -221,9 +223,19 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
       setCanvases((prev) => prev.map((c) => (c.id === normalized.id ? normalized : c)));
       setDraft(null);
       setActiveId(null);
-      setNotice('Action Canvas encerrado. Resultados disponíveis no MID (Hub).');
       void syncMagnusMemoryAfterCanvasChange();
       onCanvasClosed?.();
+      if (signOff === 'sim') {
+        navigate('/dashboard/relatorios', {
+          state: {
+            autoGenerate: true,
+            midConcludeNotice:
+              'Action Canvas encerrado com sign-off positivo. Gerando relatório Domínio (MID)…',
+          },
+        });
+        return;
+      }
+      setNotice('Action Canvas encerrado. Resultados disponíveis no MID (Hub).');
     } catch {
       setError('Erro ao registrar sign-off.');
     } finally {

@@ -21,6 +21,7 @@ import './styles/mid-dashboard.css';
 import './styles/account-page.css';
 import './styles/loop-workspace.css';
 import './styles/cycle-selector.css';
+import './styles/project-select.css';
 import './styles/equipe-diffusao.css';
 import './styles/historico-loop.css';
 import './styles/employee-profile.css';

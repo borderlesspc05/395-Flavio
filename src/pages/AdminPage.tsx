@@ -182,7 +182,7 @@ export function AdminPage() {
 
         <div className="admin-sidebar-foot">
           <Link to="/">Landing</Link>
-          <Link to="/dashboard">App</Link>
+          <Link to="/escolher-projeto">App</Link>
           <button type="button" className="admin-sidebar-logout" onClick={() => void handleLogout()}>
             <LogOut size={16} />
             Sair

@@ -54,7 +54,7 @@ export function DashboardHome() {
   useEffect(() => {
     if (!locationState?.postDiagnosticNotice) return;
     setPostDiagnosticNotice(locationState.postDiagnosticNotice);
-    navigate('/dashboard', { replace: true });
+    navigate('/dashboard/inicio', { replace: true });
   }, [locationState, navigate]);
 
   useEffect(() => {
@@ -137,9 +137,9 @@ export function DashboardHome() {
             <button
               type="button"
               className="dashboard-post-submit-btn"
-              onClick={() => navigate('/dashboard/consultoria-ia')}
+              onClick={() => navigate('/dashboard/design')}
             >
-              Ir para MM Blueprint
+              Ir para Design
               <ArrowRight size={16} />
             </button>
             <button

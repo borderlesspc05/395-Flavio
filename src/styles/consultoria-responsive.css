@@ -31,6 +31,19 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.consultoria-ia.consultoria-ia--embedded {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.consultoria-ia.consultoria-ia--embedded .consultoria-container {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .consultoria-ia.consultoria-ia--gate-phase > .gate-zero-panel {
   flex: 0 0 auto;
   width: 100%;

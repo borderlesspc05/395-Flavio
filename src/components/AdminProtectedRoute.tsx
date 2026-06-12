@@ -26,7 +26,7 @@ export function AdminProtectedRoute({ children }: { children: React.ReactNode })
   }
 
   if (!isAdminEmail(user.email)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/escolher-projeto" replace />;
   }
 
   return <>{children}</>;
