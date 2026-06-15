@@ -3,8 +3,34 @@ import { env } from '../config/env';
 import { AppError } from '../utils/errors';
 
 export interface ChatCompletionMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string | null;
+  tool_calls?: LlmToolCallWire[];
+  tool_call_id?: string;
+}
+
+export interface LlmToolDefinition {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+export interface LlmToolCallWire {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+export interface LlmToolCall {
+  id: string;
+  name: string;
+  arguments: string;
 }
 
 export interface ChatCompletionOptions {
@@ -12,6 +38,12 @@ export interface ChatCompletionOptions {
   messages: ChatCompletionMessage[];
   temperature?: number;
   maxTokens?: number;
+  tools?: LlmToolDefinition[];
+}
+
+export interface ChatCompletionResult {
+  content: string | null;
+  toolCalls: LlmToolCall[];
 }
 
 export type LlmProvider = 'openai' | 'openrouter';
@@ -99,39 +131,72 @@ export function normalizeModelForProvider(model: string | undefined, provider: L
   return raw;
 }
 
-async function callOpenAi(options: ChatCompletionOptions): Promise<string> {
+function parseToolCalls(raw: unknown): LlmToolCall[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      const call = item as {
+        id?: string;
+        function?: { name?: string; arguments?: string };
+      };
+      if (!call.id || !call.function?.name) return null;
+      return {
+        id: call.id,
+        name: call.function.name,
+        arguments: call.function.arguments ?? '{}',
+      };
+    })
+    .filter((item): item is LlmToolCall => item !== null);
+}
+
+function parseCompletionResponse(data: unknown): ChatCompletionResult {
+  const message = (data as { choices?: Array<{ message?: unknown }> })?.choices?.[0]?.message as
+    | {
+        content?: string | null;
+        tool_calls?: unknown;
+      }
+    | undefined;
+
+  return {
+    content: typeof message?.content === 'string' ? message.content : message?.content ?? null,
+    toolCalls: parseToolCalls(message?.tool_calls),
+  };
+}
+
+async function callOpenAiCompletion(options: ChatCompletionOptions): Promise<ChatCompletionResult> {
   const apiKey = env.openai.apiKey?.trim();
   if (!apiKey) {
     throw new AppError(503, 'OpenAI API key not configured. Set OPENAI_API_KEY.', 'LLM_NOT_CONFIGURED');
   }
 
   const model = normalizeModelForProvider(options.model, 'openai');
+  const body: Record<string, unknown> = {
+    model,
+    messages: options.messages,
+    temperature: options.temperature ?? 0.7,
+    max_tokens: options.maxTokens ?? 4096,
+  };
+  if (options.tools?.length) {
+    body.tools = options.tools;
+    body.tool_choice = 'auto';
+  }
 
-  const response = await axios.post(
-    OPENAI_URL,
-    {
-      model,
-      messages: options.messages,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.maxTokens ?? 4096,
+  const response = await axios.post(OPENAI_URL, body, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
     },
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      timeout: env.chatTimeout,
-    }
-  );
+    timeout: env.chatTimeout,
+  });
 
-  const content = response.data?.choices?.[0]?.message?.content;
-  if (!content) {
+  const result = parseCompletionResponse(response.data);
+  if (!result.content && result.toolCalls.length === 0) {
     throw new AppError(502, 'Empty response from OpenAI', 'OPENAI_EMPTY');
   }
-  return typeof content === 'string' ? content : JSON.stringify(content);
+  return result;
 }
 
-async function callOpenRouter(options: ChatCompletionOptions): Promise<string> {
+async function callOpenRouterCompletion(options: ChatCompletionOptions): Promise<ChatCompletionResult> {
   const apiKey = env.openrouter.apiKey?.trim();
   if (!apiKey) {
     throw new AppError(
@@ -142,31 +207,54 @@ async function callOpenRouter(options: ChatCompletionOptions): Promise<string> {
   }
 
   const model = normalizeModelForProvider(options.model, 'openrouter');
+  const body: Record<string, unknown> = {
+    model,
+    messages: options.messages,
+    temperature: options.temperature ?? 0.7,
+    max_tokens: options.maxTokens ?? 4096,
+  };
+  if (options.tools?.length) {
+    body.tools = options.tools;
+    body.tool_choice = 'auto';
+  }
 
-  const response = await axios.post(
-    OPENROUTER_URL,
-    {
-      model,
-      messages: options.messages,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.maxTokens ?? 4096,
+  const response = await axios.post(OPENROUTER_URL, body, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': env.openrouter.siteUrl,
+      'X-Title': env.openrouter.appName,
+      'Content-Type': 'application/json',
     },
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': env.openrouter.siteUrl,
-        'X-Title': env.openrouter.appName,
-        'Content-Type': 'application/json',
-      },
-      timeout: env.chatTimeout,
-    }
-  );
+    timeout: env.chatTimeout,
+  });
 
-  const content = response.data?.choices?.[0]?.message?.content;
-  if (!content) {
+  const result = parseCompletionResponse(response.data);
+  if (!result.content && result.toolCalls.length === 0) {
     throw new AppError(502, 'Empty response from OpenRouter', 'OPENROUTER_EMPTY');
   }
-  return typeof content === 'string' ? content : JSON.stringify(content);
+  return result;
+}
+
+async function callOpenAi(options: ChatCompletionOptions): Promise<string> {
+  const result = await callOpenAiCompletion(options);
+  if (result.toolCalls.length > 0) {
+    throw new AppError(502, 'Unexpected tool calls in text-only completion', 'OPENAI_TOOL_CALL');
+  }
+  if (!result.content) {
+    throw new AppError(502, 'Empty response from OpenAI', 'OPENAI_EMPTY');
+  }
+  return result.content;
+}
+
+async function callOpenRouter(options: ChatCompletionOptions): Promise<string> {
+  const result = await callOpenRouterCompletion(options);
+  if (result.toolCalls.length > 0) {
+    throw new AppError(502, 'Unexpected tool calls in text-only completion', 'OPENROUTER_TOOL_CALL');
+  }
+  if (!result.content) {
+    throw new AppError(502, 'Empty response from OpenRouter', 'OPENROUTER_EMPTY');
+  }
+  return result.content;
 }
 
 function mapAuthError(msg: string, provider: LlmProvider): AppError {
@@ -192,6 +280,54 @@ export async function chatCompletion(options: ChatCompletionOptions): Promise<st
   try {
     if (provider === 'openai') return await callOpenAi(options);
     return await callOpenRouter(options);
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    if (axios.isAxiosError(err)) {
+      const body = err.response?.data as { error?: { message?: string } } | undefined;
+      const bodyMsg =
+        typeof body?.error?.message === 'string'
+          ? body.error.message
+          : typeof err.response?.data === 'object' &&
+              err.response?.data !== null &&
+              'message' in err.response.data
+            ? String((err.response.data as { message?: string }).message)
+            : '';
+      const msg = bodyMsg || err.message;
+      const lower = msg.toLowerCase();
+      if (
+        err.response?.status === 401 ||
+        lower.includes('missing authentication') ||
+        lower.includes('invalid api key') ||
+        lower.includes('no auth') ||
+        lower.includes('incorrect api key')
+      ) {
+        throw mapAuthError(msg, provider);
+      }
+      throw new AppError(
+        err.response?.status ?? 502,
+        `${provider === 'openai' ? 'OpenAI' : 'OpenRouter'} error: ${msg}`,
+        provider === 'openai' ? 'OPENAI_ERROR' : 'OPENROUTER_ERROR'
+      );
+    }
+    throw err;
+  }
+}
+
+export async function chatCompletionWithTools(
+  options: ChatCompletionOptions
+): Promise<ChatCompletionResult> {
+  const provider = resolveLlmProvider();
+  if (!provider) {
+    throw new AppError(
+      503,
+      'Nenhum provedor de IA configurado. Defina OPENAI_API_KEY ou OPENROUTER_API_KEY.',
+      'LLM_NOT_CONFIGURED'
+    );
+  }
+
+  try {
+    if (provider === 'openai') return await callOpenAiCompletion(options);
+    return await callOpenRouterCompletion(options);
   } catch (err) {
     if (err instanceof AppError) throw err;
     if (axios.isAxiosError(err)) {

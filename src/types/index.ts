@@ -122,6 +122,13 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   createdAt?: string;
+  executedActions?: Array<{
+    tool: string;
+    ok: boolean;
+    summary: string;
+    entityId?: string;
+    error?: string;
+  }>;
 }
 
 export interface Conversation {

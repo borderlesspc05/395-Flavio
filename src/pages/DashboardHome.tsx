@@ -7,10 +7,12 @@ import { getInitialForm } from '../services/initialForm';
 import { actionCanvasesApi, objectivesApi, teamApi, reportsApi } from '../services/api';
 import type { ActionCanvas, InitialFormData, Objective, TeamMember } from '../types';
 import { MidDashboard } from '../components/mid/MidDashboard';
+import { useCycle } from '../context/CycleContext';
 import { buildMidDashboard, getWaveProgressForMid } from '../services/midDashboard';
 import type { MidDashboardData } from '../types/mid';
 
 export function DashboardHome() {
+  const { activeCycle } = useCycle();
   const location = useLocation();
   const navigate = useNavigate();
   const locationState = location.state as
@@ -97,12 +99,13 @@ export function DashboardHome() {
       buildMidDashboard({
         formData,
         formComplete: !!formCompletedAt,
+        cycleLabel: activeCycle?.label,
         objectives,
         canvases,
         team,
         reports,
       }),
-    [formData, formCompletedAt, objectives, canvases, team, reports]
+    [formData, formCompletedAt, activeCycle?.label, objectives, canvases, team, reports]
   );
 
   const waveChips = useMemo(

@@ -81,7 +81,7 @@ router.post('/blueprint-gate', async (req: Request, res: Response, next: NextFun
 
 router.post('/chat', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { conversationId, model, suggestObjectives, diagnosticContext, gateContext } = req.body;
+    const { conversationId, model, suggestObjectives, diagnosticContext, gateContext, cycleId } = req.body;
     const message = req.body.message ?? req.body.content;
 
     if (!message || typeof message !== 'string') {
@@ -94,6 +94,7 @@ router.post('/chat', async (req: Request, res: Response, next: NextFunction) => 
         message,
         conversationId,
         model,
+        cycleId: typeof cycleId === 'string' ? cycleId : undefined,
         diagnosticContext: typeof diagnosticContext === 'string' ? diagnosticContext : undefined,
         gateContext: typeof gateContext === 'string' ? gateContext : undefined,
         suggestObjectives: Boolean(suggestObjectives),

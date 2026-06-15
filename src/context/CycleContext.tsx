@@ -37,6 +37,7 @@ interface CycleContextValue {
   startNewCycle: (options?: { label?: string }) => Promise<{ ok: boolean; message?: string }>;
   clearNeedsDiagnosis: () => void;
   persistActiveCycleSnapshot: () => Promise<void>;
+  renameActiveCycle: (label: string) => Promise<{ ok: boolean; message?: string }>;
 }
 
 const CycleContext = createContext<CycleContextValue | null>(null);
@@ -226,6 +227,36 @@ export function CycleProvider({ children }: { children: ReactNode }) {
     }
   }, [userId, activeCycle, refreshCycles]);
 
+  const renameActiveCycle = useCallback(
+    async (label: string) => {
+      if (!userId || !activeCycle) {
+        return { ok: false, message: 'Nenhum ciclo ativo para renomear.' };
+      }
+
+      const trimmed = label.trim();
+      if (trimmed.length < 2) {
+        return { ok: false, message: 'Informe um nome com pelo menos 2 caracteres.' };
+      }
+
+      if (trimmed === activeCycle.label) {
+        return { ok: true };
+      }
+
+      try {
+        await updateDiagnosticCycle(activeCycle.id, { label: trimmed });
+        setActiveCycle((prev) => (prev ? { ...prev, label: trimmed } : prev));
+        setCycles((prev) =>
+          prev.map((cycle) => (cycle.id === activeCycle.id ? { ...cycle, label: trimmed } : cycle))
+        );
+        return { ok: true };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Erro ao renomear projeto';
+        return { ok: false, message: msg };
+      }
+    },
+    [userId, activeCycle]
+  );
+
   const value = useMemo(
     () => ({
       userId,
@@ -239,6 +270,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       startNewCycle,
       clearNeedsDiagnosis: () => setNeedsDiagnosis(false),
       persistActiveCycleSnapshot,
+      renameActiveCycle,
     }),
     [
       userId,
@@ -251,6 +283,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       switchCycle,
       startNewCycle,
       persistActiveCycleSnapshot,
+      renameActiveCycle,
     ]
   );
 

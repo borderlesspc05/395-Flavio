@@ -2,8 +2,10 @@ import { Conversation, SuggestedObjective } from '../types';
 import { generateId, nowIso } from '../utils/id';
 import {
   chatCompletion,
+  chatCompletionWithTools,
   mockChatReply,
   getDefaultModel,
+  isLlmConfigured,
   isLlmNotConfiguredError,
   type ChatCompletionMessage,
 } from './llm';
@@ -16,6 +18,13 @@ import {
   getAgentSettings,
   resolveMentionedSkills,
 } from './agentConfig';
+import {
+  AGENT_TOOLS,
+  buildProjectSnapshot,
+  executeAgentTool,
+  getToolResultPayload,
+  type AgentActionRecord,
+} from './agentTools';
 import {
   buildMagnusWavesMemoryContext,
   MAGNUS_MEMORY_SYSTEM_PREAMBLE,
@@ -37,6 +46,16 @@ Se o usuário pedir objetivos, inclua ao final um bloco JSON válido entre marca
 <!-- SUGGESTED_OBJECTIVES -->
 [{"titulo":"...","descricao":"...","categoria":"...","prioridade":1}]
 <!-- /SUGGESTED_OBJECTIVES -->`;
+
+const AGENT_AUTONOMY_PROMPT = `
+## Autonomia de execução no projeto
+Você pode criar, alterar e excluir itens do projeto do usuário quando ele solicitar explicitamente.
+Use as ferramentas disponíveis para executar ações reais — não apenas descreva o que faria.
+Antes de atualizar ou excluir, use list_* se precisar localizar o id correto.
+Escopo das ferramentas: objetivos, Action Canvas, membros da equipe e nome do projeto/ciclo.
+Após executar ações, confirme de forma clara o que foi feito.
+Não exclua nem altere itens sem pedido claro do usuário.
+Se faltar informação para criar algo, pergunte antes ou use valores razoáveis e informe na resposta.`;
 
 function parseSuggestedObjectives(content: string): {
   cleanContent: string;
@@ -70,6 +89,7 @@ export interface ChatRequest {
   message: string;
   conversationId?: string;
   model?: string;
+  cycleId?: string;
   diagnosticContext?: string;
   gateContext?: string;
   suggestObjectives?: boolean;
@@ -80,11 +100,97 @@ export interface ChatResponse {
   reply: string;
   model: string;
   suggestedObjectives?: SuggestedObjective[];
+  executedActions?: AgentActionRecord[];
   usedWebSearch?: boolean;
   usedRag?: boolean;
   invokedSkills?: string[];
   /** true quando caiu no mock por falta de chave de IA */
   demoMode?: boolean;
+}
+
+const MAX_TOOL_ROUNDS = 6;
+
+async function runAgentChat(params: {
+  model: string;
+  messages: ChatCompletionMessage[];
+  userId: string;
+  cycleId?: string;
+}): Promise<{ reply: string; executedActions: AgentActionRecord[] }> {
+  const executedActions: AgentActionRecord[] = [];
+  const messages = [...params.messages];
+
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    const result = await chatCompletionWithTools({
+      model: params.model,
+      messages,
+      tools: AGENT_TOOLS,
+      temperature: 0.4,
+    });
+
+    if (result.toolCalls.length === 0) {
+      return {
+        reply: result.content?.trim() || 'Pronto.',
+        executedActions,
+      };
+    }
+
+    messages.push({
+      role: 'assistant',
+      content: result.content,
+      tool_calls: result.toolCalls.map((call) => ({
+        id: call.id,
+        type: 'function',
+        function: { name: call.name, arguments: call.arguments },
+      })),
+    });
+
+    for (const call of result.toolCalls) {
+      let args: Record<string, unknown> = {};
+      try {
+        args = JSON.parse(call.arguments || '{}') as Record<string, unknown>;
+      } catch {
+        args = {};
+      }
+
+      const actionRecord = await executeAgentTool(params.userId, call.name, args, params.cycleId);
+      executedActions.push(actionRecord);
+
+      let data: unknown = null;
+      if (call.name === 'list_objectives') {
+        data = await getToolResultPayload(params.userId, call.name, args, params.cycleId);
+      } else if (call.name === 'list_action_canvases') {
+        data = await getToolResultPayload(params.userId, call.name, args, params.cycleId);
+      } else if (call.name === 'list_team_members') {
+        data = await getToolResultPayload(params.userId, call.name, args, params.cycleId);
+      }
+
+      messages.push({
+        role: 'tool',
+        tool_call_id: call.id,
+        content: JSON.stringify({
+          ok: actionRecord.ok,
+          summary: actionRecord.summary,
+          error: actionRecord.error,
+          entityId: actionRecord.entityId,
+          data,
+        }),
+      });
+    }
+  }
+
+  const final = await chatCompletion({
+    model: params.model,
+    messages: [
+      ...messages,
+      {
+        role: 'user',
+        content: 'Resuma em português o que foi executado no projeto e o próximo passo recomendado.',
+      },
+    ],
+    temperature: 0.5,
+  });
+
+  return { reply: final.trim(), executedActions };
 }
 
 export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
@@ -122,7 +228,7 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
     }
   }
 
-  const systemParts = [SYSTEM_PROMPT];
+  const systemParts = [SYSTEM_PROMPT, AGENT_AUTONOMY_PROMPT];
   if (agentContext) {
     systemParts.push(agentContext);
   }
@@ -138,6 +244,8 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
       `\n\n## Memória Magnus Waves (diagnóstico → design → difusão)\n${MAGNUS_MEMORY_SYSTEM_PREAMBLE}\n\n${magnusMemory}`
     );
   }
+  const projectSnapshot = await buildProjectSnapshot(req.userId, req.cycleId);
+  systemParts.push(`\n\n## Estado atual do projeto\n${projectSnapshot}`);
   if (webContext) {
     systemParts.push(`\n\n${webContext}`);
   }
@@ -155,10 +263,24 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
     { role: 'user', content: req.message },
   ];
 
+  const useAgentTools = isLlmConfigured();
+
   let rawReply: string;
+  let executedActions: AgentActionRecord[] = [];
   let demoMode = false;
   try {
-    rawReply = await chatCompletion({ model, messages });
+    if (useAgentTools) {
+      const agentResult = await runAgentChat({
+        model,
+        messages,
+        userId: req.userId,
+        cycleId: req.cycleId,
+      });
+      rawReply = agentResult.reply;
+      executedActions = agentResult.executedActions;
+    } else {
+      rawReply = await chatCompletion({ model, messages });
+    }
   } catch (err) {
     if (isLlmNotConfiguredError(err)) {
       rawReply = mockChatReply(req.message, ragContext);
@@ -216,6 +338,10 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
 
   if (suggested.length > 0) {
     response.suggestedObjectives = suggested;
+  }
+
+  if (executedActions.length > 0) {
+    response.executedActions = executedActions;
   }
 
   if (invokedSkills.length > 0) {

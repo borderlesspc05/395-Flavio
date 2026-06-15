@@ -228,6 +228,7 @@ export const aiApi = {
     modelId?: string;
     diagnosticContext?: string;
     gateContext?: string;
+    cycleId?: string;
   }) =>
     withUserId((userId) =>
       api
@@ -240,6 +241,7 @@ export const aiApi = {
             model: data.modelId,
             diagnosticContext: data.diagnosticContext,
             gateContext: data.gateContext,
+            cycleId: data.cycleId ?? getActiveCycleId() ?? undefined,
             userId: userId || undefined,
           },
           { timeout: CHAT_TIMEOUT }

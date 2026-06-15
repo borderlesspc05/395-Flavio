@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host",
+    "dev:mobile": "node scripts/mobile-test.mjs && vite --host",
+    "dev:mobile:help": "node scripts/mobile-test.mjs",
+    "tunnel": "npx --yes localtunnel --port 5173",
     "dev:api": "npm run dev --prefix server",
     "build": "tsc && vite build",
     "postbuild": "npm run build:api",

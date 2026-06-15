@@ -28,13 +28,14 @@ import {
   Zap,
 } from 'lucide-react';
 import { agentApi, aiApi, type AgentSkillDto } from '../services/api';
+import { useCycle } from '../context/CycleContext';
 import type { ChatMessage, InitialFormData } from '../types';
 
 const SUGGESTIONS = [
+  'Crie 3 objetivos estratégicos para o próximo trimestre',
   'Qual solução priorizar no Blueprint?',
+  'Renomeie o projeto para um nome mais claro',
   'Montar MM Blueprint e objetivos para Difusão',
-  'O que evitar agora no Solution Pick?',
-  'Roadmap 0-30, 30-90 e 90-180 dias',
 ];
 
 interface AiModel {
@@ -87,6 +88,7 @@ type ConsultoriaIAPageProps = {
 };
 
 export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: ConsultoriaIAPageProps = {}) {
+  const { refreshCycles } = useCycle();
   const [models, setModels] = useState<AiModel[]>([]);
   const [conversations, setConversations] = useState<ConvSummary[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -384,12 +386,20 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
         role: 'assistant',
         content: result.reply || '',
         createdAt: new Date().toISOString(),
+        executedActions: result.executedActions,
       };
       setMessages((prev) => [...prev.filter((m) => m.id !== tempUser.id), tempUser, assistant]);
 
       await loadConversations();
       if (result.suggestedObjectives?.length) {
         setShowObjectivesBanner(true);
+      }
+      if (result.executedActions?.length) {
+        const renamed = result.executedActions.some((a) => a.tool === 'rename_project' && a.ok);
+        if (renamed) void refreshCycles();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('mm:project-data-changed'));
+        }
       }
     } catch (err: unknown) {
       setMessages((prev) => prev.filter((m) => m.id !== tempUser.id));
@@ -744,6 +754,19 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
                             <p>{msg.content}</p>
                           )}
                         </div>
+                        {msg.executedActions && msg.executedActions.length > 0 && (
+                          <ul className="chat-action-log" aria-label="Ações executadas no projeto">
+                            {msg.executedActions.map((action) => (
+                              <li
+                                key={`${action.tool}-${action.summary}`}
+                                className={action.ok ? 'chat-action-log__item--ok' : 'chat-action-log__item--err'}
+                              >
+                                <Zap size={12} aria-hidden />
+                                <span>{action.summary}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                         {msg.createdAt && (
                           <span className="message-time">{formatTime(msg.createdAt)}</span>
                         )}

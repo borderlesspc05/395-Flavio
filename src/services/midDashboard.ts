@@ -36,6 +36,7 @@ interface ReportLike {
 interface BuildMidInput {
   formData: InitialFormData | null;
   formComplete: boolean;
+  cycleLabel?: string | null;
   objectives: Objective[];
   canvases: ActionCanvas[];
   team: TeamMember[];
@@ -137,8 +138,9 @@ function buildOverview(
   const waveId = getActiveWaveId(progress);
   const wave = MAGNUS_WAVES.find((w) => w.id === waveId)!;
 
+  const cycleName = input.cycleLabel?.trim();
   return {
-    projectName: input.formData?.organizacao?.trim() || 'People Sprint Magnus Mind',
+    projectName: cycleName || 'People Sprint Magnus Mind',
     owner: pickOwner(input.canvases, input.team),
     sponsor: pickSponsor(input.canvases, input.team),
     statusLabel: statusLabel(progress),

@@ -212,6 +212,105 @@
   font-size: 0.92rem;
 }
 
+.mid-meta-project {
+  grid-column: 1 / -1;
+}
+
+.mid-project-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.mid-project-name {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.mid-project-rename {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 0.05rem;
+  padding: 0;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  border-radius: 8px;
+  background: rgba(8, 12, 18, 0.45);
+  color: var(--mid-bronze);
+  cursor: pointer;
+  transition: border-color 180ms var(--mid-ease), color 180ms var(--mid-ease), background 180ms var(--mid-ease);
+}
+
+.mid-project-rename:hover {
+  border-color: rgba(255, 188, 125, 0.45);
+  color: var(--mid-warm);
+  background: rgba(255, 188, 125, 0.08);
+}
+
+.mid-project-edit {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mid-project-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 188, 125, 0.35);
+  background: rgba(8, 12, 18, 0.65);
+  color: var(--mid-text);
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.mid-project-input:focus {
+  outline: none;
+  border-color: rgba(255, 188, 125, 0.55);
+  box-shadow: 0 0 0 2px rgba(255, 188, 125, 0.12);
+}
+
+.mid-project-edit-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.mid-project-edit-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(8, 12, 18, 0.45);
+  color: var(--mid-muted);
+  cursor: pointer;
+}
+
+.mid-project-edit-btn--save {
+  border-color: rgba(255, 188, 125, 0.4);
+  color: var(--mid-warm);
+}
+
+.mid-project-edit-btn:disabled,
+.mid-project-input:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.mid-project-error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #f08a8a;
+}
+
 .mid-meta-progress {
   grid-column: 1 / -1;
 }

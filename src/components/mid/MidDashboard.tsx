@@ -1,7 +1,19 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Radar, Sparkles, Heart, ListChecks, Lightbulb, Orbit } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  Heart,
+  Lightbulb,
+  ListChecks,
+  Orbit,
+  Pencil,
+  Radar,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import type { MidDashboardData } from '../../types/mid';
+import { useCycle } from '../../context/CycleContext';
 import { MidSignalDot } from './MidSignalDot';
 
 interface MidDashboardProps {
@@ -28,6 +40,111 @@ function SectionTitle({
         <h2 className="mid-section-title">{title}</h2>
       </div>
     </header>
+  );
+}
+
+function EditableProjectName({ name }: { name: string }) {
+  const { renameActiveCycle } = useCycle();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(name);
+  }, [name, editing]);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const cancel = () => {
+    setDraft(name);
+    setError('');
+    setEditing(false);
+  };
+
+  const commit = async () => {
+    const trimmed = draft.trim();
+    if (!trimmed) {
+      setError('Informe um nome para o projeto.');
+      return;
+    }
+    if (trimmed === name) {
+      setEditing(false);
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const result = await renameActiveCycle(trimmed);
+      if (!result.ok) {
+        setError(result.message ?? 'Não foi possível salvar o nome.');
+        return;
+      }
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div className="mid-project-edit">
+        <input
+          ref={inputRef}
+          type="text"
+          className="mid-project-input"
+          value={draft}
+          maxLength={120}
+          disabled={saving}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void commit();
+            if (e.key === 'Escape') cancel();
+          }}
+          aria-label="Nome do projeto"
+        />
+        <div className="mid-project-edit-actions">
+          <button
+            type="button"
+            className="mid-project-edit-btn mid-project-edit-btn--save"
+            onClick={() => void commit()}
+            disabled={saving}
+            aria-label="Salvar nome do projeto"
+          >
+            <Check size={14} />
+          </button>
+          <button
+            type="button"
+            className="mid-project-edit-btn"
+            onClick={cancel}
+            disabled={saving}
+            aria-label="Cancelar edição"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        {error && <p className="mid-project-error">{error}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mid-project-display">
+      <span className="mid-project-name">{name}</span>
+      <button
+        type="button"
+        className="mid-project-rename"
+        onClick={() => setEditing(true)}
+        aria-label="Renomear projeto"
+        title="Renomear projeto"
+      >
+        <Pencil size={13} />
+      </button>
+    </div>
   );
 }
 
@@ -82,9 +199,11 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
             </article>
 
             <dl className="mid-meta-list">
-              <div>
+              <div className="mid-meta-project">
                 <dt>Projeto</dt>
-                <dd>{overview.projectName}</dd>
+                <dd>
+                  <EditableProjectName name={overview.projectName} />
+                </dd>
               </div>
               <div>
                 <dt>Owner</dt>
