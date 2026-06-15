@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { reportsApi } from '../services/api';
 import type { NormalizedReport } from '../services/apiNormalize';
+import { ActivityTimeline } from '../components/ActivityTimeline';
 
 interface ReportStats {
   totalObjectives?: number;
@@ -62,6 +63,7 @@ export function RelatoriosPage() {
   const [detail, setDetail] = useState<ReportDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [midNotice, setMidNotice] = useState<string | null>(null);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,6 +92,7 @@ export function RelatoriosPage() {
       setReports((prev) => [normalized, ...prev]);
       setSelectedId(normalized.id);
       setDetail(normalized);
+      setHistoryRefreshKey((k) => k + 1);
     } catch {
       setError('Erro ao gerar relatório. Tente novamente.');
     } finally {
@@ -257,7 +260,8 @@ export function RelatoriosPage() {
           <div>
             <h1 className="relatorios-title">Onda 4 — Domínio · MID</h1>
             <p className="relatorios-subtitle">
-              Magnus Intelligence Dashboard — avaliação Kirkpatrick nível 4 e loop contínuo
+              Magnus Intelligence Dashboard — avaliação Kirkpatrick nível 4, histórico do usuário e loop
+              contínuo
             </p>
           </div>
         </div>
@@ -283,53 +287,66 @@ export function RelatoriosPage() {
 
       {error && <div className="relatorios-error">{error}</div>}
 
-      <section className="relatorios-list-section">
-        <h2 className="section-title">Relatórios gerados</h2>
-        {loading ? (
-          <div className="relatorios-loading">
-            <Loader2 size={32} className="spinning" />
-            <p>Carregando relatórios...</p>
-          </div>
-        ) : reports.length === 0 ? (
-          <div className="relatorios-empty">
-            <FileText size={48} style={{ opacity: 0.4, marginBottom: 16 }} />
-            <p>Nenhum relatório gerado ainda.</p>
-          </div>
-        ) : (
-          <div className="relatorios-list">
-            {reports.map((report) => (
-              <article key={report.id} className="report-card">
-                <div className="report-card-header">
-                  <div className="report-icon-wrapper">
-                    <FileText size={24} />
-                  </div>
-                  <div className="report-card-content">
-                    <h3 className="report-card-title">{report.titulo || report.title}</h3>
-                    <p className="report-card-date">
-                      {new Date(report.createdAt).toLocaleString('pt-BR')}
-                    </p>
-                    {report.stats && (
-                      <div className="report-card-stats">
-                        <span className="report-stat">
-                          {report.stats.totalObjectives ?? 0} objetivos
-                        </span>
-                        <span className="report-stat">
-                          {report.stats.completionRate ?? 0}% conclusão
-                        </span>
+      <div className="relatorios-mid-layout">
+        <div className="relatorios-mid-primary">
+          <section className="relatorios-list-section">
+            <h2 className="section-title">Relatórios gerados</h2>
+            {loading ? (
+              <div className="relatorios-loading">
+                <Loader2 size={32} className="spinning" />
+                <p>Carregando relatórios...</p>
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="relatorios-empty">
+                <FileText size={48} style={{ opacity: 0.4, marginBottom: 16 }} />
+                <p>Nenhum relatório gerado ainda.</p>
+              </div>
+            ) : (
+              <div className="relatorios-list">
+                {reports.map((report) => (
+                  <article key={report.id} className="report-card">
+                    <div className="report-card-header">
+                      <div className="report-icon-wrapper">
+                        <FileText size={24} />
                       </div>
-                    )}
-                  </div>
-                </div>
-                <div className="report-card-actions">
-                  <button type="button" className="view-button" onClick={() => openDetail(report.id)}>
-                    Ver detalhes
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+                      <div className="report-card-content">
+                        <h3 className="report-card-title">{report.titulo || report.title}</h3>
+                        <p className="report-card-date">
+                          {new Date(report.createdAt).toLocaleString('pt-BR')}
+                        </p>
+                        {report.stats && (
+                          <div className="report-card-stats">
+                            <span className="report-stat">
+                              {report.stats.totalObjectives ?? 0} objetivos
+                            </span>
+                            <span className="report-stat">
+                              {report.stats.completionRate ?? 0}% conclusão
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="report-card-actions">
+                      <button type="button" className="view-button" onClick={() => openDetail(report.id)}>
+                        Ver detalhes
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <aside className="relatorios-mid-history historico-page--refined">
+          <ActivityTimeline
+            title="Histórico do usuário"
+            subtitle="Todas as ações registradas na plataforma alimentam o Domínio MID."
+            showFilters
+            refreshKey={historyRefreshKey}
+          />
+        </aside>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ export interface UserProfile {
   userId: string;
   email: string;
   displayName?: string;
+  photoURL?: string;
   planId?: PlanId;
   /** Se definido, sobrescreve o limite do plano (null = ilimitado). */
   concurrencyOverride?: number | null;
@@ -19,6 +20,7 @@ export async function upsertUserProfile(data: {
   userId: string;
   email?: string;
   displayName?: string;
+  photoURL?: string;
   planId?: PlanId;
   concurrencyOverride?: number | null;
 }): Promise<UserProfile> {
@@ -33,6 +35,7 @@ export async function upsertUserProfile(data: {
     userId: data.userId,
     email: data.email?.trim().toLowerCase() ?? existing?.email ?? '',
     displayName: data.displayName ?? existing?.displayName,
+    photoURL: data.photoURL ?? existing?.photoURL,
     planId: data.planId ?? existing?.planId,
     concurrencyOverride:
       data.concurrencyOverride !== undefined

@@ -1,0 +1,51 @@
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #0c1016;
+  color: #ffbc7d;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.user-avatar--sm {
+  width: 20px;
+  height: 20px;
+  font-size: 0.55rem;
+}
+
+.user-avatar--md {
+  width: 36px;
+  height: 36px;
+  font-size: 0.82rem;
+}
+
+.user-avatar--lg {
+  width: 100%;
+  height: 100%;
+  font-size: 1.65rem;
+  font-family: 'Newsreader', Georgia, serif;
+}
+
+.user-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.user-avatar__initials {
+  line-height: 1;
+}
+
+.nav-item .user-avatar--sm {
+  border: 1px solid rgba(175, 146, 112, 0.35);
+}
+
+.nav-item.active .user-avatar--sm {
+  border-color: rgba(74, 158, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.2);
+}

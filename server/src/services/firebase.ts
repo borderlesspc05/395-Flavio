@@ -17,6 +17,7 @@ export function initFirebase(): void {
     try {
       admin.initializeApp({
         credential: admin.credential.applicationDefault(),
+        storageBucket: env.firebase.storageBucket,
       });
       initialized = true;
       console.log('[firebase] Initialized via GOOGLE_APPLICATION_CREDENTIALS');
@@ -34,6 +35,7 @@ export function initFirebase(): void {
           clientEmail,
           privateKey,
         }),
+        storageBucket: env.firebase.storageBucket,
       });
       initialized = true;
       console.log('[firebase] Initialized with service account env vars');

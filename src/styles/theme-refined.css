@@ -449,8 +449,8 @@ body {
 }
 
 .sidebar-header {
-  border-bottom-color: rgba(175, 146, 112, 0.12) !important;
-  padding-bottom: var(--spacing-lg) !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
 }
 
 .sidebar-logo {
@@ -459,10 +459,12 @@ body {
 }
 
 .sidebar-header .logo-text {
-  font-size: 1.05rem !important;
+  font-family: 'Newsreader', Georgia, serif !important;
+  font-style: italic !important;
+  font-size: 1.12rem !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
-  color: rgba(255, 255, 255, 0.95) !important;
+  color: #ffbc7d !important;
 }
 
 .nav-item {

@@ -2,8 +2,7 @@ import { ActionCanvas, Objective, Report, ReportStats, TeamMember } from '../typ
 import { generateId, nowIso } from '../utils/id';
 import { listByUser, create, COLLECTIONS } from './storage';
 import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
-import { env } from '../config/env';
-import { logActivity } from './activities';
+import { logActivity, getActivities } from './activities';
 
 function computeStats(objectives: Objective[], team: TeamMember[]): ReportStats {
   const total = objectives.length;
@@ -22,15 +21,30 @@ function computeStats(objectives: Objective[], team: TeamMember[]): ReportStats 
 }
 
 export async function generateReport(userId: string): Promise<Report> {
-  const [objectives, team, actionCanvases] = await Promise.all([
+  const [objectives, team, actionCanvases, activities] = await Promise.all([
     listByUser<Objective>(COLLECTIONS.objectives, userId),
     listByUser<TeamMember>(COLLECTIONS.teamMembers, userId),
     listByUser<ActionCanvas>(COLLECTIONS.actionCanvases, userId),
+    getActivities(userId),
   ]);
 
   const closedCanvases = actionCanvases.filter((c) => c.fechado);
 
   const stats = computeStats(objectives, team);
+
+  const recentActivities = [...activities]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 25);
+
+  const activitySummary =
+    recentActivities.length > 0
+      ? recentActivities
+          .map((a) => {
+            const when = new Date(a.createdAt).toLocaleString('pt-BR');
+            return `- [${when}] ${a.tipo}: ${a.descricao}`;
+          })
+          .join('\n')
+      : '- nenhuma atividade registrada';
 
   const dataSummary = `
 Objetivos (${stats.totalObjectives} total):
@@ -54,10 +68,13 @@ ${closedCanvases
     return `- ${c.nomeIniciativa} | sign-off ${c.signOff} | ${n} entregas | owner ${c.owner}`;
   })
   .join('\n') || '- nenhum'}
+
+Histórico recente do usuário (${recentActivities.length} eventos):
+${activitySummary}
 `.trim();
 
   const prompt = `Com base nos dados abaixo, gere um relatório estratégico executivo em português brasileiro.
-Inclua: resumo executivo, análise de progresso, riscos, recomendações e próximos passos.
+Inclua: resumo executivo, análise de progresso, leitura do histórico de atividades do usuário, riscos, recomendações e próximos passos.
 Use markdown com seções claras.
 
 Dados:

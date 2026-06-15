@@ -11,13 +11,14 @@ import {
   LogOut,
   Menu,
   UserCircle,
-  Layers,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useLocale } from '../context/LocaleContext';
 import { CycleSelector } from './CycleSelector';
 import { SupportChatWidget } from './SupportChatWidget';
+import { UserAvatar } from './UserAvatar';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import { clearWorkspaceEntered } from '../services/projectWorkspace';
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = 'mm.sidebar.collapsed';
@@ -26,6 +27,7 @@ export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLocale();
+  const { photoURL, initials } = useAuthProfile();
   const mainRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,7 +43,6 @@ export function DashboardLayout() {
 
   const navItems = [
     { id: 'dashboard', label: t.nav.hub, icon: LayoutDashboard, path: '/dashboard/inicio' },
-    { id: 'ciclos', label: 'Projetos', icon: Layers, path: '/escolher-projeto' },
     { id: 'formulario', label: t.nav.diagnostic, icon: FileText, path: '/dashboard/initial-form' },
     { id: 'consultoria', label: t.nav.design, icon: Bot, path: '/dashboard/design' },
     { id: 'objetivos', label: t.nav.diffusion, icon: Target, path: '/dashboard/objetivos' },
@@ -76,6 +77,19 @@ export function DashboardLayout() {
     mainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     mainRef.current?.focus({ preventScroll: true });
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const lockScroll = sidebarOpen && window.innerWidth < 769;
+    if (!lockScroll) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sidebarOpen]);
 
   const handleNav = (_id: string, path: string) => {
     navigate(path);
@@ -123,7 +137,6 @@ export function DashboardLayout() {
               const Icon = item.icon;
               const active =
                 location.pathname === item.path ||
-                (item.id === 'ciclos' && location.pathname === '/escolher-projeto') ||
                 (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
                 (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe');
               return (
@@ -136,7 +149,17 @@ export function DashboardLayout() {
                   aria-label={item.label}
                   title={sidebarCollapsed ? item.label : undefined}
                 >
-                  <Icon className="nav-icon" size={20} aria-hidden />
+                  {item.id === 'conta' && photoURL ? (
+                    <UserAvatar
+                      photoURL={photoURL}
+                      initials={initials}
+                      size="sm"
+                      className="nav-avatar"
+                      alt={item.label}
+                    />
+                  ) : (
+                    <Icon className="nav-icon" size={20} aria-hidden />
+                  )}
                   <span className="nav-label">{item.label}</span>
                 </button>
               );

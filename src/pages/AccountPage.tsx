@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
+import { updateProfile } from 'firebase/auth';
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
@@ -8,6 +8,7 @@ import {
 import {
   ArrowRight,
   Check,
+  Camera,
   Globe2,
   KeyRound,
   Loader2,
@@ -16,8 +17,11 @@ import {
   UserRound,
 } from 'lucide-react';
 import { auth } from '../config/firebase';
+import { UserAvatar } from '../components/UserAvatar';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLocale } from '../context/LocaleContext';
 import { usePlan } from '../context/PlanContext';
+import { ProfilePhotoError, uploadProfilePhoto } from '../services/profilePhoto';
 import { LOCALES, LOCALE_LABELS, type Locale } from '../constants/locales';
 import { translations } from '../i18n/translations';
 
@@ -32,17 +36,6 @@ function formatMemberDate(iso: string | undefined, locale: Locale): string {
   const d = new Date(iso);
   const tag = locale === 'pt' ? 'pt-BR' : locale === 'es' ? 'es-ES' : 'en-US';
   return d.toLocaleDateString(tag, { day: '2-digit', month: 'long', year: 'numeric' });
-}
-
-function getInitials(name: string, email: string): string {
-  const trimmed = name.trim();
-  if (trimmed) {
-    const parts = trimmed.split(/\s+/).filter(Boolean);
-    const first = parts[0]?.[0] ?? '';
-    const second = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
-    return `${first}${second}`.toUpperCase() || '?';
-  }
-  return email[0]?.toUpperCase() ?? '?';
 }
 
 function firebasePasswordError(
@@ -79,15 +72,19 @@ function StatusBanner({
 
 export function AccountPage() {
   const { locale, setLocale, t } = useLocale();
-  const { plan, loading: planLoading, concurrencyLabel } = usePlan();
+  const { plan, loading: planLoading, concurrencyLabel, refreshPlan } = usePlan();
+  const { loading: authLoading, displayName: authDisplayName, email: authEmail, photoURL, initials, memberSince, refreshProfile, setProfilePhotoURL } =
+    useAuthProfile();
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
-  const [memberSince, setMemberSince] = useState<string | undefined>();
-  const [authLoading, setAuthLoading] = useState(true);
 
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoMessage, setPhotoMessage] = useState('');
+  const [photoError, setPhotoError] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -98,25 +95,16 @@ export function AccountPage() {
 
   const [languageMessage, setLanguageMessage] = useState('');
 
-  const initials = useMemo(() => getInitials(displayName, email), [displayName, email]);
   const planId = plan?.planId ?? 'starter';
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setAuthLoading(true);
-      if (user) {
-        setDisplayName(user.displayName ?? '');
-        setEmail(user.email ?? '');
-        setMemberSince(user.metadata.creationTime);
-      } else {
-        setDisplayName('');
-        setEmail('');
-        setMemberSince(undefined);
-      }
-      setAuthLoading(false);
-    });
-    return unsub;
-  }, []);
+    void refreshPlan();
+  }, [refreshPlan]);
+
+  useEffect(() => {
+    setDisplayName(authDisplayName);
+    setEmail(authEmail);
+  }, [authDisplayName, authEmail]);
 
   const handleSaveProfile = async (e: FormEvent) => {
     e.preventDefault();
@@ -132,6 +120,40 @@ export function AccountPage() {
     } finally {
       setProfileSaving(false);
     }
+  };
+
+  const handlePhotoSelect = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    await uploadPhotoFile(file);
+  };
+
+  const uploadPhotoFile = async (file: File) => {
+    setPhotoUploading(true);
+    setPhotoError('');
+    setPhotoMessage('');
+
+    try {
+      const url = await uploadProfilePhoto(file);
+      setProfilePhotoURL(url);
+      await refreshProfile();
+      setPhotoMessage(t.account.photoSaved);
+    } catch (err) {
+      if (err instanceof ProfilePhotoError) {
+        if (err.code === 'INVALID_TYPE') setPhotoError(t.account.errors.photoInvalidType);
+        else if (err.code === 'FILE_TOO_LARGE') setPhotoError(t.account.errors.photoTooLarge);
+        else setPhotoError(t.account.errors.photoUploadFailed);
+      } else {
+        setPhotoError(t.account.errors.photoUploadFailed);
+      }
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const openPhotoPicker = () => {
+    photoInputRef.current?.click();
   };
 
   const handleChangePassword = async (e: FormEvent) => {
@@ -209,22 +231,56 @@ export function AccountPage() {
               </div>
             ) : (
               <>
-                <div className="account-avatar-ring">
-                  <div className="account-avatar" aria-hidden>
-                    {initials}
+                <div className="account-avatar-block">
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="account-avatar-input"
+                    onChange={(e) => void handlePhotoSelect(e)}
+                    disabled={photoUploading}
+                  />
+                  <button
+                    type="button"
+                    className="account-avatar-trigger"
+                    onClick={openPhotoPicker}
+                    disabled={photoUploading}
+                    aria-label={t.account.photoChange}
+                  >
+                    <div className="account-avatar-ring">
+                      <div className="account-avatar">
+                        <UserAvatar photoURL={photoURL} initials={initials} size="lg" alt={displayName.trim() || email} />
+                      </div>
+                      {photoUploading && (
+                        <span className="account-avatar-overlay account-avatar-overlay--visible" aria-hidden>
+                          <Loader2 size={22} className="account-spin" />
+                        </span>
+                      )}
+                    </div>
+                    <span className="account-avatar-camera" aria-hidden>
+                      <Camera size={14} />
+                    </span>
+                  </button>
+                </div>
+                {(photoMessage || photoError) && (
+                  <div className="account-identity-alerts">
+                    {photoMessage && <StatusBanner kind="success">{photoMessage}</StatusBanner>}
+                    {photoError && <StatusBanner kind="error">{photoError}</StatusBanner>}
                   </div>
-                </div>
-                <h2 className="account-identity-name">{displayName.trim() || email}</h2>
-                <p className="account-identity-email">{email}</p>
-                <div className={`account-plan-pill account-plan-pill--${planId}`}>
-                  <Shield size={14} aria-hidden />
-                  <span>
-                    {planLoading ? t.account.planLoading : (plan?.planName ?? 'Starter')}
-                  </span>
-                </div>
-                {!planLoading && (
-                  <p className="account-plan-meta">{concurrencyLabel}</p>
                 )}
+                <div className="account-identity-summary">
+                  <h2 className="account-identity-name">{displayName.trim() || email}</h2>
+                  <p className="account-identity-email">{email}</p>
+                  <div className={`account-plan-pill account-plan-pill--${planId}`}>
+                    <Shield size={14} aria-hidden />
+                    <span>
+                      {planLoading ? t.account.planLoading : (plan?.planName ?? 'Starter')}
+                    </span>
+                  </div>
+                  {!planLoading && (
+                    <p className="account-plan-meta">{concurrencyLabel}</p>
+                  )}
+                </div>
                 <dl className="account-identity-stats">
                   <div>
                     <dt>{t.account.memberSince}</dt>

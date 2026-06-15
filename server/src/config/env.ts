@@ -47,6 +47,11 @@ export const env = {
     projectId: process.env.FIREBASE_PROJECT_ID,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY),
+    storageBucket:
+      process.env.FIREBASE_STORAGE_BUCKET?.trim() ||
+      (process.env.FIREBASE_PROJECT_ID
+        ? `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`
+        : undefined),
   },
   openai: {
     apiKey: process.env.OPENAI_API_KEY?.trim() || undefined,

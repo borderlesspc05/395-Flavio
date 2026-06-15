@@ -178,10 +178,11 @@
 .account-avatar-ring {
   width: clamp(72px, 18vw, 88px);
   height: clamp(72px, 18vw, 88px);
-  margin: 0 auto 1rem;
+  margin: 0;
   padding: 3px;
   border-radius: 50%;
   background: conic-gradient(from 210deg, var(--acc-bronze), var(--acc-warm), var(--acc-gold), var(--acc-bronze));
+  position: relative;
 }
 
 .account-avatar {
@@ -191,12 +192,216 @@
   height: 100%;
   border-radius: 50%;
   background: var(--acc-ink);
-  font-family: var(--acc-serif);
-  font-size: 1.65rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--acc-warm);
+  overflow: hidden;
 }
+
+.account-avatar-block {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto 0.85rem;
+}
+
+.account-avatar-trigger {
+  position: relative;
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  border-radius: 50%;
+  transition: transform 180ms var(--acc-ease), opacity 180ms var(--acc-ease);
+}
+
+.account-avatar-trigger:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.account-avatar-trigger:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.account-avatar-camera {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--acc-ink);
+  background: linear-gradient(135deg, #f2d39c, #ffbc7d);
+  color: #1a222d;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+
+.account-identity-summary {
+  min-width: 0;
+  width: 100%;
+}
+
+.account-identity-alerts {
+  display: grid;
+  gap: 0.45rem;
+  width: 100%;
+  margin-bottom: 0.65rem;
+}
+
+.account-avatar-overlay--visible {
+  opacity: 1 !important;
+}
+
+.profile-camera-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 8, 14, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.profile-camera-modal {
+  width: min(100%, 420px);
+  border-radius: 18px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: linear-gradient(165deg, rgba(28, 36, 48, 0.98), rgba(12, 16, 24, 0.99));
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.profile-camera-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
+}
+
+.profile-camera-header h2 {
+  margin: 0;
+  font-family: var(--acc-serif);
+  font-size: 1.1rem;
+  color: var(--acc-text);
+}
+
+.profile-camera-header p {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: var(--acc-muted);
+  line-height: 1.45;
+}
+
+.profile-camera-close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(175, 146, 112, 0.24);
+  border-radius: 10px;
+  background: rgba(8, 12, 18, 0.45);
+  color: var(--acc-text);
+  cursor: pointer;
+}
+
+.profile-camera-preview-wrap {
+  position: relative;
+  margin: 0 1rem;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(175, 146, 112, 0.2);
+  background: #05080e;
+}
+
+.profile-camera-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.profile-camera-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--acc-muted);
+}
+
+.profile-camera-status--error {
+  padding: 1rem;
+  text-align: center;
+}
+
+.profile-camera-status--error p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #fca5a5;
+}
+
+.profile-camera-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding: 1rem;
+}
+
+.account-avatar-upload {
+  display: block;
+  margin: 0 auto 0.35rem;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.account-avatar-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+.account-avatar-overlay {
+  position: absolute;
+  inset: 3px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(8, 12, 18, 0.55);
+  opacity: 0;
+  transition: opacity 180ms var(--acc-ease);
+}
+
+.account-avatar-upload:hover .account-avatar-overlay,
+.account-avatar-upload:focus-within .account-avatar-overlay {
+  opacity: 1;
+}
+
+.account-avatar-upload-label {
+  display: block;
+  margin-top: 0.45rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--acc-bronze);
+}
+
 
 .account-identity-name {
   margin: 0 0 0.25rem;
@@ -205,15 +410,17 @@
   font-weight: 600;
   text-align: center;
   line-height: 1.25;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .account-identity-email {
-  margin: 0 0 1rem;
+  margin: 0 0 0.85rem;
   text-align: center;
   font-size: 0.82rem;
   color: var(--acc-muted);
-  word-break: break-all;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .account-plan-pill {
@@ -709,40 +916,51 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     column-gap: clamp(1rem, 3vw, 1.5rem);
-    row-gap: 0.35rem;
+    row-gap: 0.5rem;
     align-items: center;
   }
 
-  .account-identity-frame > .account-avatar-ring {
+  .account-identity-frame > .account-avatar-block {
     grid-column: 1;
-    grid-row: 1 / span 4;
+    grid-row: 1;
     margin: 0;
-    align-self: center;
+    align-self: start;
   }
 
-  .account-identity-frame > .account-identity-name,
-  .account-identity-frame > .account-identity-email,
-  .account-identity-frame > .account-plan-pill,
-  .account-identity-frame > .account-plan-meta {
+  .account-identity-frame > .account-identity-alerts {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  .account-identity-frame > .account-identity-summary {
     grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .account-identity-summary .account-identity-name,
+  .account-identity-summary .account-identity-email,
+  .account-identity-summary .account-plan-pill,
+  .account-identity-summary .account-plan-meta {
     text-align: left;
   }
 
-  .account-identity-frame > .account-identity-name {
-    margin-bottom: 0;
+  .account-identity-summary .account-identity-name {
+    margin-bottom: 0.15rem;
   }
 
-  .account-identity-frame > .account-identity-email {
-    margin-bottom: 0;
+  .account-identity-summary .account-identity-email {
+    margin-bottom: 0.65rem;
   }
 
-  .account-identity-frame > .account-plan-pill {
+  .account-identity-summary .account-plan-pill {
     margin: 0;
-    justify-self: start;
+    justify-content: flex-start;
   }
 
-  .account-identity-frame > .account-plan-meta {
+  .account-identity-summary .account-plan-meta {
     margin-bottom: 0;
+    text-align: left;
   }
 
   .account-identity-frame > .account-identity-stats {
@@ -772,17 +990,17 @@
     text-align: center;
   }
 
-  .account-identity-frame > .account-avatar-ring {
-    margin: 0 auto 0.65rem;
+  .account-identity-frame > .account-avatar-block {
+    margin: 0 auto 0.75rem;
   }
 
-  .account-identity-frame > .account-identity-name,
-  .account-identity-frame > .account-identity-email,
-  .account-identity-frame > .account-plan-meta {
+  .account-identity-summary .account-identity-name,
+  .account-identity-summary .account-identity-email,
+  .account-identity-summary .account-plan-meta {
     text-align: center;
   }
 
-  .account-identity-frame > .account-plan-pill {
+  .account-identity-summary .account-plan-pill {
     margin: 0 auto 0.35rem;
   }
 

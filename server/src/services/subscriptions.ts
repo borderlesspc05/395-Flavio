@@ -1,6 +1,7 @@
 import { create, getById, update, COLLECTIONS } from './storage';
-import { DEFAULT_PLAN_ID, type PlanId, isPlanId } from './plans';
-import { getConcurrencyLimitFromSettings } from './adminSettings';
+import { DEFAULT_PLAN_ID, type PlanId, isPlanId, inferPlanIdFromConcurrencyLimit } from './plans';
+import { getConcurrencyLimitForUser } from './concurrency';
+import type { UserProfile } from './users';
 
 export interface SubscriptionRecord {
   id: string;
@@ -77,23 +78,50 @@ export async function linkSubscriptionToUser(
 }
 
 export async function getPlanIdForUser(userId: string): Promise<PlanId> {
+  const profile = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
+  if (profile?.planId && isPlanId(profile.planId)) {
+    return profile.planId;
+  }
+
   const { listByUser } = await import('./storage');
   const items = await listByUser<SubscriptionRecord>(COLLECTIONS.subscriptions, userId);
   const active = items.find(
     (s) => (s.status === 'active' || s.status === 'past_due') && isPlanId(s.planId)
   );
   if (active) return active.planId;
+
+  const email = profile?.email?.trim();
+  if (email) {
+    const byEmail = await getSubscriptionByEmail(email);
+    if (
+      byEmail &&
+      (byEmail.status === 'active' || byEmail.status === 'past_due') &&
+      isPlanId(byEmail.planId)
+    ) {
+      if (!byEmail.userId) {
+        await linkSubscriptionToUser(email, userId).catch(() => undefined);
+      }
+      return byEmail.planId;
+    }
+  }
+
   return DEFAULT_PLAN_ID;
 }
 
 export async function getPlanSummaryForUser(userId: string) {
-  const planId = await getPlanIdForUser(userId);
+  const concurrencyLimit = await getConcurrencyLimitForUser(userId);
+  let planId = await getPlanIdForUser(userId);
+
+  if (planId === DEFAULT_PLAN_ID) {
+    const inferred = inferPlanIdFromConcurrencyLimit(concurrencyLimit);
+    if (inferred) planId = inferred;
+  }
+
   const plan = (await import('./plans')).PLANS[planId];
-  const { getConcurrencyLimitForUser } = await import('./concurrency');
   return {
     planId,
     planName: plan.name,
-    concurrencyLimit: await getConcurrencyLimitForUser(userId),
+    concurrencyLimit,
   };
 }
 

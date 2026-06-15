@@ -19,6 +19,7 @@ import './styles/plans-landing.css';
 import './styles/admin-panel.css';
 import './styles/mid-dashboard.css';
 import './styles/account-page.css';
+import './styles/user-avatar.css';
 import './styles/loop-workspace.css';
 import './styles/cycle-selector.css';
 import './styles/project-select.css';

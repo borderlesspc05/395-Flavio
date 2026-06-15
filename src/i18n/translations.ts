@@ -27,6 +27,15 @@ export type TranslationTree = {
     memberSince: string;
     saveProfile: string;
     profileSaved: string;
+    photoHint: string;
+    photoChange: string;
+    photoChoose: string;
+    photoTake: string;
+    photoCameraTitle: string;
+    photoCameraHint: string;
+    photoCameraCancel: string;
+    photoUploading: string;
+    photoSaved: string;
     securitySection: string;
     securityHint: string;
     currentPassword: string;
@@ -46,6 +55,11 @@ export type TranslationTree = {
       wrongPassword: string;
       requiresRecentLogin: string;
       generic: string;
+      photoInvalidType: string;
+      photoTooLarge: string;
+      photoUploadFailed: string;
+      photoCameraDenied: string;
+      photoCameraUnavailable: string;
     };
   };
 };
@@ -78,6 +92,15 @@ export const translations: Record<Locale, TranslationTree> = {
       memberSince: 'Membro desde',
       saveProfile: 'Salvar perfil',
       profileSaved: 'Perfil atualizado com sucesso.',
+      photoHint: 'Escolha uma imagem da galeria ou tire uma foto com a câmera.',
+      photoChange: 'Alterar foto',
+      photoChoose: 'Escolher foto',
+      photoTake: 'Tirar foto',
+      photoCameraTitle: 'Tirar foto de perfil',
+      photoCameraHint: 'Posicione seu rosto no centro e toque em capturar.',
+      photoCameraCancel: 'Cancelar',
+      photoUploading: 'Enviando foto…',
+      photoSaved: 'Foto de perfil atualizada.',
       securitySection: 'Segurança',
       securityHint: 'Para trocar a senha, confirme a senha atual.',
       currentPassword: 'Senha atual',
@@ -97,6 +120,11 @@ export const translations: Record<Locale, TranslationTree> = {
         wrongPassword: 'Senha atual incorreta.',
         requiresRecentLogin: 'Faça login novamente e tente alterar a senha.',
         generic: 'Não foi possível concluir a operação. Tente novamente.',
+        photoInvalidType: 'Use uma imagem JPG, PNG, WebP ou GIF.',
+        photoTooLarge: 'A imagem deve ter no máximo 5 MB.',
+        photoUploadFailed: 'Não foi possível enviar a foto. Tente novamente.',
+        photoCameraDenied: 'Permita o acesso à câmera para tirar a foto.',
+        photoCameraUnavailable: 'Câmera não disponível neste dispositivo ou navegador.',
       },
     },
   },
@@ -127,6 +155,15 @@ export const translations: Record<Locale, TranslationTree> = {
       memberSince: 'Member since',
       saveProfile: 'Save profile',
       profileSaved: 'Profile updated successfully.',
+      photoHint: 'Choose an image from your gallery or take a photo with the camera.',
+      photoChange: 'Change photo',
+      photoChoose: 'Choose photo',
+      photoTake: 'Take photo',
+      photoCameraTitle: 'Take profile photo',
+      photoCameraHint: 'Center your face and tap capture.',
+      photoCameraCancel: 'Cancel',
+      photoUploading: 'Uploading photo…',
+      photoSaved: 'Profile photo updated.',
       securitySection: 'Security',
       securityHint: 'To change your password, confirm your current password.',
       currentPassword: 'Current password',
@@ -146,6 +183,11 @@ export const translations: Record<Locale, TranslationTree> = {
         wrongPassword: 'Current password is incorrect.',
         requiresRecentLogin: 'Please sign in again and try changing your password.',
         generic: 'Could not complete the operation. Please try again.',
+        photoInvalidType: 'Use a JPG, PNG, WebP, or GIF image.',
+        photoTooLarge: 'Image must be 5 MB or smaller.',
+        photoUploadFailed: 'Could not upload the photo. Please try again.',
+        photoCameraDenied: 'Allow camera access to take a photo.',
+        photoCameraUnavailable: 'Camera is not available on this device or browser.',
       },
     },
   },
@@ -176,6 +218,15 @@ export const translations: Record<Locale, TranslationTree> = {
       memberSince: 'Miembro desde',
       saveProfile: 'Guardar perfil',
       profileSaved: 'Perfil actualizado con éxito.',
+      photoHint: 'Elija una imagen de la galería o tome una foto con la cámara.',
+      photoChange: 'Cambiar foto',
+      photoChoose: 'Elegir foto',
+      photoTake: 'Tomar foto',
+      photoCameraTitle: 'Tomar foto de perfil',
+      photoCameraHint: 'Centre su rostro y toque capturar.',
+      photoCameraCancel: 'Cancelar',
+      photoUploading: 'Subiendo foto…',
+      photoSaved: 'Foto de perfil actualizada.',
       securitySection: 'Seguridad',
       securityHint: 'Para cambiar la contraseña, confirme la contraseña actual.',
       currentPassword: 'Contraseña actual',
@@ -195,6 +246,11 @@ export const translations: Record<Locale, TranslationTree> = {
         wrongPassword: 'Contraseña actual incorrecta.',
         requiresRecentLogin: 'Inicie sesión de nuevo e intente cambiar la contraseña.',
         generic: 'No se pudo completar la operación. Inténtelo de nuevo.',
+        photoInvalidType: 'Use una imagen JPG, PNG, WebP o GIF.',
+        photoTooLarge: 'La imagen debe tener como máximo 5 MB.',
+        photoUploadFailed: 'No se pudo subir la foto. Inténtelo de nuevo.',
+        photoCameraDenied: 'Permita el acceso a la cámara para tomar la foto.',
+        photoCameraUnavailable: 'La cámara no está disponible en este dispositivo o navegador.',
       },
     },
   },

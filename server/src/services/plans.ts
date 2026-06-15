@@ -22,3 +22,11 @@ export function isPlanId(value: string): value is PlanId {
 export function getConcurrencyLimit(planId: PlanId): number | null {
   return PLANS[planId].concurrencyLimit;
 }
+
+/** Alinha exibição do plano quando só o limite de concorrência está configurado (ex.: admin). */
+export function inferPlanIdFromConcurrencyLimit(limit: number | null): PlanId | null {
+  if (limit === null) return 'premium';
+  if (limit >= 3) return 'advanced';
+  if (limit === 1) return 'starter';
+  return null;
+}
