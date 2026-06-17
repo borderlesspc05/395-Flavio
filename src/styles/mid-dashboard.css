@@ -154,10 +154,178 @@
 
 .mid-subtitle {
   margin: 0;
-  max-width: 42ch;
+  max-width: 52ch;
   font-size: 0.95rem;
   color: var(--mid-muted);
   line-height: 1.55;
+}
+
+.mid-overview-grid--slim {
+  align-items: stretch;
+}
+
+.mid-meta-list--compact {
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--mid-border);
+  background: rgba(14, 18, 24, 0.55);
+}
+
+/* Executive KPI grid */
+.mid-exec-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .mid-exec-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .mid-exec-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mid-exec-kpi {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem 1.05rem;
+  border-radius: 16px;
+  border: 1px solid var(--mid-border);
+  background: linear-gradient(165deg, rgba(30, 38, 50, 0.82), rgba(16, 20, 28, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  animation: mid-reveal 0.7s var(--mid-ease) both;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.mid-exec-kpi:hover {
+  transform: translateY(-1px);
+  border-color: rgba(201, 169, 98, 0.35);
+}
+
+.mid-exec-kpi.is-attention,
+.mid-exec-kpi.is-low {
+  border-color: rgba(240, 138, 126, 0.35);
+}
+
+.mid-exec-kpi.is-evolving,
+.mid-exec-kpi.is-steady,
+.mid-exec-kpi.is-attention.mid-exec-kpi.is-evolving {
+  border-color: rgba(232, 192, 106, 0.32);
+}
+
+.mid-exec-kpi.is-mature,
+.mid-exec-kpi.is-strong {
+  border-color: rgba(127, 212, 160, 0.32);
+}
+
+.mid-exec-kpi-head {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.mid-exec-kpi-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  border: 1px solid rgba(201, 169, 98, 0.28);
+  background: rgba(201, 169, 98, 0.1);
+  color: var(--mid-gold);
+  flex-shrink: 0;
+}
+
+.mid-exec-kpi-question {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mid-muted);
+}
+
+.mid-exec-kpi-title {
+  margin: 0.15rem 0 0;
+  font-family: var(--mid-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.mid-exec-kpi-score-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mid-exec-kpi-score {
+  margin: 0;
+  font-family: var(--mid-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--mid-text);
+}
+
+.mid-exec-kpi-score span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--mid-muted);
+}
+
+.mid-exec-kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  background: rgba(8, 12, 18, 0.55);
+  color: var(--mid-muted);
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mid-exec-kpi-trend.is-up {
+  color: #8ee4a8;
+  border-color: rgba(110, 207, 143, 0.35);
+}
+
+.mid-exec-kpi-trend.is-down {
+  color: #f08a7e;
+  border-color: rgba(240, 138, 126, 0.35);
+}
+
+.mid-exec-kpi-status {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--mid-warm);
+}
+
+.mid-exec-kpi-meta {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.mid-exec-kpi-meta li {
+  font-size: 0.72rem;
+  color: var(--mid-muted);
+  line-height: 1.35;
 }
 
 .mid-overview-meta {
@@ -184,6 +352,20 @@
 .mid-health-desc {
   margin: 0;
   font-size: 0.88rem;
+  color: var(--mid-muted);
+}
+
+.mid-health-score {
+  margin: 0.35rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--mid-cream);
+  line-height: 1;
+}
+
+.mid-health-score span {
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--mid-muted);
 }
 
@@ -779,6 +961,16 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.mid-skeleton-row--kpis {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1100px) {
+  .mid-skeleton-row--kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .mid-skeleton-row .mid-skeleton {

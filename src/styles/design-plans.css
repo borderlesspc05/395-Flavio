@@ -22,6 +22,10 @@
   padding: 0 1.25rem 2.5rem;
 }
 
+.design-plans-workspace--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .design-plans-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);

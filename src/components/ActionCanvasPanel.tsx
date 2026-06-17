@@ -235,7 +235,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
         });
         return;
       }
-      setNotice('Action Canvas encerrado. Resultados disponíveis no MID (Hub).');
+      setNotice('Action Canvas encerrado. Resultados disponíveis no MID.');
     } catch {
       setError('Erro ao registrar sign-off.');
     } finally {
@@ -449,7 +449,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                 ? 'Complete o diagnóstico Magnus Waves primeiro'
                 : slotsLeft <= 0
                   ? 'Limite de 5 Action Canvas atingido'
-                  : 'Gerar iniciativas com IA a partir do diagnóstico e Gate Zero'
+                  : 'Gerar iniciativas com IA a partir do diagnóstico e da escolha de caminho'
             }
           >
             <Sparkles size={17} />
@@ -842,7 +842,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                   {currentStep === 4 && (
                     <div className="action-canvas-section action-canvas-signoff">
                       <p className="action-canvas-section-lead">
-                        Encerra este Action Canvas? Os resultados vão para o MID (Hub).
+                        Encerra este Action Canvas? Os resultados vão para o MID.
                       </p>
                       {readOnly ? (
                         <div className="action-canvas-signoff-result-card">
@@ -926,7 +926,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
               <div>
                 <h3 id="ac-ai-title">Action Canvas sugeridos pela IA</h3>
                 <p>
-                  Com base no diagnóstico, Gate Zero e memória Magnus Waves. Selecione e importe — você pode editar
+                  Com base no diagnóstico, escolha de caminho e memória Magnus Waves. Selecione e importe — você pode editar
                   depois.
                 </p>
               </div>

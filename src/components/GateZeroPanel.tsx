@@ -76,7 +76,7 @@ export function GateZeroPanel({
 
   const requestAiSuggestion = async () => {
     if (!diagnosticContext.trim()) {
-      setLocalError('Complete o diagnóstico para a IA classificar o Gate Zero.');
+      setLocalError('Complete o diagnóstico para a IA sugerir o caminho.');
       return;
     }
     setAiLoading(true);
@@ -210,7 +210,7 @@ export function GateZeroPanel({
       setDraftPath(null);
       onGateDocChange(null);
     } catch {
-      setLocalError('Não foi possível limpar o Gate Zero.');
+      setLocalError('Não foi possível limpar a escolha de caminho.');
     } finally {
       setSaving(false);
     }
@@ -220,7 +220,7 @@ export function GateZeroPanel({
     return (
       <div className="gate-zero-panel gate-zero-panel--loading" role="status">
         <GitBranch size={22} aria-hidden />
-        <span>Carregando Gate Zero…</span>
+        <span>Carregando escolha de caminho…</span>
       </div>
     );
   }
@@ -238,7 +238,7 @@ export function GateZeroPanel({
               <GitBranch size={22} />
             </div>
             <div>
-              <strong>Gate Zero confirmado</strong>
+              <strong>Caminho confirmado</strong>
               <p className="gate-zero-kicker" style={{ marginTop: '0.35rem', marginBottom: 0 }}>
                 {label}
               </p>
@@ -266,8 +266,8 @@ export function GateZeroPanel({
       <div className="gate-zero-panel gate-zero-panel--skipped">
         <div className="gate-zero-surface">
           <p>
-            <strong>Gate Zero adiado.</strong> Você pode conversar livremente; para ancorar o MM
-            Blueprint, defina o caminho quando quiser.
+            <strong>Escolha adiada.</strong> Você pode conversar livremente; para ancorar o plano de Design, defina o
+            caminho quando quiser.
           </p>
           <button
             type="button"
@@ -275,7 +275,7 @@ export function GateZeroPanel({
             onClick={() => void handleResetGate()}
             disabled={saving}
           >
-            Retomar Gate Zero
+            Retomar escolha de caminho
           </button>
         </div>
       </div>
@@ -294,9 +294,9 @@ export function GateZeroPanel({
           <div>
             <span className="gate-zero-eyebrow">Onda 2 · Decisão-mestre</span>
             <h2 id="gate-zero-title" className="gate-zero-title">
-              2.0 Gate Zero
+              2.0 Escolha de caminho
             </h2>
-            <p className="gate-zero-kicker">MM Blueprint — bifurcação antes do Outcome Forge</p>
+            <p className="gate-zero-kicker">Bifurcação antes do plano de ação — treinamento ou sistêmico</p>
             <p className="gate-zero-rule">{GATE_ZERO_RULE}</p>
           </div>
           <div className="gate-zero-hero-meta" aria-hidden>
@@ -341,8 +341,7 @@ export function GateZeroPanel({
             {aiLoading ? 'Consultando IA…' : 'Sugerir caminho com IA'}
           </button>
           <p className="gate-zero-rail-hint">
-            A IA lê o canvas 1.1–1.5 e recomenda um caminho; você confirma ou corrige antes do
-            Blueprint.
+            A IA lê o canvas 1.1–1.5 e recomenda um caminho; você confirma ou corrige antes de seguir no Design.
           </p>
         </div>
 
@@ -427,7 +426,7 @@ export function GateZeroPanel({
             disabled={saving || !draftPath}
           >
             <Check size={17} aria-hidden />
-            {revisionMode ? 'Salvar decisão e voltar ao chat' : 'Confirmar e seguir para o Blueprint'}
+            {revisionMode ? 'Salvar decisão e voltar ao chat' : 'Confirmar e seguir para o Design'}
           </button>
           <button
             type="button"

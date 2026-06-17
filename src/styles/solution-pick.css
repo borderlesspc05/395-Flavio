@@ -39,6 +39,73 @@
   max-width: 52rem;
 }
 
+.solution-pick-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.solution-pick-read {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(12, 18, 28, 0.65);
+  color: #f3ead8;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.solution-pick-read:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.solution-pick-evolution {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(8, 12, 20, 0.72);
+}
+
+.solution-pick-evolution-score {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #f3ead8;
+}
+
+.solution-pick-evolution-label {
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.solution-pick-evolution.is-attention .solution-pick-evolution-score,
+.solution-pick-evolution.is-attention .solution-pick-evolution-label {
+  color: #f08a7e;
+}
+
+.solution-pick-evolution.is-evolving .solution-pick-evolution-score,
+.solution-pick-evolution.is-evolving .solution-pick-evolution-label {
+  color: #e8c06a;
+}
+
+.solution-pick-evolution.is-mature .solution-pick-evolution-score,
+.solution-pick-evolution.is-mature .solution-pick-evolution-label {
+  color: #7fd4a0;
+}
+
 .solution-pick-refresh {
   display: inline-flex;
   align-items: center;

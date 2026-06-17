@@ -289,7 +289,7 @@ export function MinhaEquipePage() {
           onClick={() => setSearchParams({ tab: 'consultoria' })}
         >
           <Bot size={16} aria-hidden />
-          Consultoria IA · Blueprint
+          Consultoria IA
         </button>
       </div>
 

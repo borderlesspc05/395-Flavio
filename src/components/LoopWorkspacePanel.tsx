@@ -227,8 +227,9 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
           </summary>
           <div className="loop-workspace__advanced-body">
             <p className="loop-workspace__advanced-hint">
-              Novo ciclo arquiva o atual e limpa o Gate Zero automaticamente. Use os setores abaixo só se
-              quiser reiniciar dados de execução.
+              Ao iniciar um novo ciclo, o ciclo atual é arquivado e o diagnóstico inicial é
+              reiniciado automaticamente. Utilize os setores abaixo apenas se desejar limpar também
+              os dados de execução.
             </p>
             <fieldset className="loop-workspace__sectors">
               <legend>Reiniciar setores (opcional)</legend>

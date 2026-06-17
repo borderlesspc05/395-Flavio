@@ -33,9 +33,9 @@ import type { ChatMessage, InitialFormData } from '../types';
 
 const SUGGESTIONS = [
   'Crie 3 objetivos estratégicos para o próximo trimestre',
-  'Qual solução priorizar no Blueprint?',
+  'Qual solução priorizar no Design?',
   'Renomeie o projeto para um nome mais claro',
-  'Montar MM Blueprint e objetivos para Difusão',
+  'Montar planos de ação e publicar na Difusão',
 ];
 
 interface AiModel {
@@ -465,8 +465,7 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
     >
       {diagnosticComplete === false && (
         <div className="consultoria-gate-banner" style={{ margin: '0 1rem 0', maxWidth: 1200 }}>
-          Complete o <strong>Human-to-Business Canvas</strong> (Onda 1 — Diagnóstico) antes do MM
-          Blueprint.{' '}
+          Complete o <strong>Human-to-Business Canvas</strong> (Onda 1 — Diagnóstico) antes da Consultoria IA.{' '}
           <Link to="/dashboard/initial-form">Ir para o diagnóstico</Link>
         </div>
       )}
@@ -601,7 +600,7 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
                     type="button"
                     className="chat-header-icon-btn"
                     onClick={openGateRevision}
-                    title="Refazer Gate Zero"
+                    title="Refazer escolha de caminho"
                   >
                     <GitBranch size={16} aria-hidden />
                   </button>
@@ -681,7 +680,7 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
                   <div>
                     <p className="chat-objectives-banner-title">Transforme insights em objetivos</p>
                     <p className="chat-objectives-banner-description">
-                      Leve o diagnóstico e o MM Blueprint para a Difusão e gere objetivos prontos para execução.
+                      Leve o diagnóstico e os planos validados para a Difusão e execute com o time.
                     </p>
                   </div>
                 </div>
@@ -713,8 +712,8 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
                   <h2 className="chat-empty-title">Como posso ajudar?</h2>
                   <p className="chat-empty-description">
                     {gateDoc?.selectedPath || gateDoc?.skipped
-                      ? 'Diagnóstico e Gate Zero no contexto. Escolha uma sugestão ou escreva sua pergunta.'
-                      : 'Confirme o Gate Zero para liberar o Blueprint completo.'}
+                      ? 'Diagnóstico e escolha de caminho no contexto. Escolha uma sugestão ou escreva sua pergunta.'
+                      : 'Confirme a escolha de caminho para liberar a consultoria completa.'}
                   </p>
                 </div>
                 <div className="chat-suggestions chat-suggestions--grid">

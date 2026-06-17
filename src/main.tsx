@@ -28,6 +28,7 @@ import './styles/historico-loop.css';
 import './styles/employee-profile.css';
 import './styles/solution-pick.css';
 import './styles/design-plans.css';
+import './styles/diagnostic-laudo.css';
 import './styles/support-chat.css';
 import './styles/auth-refined.css';
 

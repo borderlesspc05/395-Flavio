@@ -10,7 +10,6 @@ import {
   Sparkles,
   Trash2,
 } from 'lucide-react';
-import { ActionCanvasPreview } from '../components/ActionCanvasPreview';
 import { auth } from '../config/firebase';
 import { actionCanvasesApi } from '../services/api';
 import { getInitialForm } from '../services/initialForm';
@@ -325,15 +324,15 @@ export function DesignPlansPage() {
         <Sparkles size={32} aria-hidden />
         <h1>Design — planos de ação</h1>
         <p>
-          Conclua o diagnóstico e escolha ações no Solution Pick (1.5), ou use o MM Blueprint na Equipe para chegar
-          aqui.
+          Conclua o diagnóstico e escolha ações no Solution Pick (1.5), ou use a Consultoria IA na Equipe para
+          chegar aqui.
         </p>
         <div className="design-plans-empty-actions">
           <Link to="/dashboard/initial-form" className="design-plans-link">
             Ir para o diagnóstico
           </Link>
           <Link to="/dashboard/minha-equipe?tab=consultoria" className="design-plans-link">
-            MM Blueprint na Equipe
+            Consultoria IA na Equipe
           </Link>
         </div>
       </div>
@@ -347,8 +346,8 @@ export function DesignPlansPage() {
           <span className="design-plans-kicker">Onda 2 · Design</span>
           <h1>Valide seus planos de ação</h1>
           <p>
-            Revise cada plano ao lado do preview do Action Canvas. Ao validar, o canvas é criado na Difusão; edições
-            seguintes sincronizam automaticamente.
+            Valide cada plano selecionado, construa junto com a IA. Após a aprovação, os planos são publicados na
+            Difusão.
           </p>
         </div>
         <div className="design-plans-progress" aria-label={`${validatedCount} de ${plans.length} planos validados`}>
@@ -370,7 +369,7 @@ export function DesignPlansPage() {
         </p>
       )}
 
-      <div className="design-plans-workspace">
+      <div className="design-plans-workspace design-plans-workspace--single">
         <div className="design-plans-editor">
           <div className="design-plans-grid">
             {plans.map((plan) => (
@@ -472,10 +471,6 @@ export function DesignPlansPage() {
             ))}
           </div>
         </div>
-
-        <aside className="design-plans-preview-pane" aria-label="Preview do Action Canvas">
-          <ActionCanvasPreview plan={activePlan} validated={activePlan?.validated} />
-        </aside>
       </div>
 
       <footer className="design-plans-footer">

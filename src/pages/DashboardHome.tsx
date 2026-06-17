@@ -99,13 +99,14 @@ export function DashboardHome() {
       buildMidDashboard({
         formData,
         formComplete: !!formCompletedAt,
+        cycleId: activeCycle?.id,
         cycleLabel: activeCycle?.label,
         objectives,
         canvases,
         team,
         reports,
       }),
-    [formData, formCompletedAt, activeCycle?.label, objectives, canvases, team, reports]
+    [formData, formCompletedAt, activeCycle?.id, activeCycle?.label, objectives, canvases, team, reports]
   );
 
   const waveChips = useMemo(

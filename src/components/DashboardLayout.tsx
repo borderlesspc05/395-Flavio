@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   UserCircle,
+  FolderKanban,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -164,6 +165,16 @@ export function DashboardLayout() {
                 </button>
               );
             })}
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => handleNav('projetos', '/escolher-projeto')}
+              aria-label={t.nav.projects}
+              title={sidebarCollapsed ? t.nav.projects : undefined}
+            >
+              <FolderKanban className="nav-icon" size={20} aria-hidden />
+              <span className="nav-label">{t.nav.projects}</span>
+            </button>
             <button
               type="button"
               className="nav-item nav-item-logout"

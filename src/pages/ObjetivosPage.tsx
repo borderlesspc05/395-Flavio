@@ -468,59 +468,13 @@ export function ObjetivosPage() {
           </div>
           <div className="objetivos-title-copy">
             <span className="difusao-header-eyebrow">MAGNUS WAVES™ · Onda 3</span>
-            <h1 className="objetivos-title">Difusão · Make the Move</h1>
+            <h1 className="objetivos-title">Difusão</h1>
             <p className="objetivos-subtitle">
-              Action Canvas → Execução → Risco &amp; Sign-off · depois objetivos (4 WS, Imprint, Follow-up).
+              Execute planos, monitore riscos e acompanhe o progresso até a entrega final.
             </p>
           </div>
         </div>
-        <div className="objetivos-header-actions">
-          <button
-            type="button"
-            className="objetivos-header-btn objetivos-header-btn--ai"
-            onClick={() => {
-              setDifusaoTab('objetivos');
-              void loadSuggestions();
-            }}
-            disabled={suggestLoading || designContextLoading || !designContext?.diagnosticComplete}
-            title={
-              !designContext?.diagnosticComplete
-                ? 'Complete o diagnóstico Magnus Waves para gerar sugestões'
-                : 'Gerar objetivos estratégicos com base na memória da IA'
-            }
-          >
-            <Sparkles size={16} aria-hidden />
-            <span>{suggestLoading ? 'Gerando…' : 'Sugestões com IA'}</span>
-          </button>
-          <button
-            type="button"
-            className="objetivos-header-btn objetivos-header-btn--blueprint"
-            onClick={() => navigate('/dashboard/minha-equipe?tab=consultoria')}
-            title="Abrir Consultoria IA e MM Blueprint (Onda 2 — Design)"
-          >
-            <GitBranch size={16} aria-hidden />
-            <span>MM Blueprint</span>
-            <ArrowRight size={15} aria-hidden className="objetivos-header-btn-arrow" />
-          </button>
-        </div>
       </header>
-
-      <nav className="difusao-tabs" aria-label="Seções da Difusão">
-        <button
-          type="button"
-          className={`difusao-tab ${difusaoTab === 'canvas' ? 'active' : ''}`}
-          onClick={() => setDifusaoTab('canvas')}
-        >
-          1 · Action Canvas
-        </button>
-        <button
-          type="button"
-          className={`difusao-tab ${difusaoTab === 'objetivos' ? 'active' : ''}`}
-          onClick={() => setDifusaoTab('objetivos')}
-        >
-          2 · Objetivos estratégicos
-        </button>
-      </nav>
 
       <MagnusMemoryBanner
         meta={designContext?.meta ?? null}
@@ -528,14 +482,12 @@ export function ObjetivosPage() {
         loading={designContextLoading}
       />
 
-      {difusaoTab === 'canvas' && (
-        <ActionCanvasPanel
-          canUseAi={Boolean(designContext?.diagnosticComplete)}
-          onCanvasClosed={() => reloadDesignContext()}
-        />
-      )}
+      <ActionCanvasPanel
+        canUseAi={Boolean(designContext?.diagnosticComplete)}
+        onCanvasClosed={() => reloadDesignContext()}
+      />
 
-      {difusaoTab === 'objetivos' && (
+      {false && difusaoTab === 'objetivos' && (
         <>
       <div className="objetivos-summary">
         <div className="objetivo-summary-card">
@@ -976,13 +928,12 @@ export function ObjetivosPage() {
 
       <section className="mid-diffusion-panel" aria-labelledby="mid-conclude-title">
         <div className="mid-diffusion-panel-copy">
-          <span className="mid-diffusion-eyebrow">Onda 3 → Onda 4</span>
           <h2 id="mid-conclude-title" className="mid-diffusion-title">
-            Concluir MID
+            Concluir Difusão
           </h2>
           <p className="mid-diffusion-subtitle">
-            Finalize a Difusão e vá para o Domínio: o Magnus Intelligence Dashboard gera o relatório
-            Kirkpatrick com o que foi executado neste ciclo.
+            Finalize a etapa de Difusão e avance para a fase final de avaliação dos resultados e impactos gerados no
+            Domínio.
           </p>
         </div>
         <button
@@ -992,13 +943,13 @@ export function ObjetivosPage() {
             navigate('/dashboard/relatorios', {
               state: {
                 autoGenerate: true,
-                midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio (MID)…',
+                midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio…',
               },
             })
           }
         >
           <BarChart3 size={18} aria-hidden />
-          Concluir MID e gerar relatório
+          Concluir Difusão
           <ArrowRight size={16} aria-hidden />
         </button>
       </section>

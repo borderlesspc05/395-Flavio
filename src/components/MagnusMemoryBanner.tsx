@@ -1,4 +1,4 @@
-import { Brain, CheckCircle2, Circle, ClipboardList, Target } from 'lucide-react';
+import { Brain, CheckCircle2, Circle, ClipboardList } from 'lucide-react';
 import type { MagnusWavesMemoryMeta } from '../services/magnusWavesMemory';
 
 interface MagnusMemoryBannerProps {
@@ -30,7 +30,7 @@ export function MagnusMemoryBanner({ meta, statusLabel, loading, compact, minima
     },
     {
       ok: meta.hasGate,
-      label: meta.hasGate ? 'Gate Zero' : 'Gate pendente',
+      label: meta.hasGate ? 'Caminho definido' : 'Caminho pendente',
       icon: meta.hasGate ? CheckCircle2 : Circle,
     },
     {
@@ -42,14 +42,6 @@ export function MagnusMemoryBanner({ meta, statusLabel, loading, compact, minima
             ? `${meta.actionCanvasTotal} canvas em andamento`
             : 'Action Canvas',
       icon: ClipboardList,
-    },
-    {
-      ok: meta.objectivesCount > 0,
-      label:
-        meta.objectivesCount > 0
-          ? `${meta.objectivesCount} objetivo${meta.objectivesCount > 1 ? 's' : ''}`
-          : 'Objetivos',
-      icon: Target,
     },
   ];
 
@@ -100,8 +92,7 @@ export function MagnusMemoryBanner({ meta, statusLabel, loading, compact, minima
       </div>
       {!compact && (
         <p className="magnus-memory-hint">
-          A Consultoria IA e as sugestões de objetivos usam diagnóstico, Blueprint, Action Canvas e objetivos como
-          contexto contínuo.
+          A Consultoria IA e as sugestões usam diagnóstico, escolha de caminho e Action Canvas como contexto contínuo.
         </p>
       )}
     </div>

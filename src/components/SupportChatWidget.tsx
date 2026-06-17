@@ -95,7 +95,7 @@ export function SupportChatWidget() {
               <p className="support-chat-placeholder">Carregando…</p>
             ) : ticket && ticket.messages.length === 0 ? (
               <p className="support-chat-placeholder">
-                Olá! Conte o que precisa. Um administrador vai responder por aqui.
+                Olá! Conte o que precisa. Um administrador humano vai responder por aqui.
               </p>
             ) : (
               ticket?.messages.map((msg) => (

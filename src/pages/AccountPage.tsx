@@ -1,4 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { updateProfile } from 'firebase/auth';
 import {
   EmailAuthProvider,
@@ -279,6 +280,13 @@ export function AccountPage() {
                   </div>
                   {!planLoading && (
                     <p className="account-plan-meta">{concurrencyLabel}</p>
+                  )}
+                  {!planLoading && planId !== 'premium' && (
+                    <Link to="/planos" className="account-plan-upgrade">
+                      <Sparkles size={14} aria-hidden />
+                      Fazer upgrade de plano
+                      <ArrowRight size={14} aria-hidden />
+                    </Link>
                   )}
                 </div>
                 <dl className="account-identity-stats">

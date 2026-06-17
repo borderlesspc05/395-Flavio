@@ -3,6 +3,24 @@ import type { WaveId } from '../constants/magnusWaves';
 export type MidHealth = 'green' | 'yellow' | 'red';
 export type MidSignal = MidHealth;
 
+export type MidTrend = 'up' | 'down' | 'flat';
+
+export type MidKpiBand = 'attention' | 'evolving' | 'mature' | 'low' | 'steady' | 'strong';
+
+export interface MidExecutiveKpi {
+  id: string;
+  question: string;
+  title: string;
+  icon: 'rocket' | 'bolt' | 'wave' | 'chart';
+  score: number;
+  label: string;
+  band: MidKpiBand;
+  trend: MidTrend;
+  trendValue: string;
+  meta: string[];
+  detail: string;
+}
+
 export interface MidOverview {
   projectName: string;
   owner: string;
@@ -58,10 +76,7 @@ export interface MidEvolutionItem {
 
 export interface MidDashboardData {
   overview: MidOverview;
-  businessImpact: MidMetricRow[];
-  humanImpact: MidHumanRow[];
+  executiveKpis: MidExecutiveKpi[];
   execution: MidExecutionRow[];
-  insights: MidInsightBlock[];
-  evolution: MidEvolutionItem[];
   hasData: boolean;
 }

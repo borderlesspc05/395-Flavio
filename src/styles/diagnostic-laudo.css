@@ -1,0 +1,67 @@
+.diagnostic-laudo-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(4, 8, 14, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.diagnostic-laudo-modal {
+  width: min(210mm, 100%);
+  max-height: min(90vh, 297mm);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: #f8f4ec;
+  color: #1f2430;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+}
+
+.diagnostic-laudo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(31, 36, 48, 0.12);
+}
+
+.diagnostic-laudo-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2430;
+}
+
+.diagnostic-laudo-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(31, 36, 48, 0.08);
+  color: #1f2430;
+  cursor: pointer;
+}
+
+.diagnostic-laudo-body {
+  overflow: auto;
+  padding: 1.25rem 1.5rem 1.75rem;
+}
+
+.diagnostic-laudo-body pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #2a3140;
+}

@@ -5,6 +5,7 @@ import {
   type SprintProgress,
 } from '../constants/magnusWaves';
 import { getDiagnosticCompletion } from '../constants/diagnosticFlow';
+import { buildExecutiveKpis } from './midExecutiveKpis';
 import type {
   ActionCanvas,
   InitialFormData,
@@ -13,14 +14,9 @@ import type {
 } from '../types';
 import type {
   MidDashboardData,
-  MidEvolutionItem,
   MidExecutionRow,
   MidHealth,
-  MidHumanRow,
-  MidInsightBlock,
-  MidMetricRow,
   MidOverview,
-  MidSignal,
 } from '../types/mid';
 
 interface ReportLike {
@@ -36,47 +32,12 @@ interface ReportLike {
 interface BuildMidInput {
   formData: InitialFormData | null;
   formComplete: boolean;
+  cycleId?: string | null;
   cycleLabel?: string | null;
   objectives: Objective[];
   canvases: ActionCanvas[];
   team: TeamMember[];
   reports: ReportLike[];
-}
-
-function parseScore(value: unknown): number | null {
-  if (typeof value === 'number' && !Number.isNaN(value)) return Math.min(100, Math.max(0, value));
-  if (typeof value === 'string') {
-    const n = parseInt(value.replace(/\D/g, ''), 10);
-    if (!Number.isNaN(n)) return Math.min(100, Math.max(0, n));
-  }
-  return null;
-}
-
-function engagementToPercent(value: unknown): number {
-  const v = String(value ?? '').toLowerCase();
-  if (v.includes('alto')) return 78;
-  if (v.includes('median')) return 52;
-  if (v.includes('baixo')) return 28;
-  return 45;
-}
-
-function signalFromDelta(delta: number, invert = false): MidSignal {
-  const d = invert ? -delta : delta;
-  if (d >= 8) return 'green';
-  if (d >= -5) return 'yellow';
-  return 'red';
-}
-
-function signalFromRate(rate: number): MidSignal {
-  if (rate >= 70) return 'green';
-  if (rate >= 40) return 'yellow';
-  return 'red';
-}
-
-function formatDelta(before: number, current: number, suffix = '%'): string {
-  const delta = current - before;
-  const sign = delta > 0 ? '+' : '';
-  return `${sign}${Math.round(delta)}${suffix}`;
 }
 
 function statusLabel(progress: SprintProgress): string {
@@ -152,137 +113,6 @@ function buildOverview(
   };
 }
 
-function buildBusinessImpact(
-  input: BuildMidInput,
-  objectiveRate: number,
-  deliveryGreenRate: number,
-  latestReport?: ReportLike
-): MidMetricRow[] {
-  const form = input.formData ?? ({} as InitialFormData);
-  const transferBase = parseScore(form.transferReadinessScore) ?? 48;
-  const learningBase = parseScore(form.learningEffectivenessScore) ?? 50;
-  const systemFriction = parseScore(form.systemFrictionScore) ?? 55;
-
-  const transferCurrent = Math.min(
-    100,
-    Math.round(transferBase + objectiveRate * 0.35 + deliveryGreenRate * 0.2)
-  );
-  const learningCurrent = Math.min(100, Math.round(learningBase + objectiveRate * 0.25));
-  const efficiencyCurrent = Math.min(100, Math.round(100 - systemFriction * 0.4 + deliveryGreenRate * 0.45));
-
-  const reportRate = latestReport?.stats?.completionRate ?? objectiveRate;
-
-  return [
-    {
-      id: 'kpi-primary',
-      label: 'Execução estratégica',
-      before: `${Math.round(objectiveRate * 0.4)}%`,
-      current: `${Math.round(reportRate)}%`,
-      variation: formatDelta(Math.round(objectiveRate * 0.4), Math.round(reportRate)),
-      signal: signalFromRate(reportRate),
-      isPrimary: true,
-    },
-    {
-      id: 'transfer',
-      label: 'Transfer Readiness',
-      before: `${transferBase}`,
-      current: `${transferCurrent}`,
-      variation: formatDelta(transferBase, transferCurrent, ' pts'),
-      signal: signalFromDelta(transferCurrent - transferBase),
-    },
-    {
-      id: 'learning',
-      label: 'Learning Effectiveness',
-      before: `${learningBase}`,
-      current: `${learningCurrent}`,
-      variation: formatDelta(learningBase, learningCurrent, ' pts'),
-      signal: signalFromDelta(learningCurrent - learningBase),
-    },
-    {
-      id: 'efficiency',
-      label: 'Eficiência operacional',
-      before: `${Math.max(0, 100 - systemFriction)}%`,
-      current: `${efficiencyCurrent}%`,
-      variation: formatDelta(Math.max(0, 100 - systemFriction), efficiencyCurrent),
-      signal: signalFromRate(efficiencyCurrent),
-    },
-  ];
-}
-
-function buildHumanImpact(
-  input: BuildMidInput,
-  objectiveRate: number,
-  deliveryGreenRate: number
-): MidHumanRow[] {
-  const form = input.formData ?? ({} as InitialFormData);
-  const engagementBefore = engagementToPercent(form.nivelEngajamentoEquipes);
-  const engagementCurrent = Math.min(95, Math.round(engagementBefore + deliveryGreenRate * 0.25));
-
-  const totalCanvases = input.canvases.length || 1;
-  const signOffYes = input.canvases.filter((c) => c.signOff === 'sim').length;
-  const adhesionBefore = Math.round((signOffYes / Math.max(totalCanvases, 1)) * 60);
-  const adhesionCurrent = Math.min(100, Math.round(adhesionBefore + deliveryGreenRate * 0.35));
-
-  const teamInvolved = new Set(
-    input.canvases.flatMap((c) =>
-      c.entregas.map((e) => e.responsavel?.trim()).filter(Boolean)
-    )
-  ).size;
-  const participationBefore = Math.min(40, input.team.length * 8);
-  const participationCurrent = Math.min(100, participationBefore + teamInvolved * 12);
-
-  const perceivedBefore = 42;
-  const perceivedCurrent = Math.min(92, Math.round(perceivedBefore + objectiveRate * 0.4));
-
-  const culturalBefore = 38;
-  const culturalCurrent = Math.min(90, Math.round(culturalBefore + signOffYes * 15));
-
-  return [
-    {
-      id: 'adhesion',
-      label: 'Adesão às iniciativas',
-      before: `${adhesionBefore}%`,
-      current: `${adhesionCurrent}%`,
-      satisfaction: signalFromRate(adhesionCurrent),
-    },
-    {
-      id: 'behavior',
-      label: 'Comportamento observado',
-      before: deliveryGreenRate < 30 ? 'Irregular' : 'Em formação',
-      current: deliveryGreenRate >= 60 ? 'Consistente' : deliveryGreenRate >= 35 ? 'Emergente' : 'Irregular',
-      satisfaction: signalFromRate(deliveryGreenRate),
-    },
-    {
-      id: 'participation',
-      label: 'Participação',
-      before: `${participationBefore}%`,
-      current: `${participationCurrent}%`,
-      satisfaction: signalFromRate(participationCurrent),
-    },
-    {
-      id: 'sentiment',
-      label: 'Sentimento',
-      before: engagementBefore < 50 ? 'Cauteloso' : 'Construtivo',
-      current: engagementCurrent >= 70 ? 'Engajado' : engagementCurrent >= 50 ? 'Construtivo' : 'Cauteloso',
-      satisfaction: signalFromRate(engagementCurrent),
-    },
-    {
-      id: 'perceived',
-      label: 'Mudança percebida',
-      before: `${perceivedBefore}%`,
-      current: `${perceivedCurrent}%`,
-      satisfaction: signalFromRate(perceivedCurrent),
-    },
-    {
-      id: 'cultural',
-      label: 'Influência cultural',
-      before: `${culturalBefore}%`,
-      current: `${culturalCurrent}%`,
-      satisfaction: signalFromRate(culturalCurrent),
-    },
-  ];
-}
-
 function deliveryStatusLabel(status: MidExecutionRow['status']): string {
   switch (status) {
     case 'verde':
@@ -344,116 +174,6 @@ function buildExecution(input: BuildMidInput): MidExecutionRow[] {
   return rows.slice(0, 12);
 }
 
-function buildInsights(input: BuildMidInput, deliveryGreenRate: number): MidInsightBlock[] {
-  const closed = input.canvases.filter((c) => c.fechado && c.signOff === 'sim');
-  const redDeliveries = input.canvases.flatMap((c) =>
-    c.entregas.filter((e) => e.status === 'vermelho' && e.entrega.trim())
-  );
-  const completedHigh = input.objectives.filter(
-    (o) => o.status === 'concluido' && o.prioridade === 'alta'
-  );
-  const latestResumo = input.reports[0]?.resumo?.trim();
-
-  const worked =
-    closed.length > 0
-      ? `${closed.length} iniciativa(s) com sign-off positivo e entregas verdes (${deliveryGreenRate}% no ritmo).`
-      : 'Ainda sem iniciativas encerradas — registre sign-off no Action Canvas para gerar aprendizado.';
-
-  const blocked =
-    redDeliveries.length > 0
-      ? `${redDeliveries.length} entrega(s) em vermelho precisam de desbloqueio com owner e sponsor.`
-      : input.objectives.filter((o) => o.status === 'nao_iniciado').length > 3
-        ? 'Objetivos parados — falta ritmo de follow-up semanal.'
-        : 'Sem bloqueios críticos registrados; mantenha cadência de evidências.';
-
-  const impact =
-    completedHigh.length > 0
-      ? `Objetivos de alta prioridade concluídos: ${completedHigh.map((o) => o.titulo).slice(0, 2).join(', ')}.`
-      : input.objectives[0]?.impacto
-        ? `Impacto esperado em foco: ${input.objectives[0].impacto.slice(0, 120)}.`
-        : 'Documente impacto nos objetivos para o MID refletir resultado humano + negócio.';
-
-  return [
-    { question: 'O que funcionou?', answer: worked },
-    { question: 'O que travou?', answer: blocked },
-    { question: 'O que gerou maior impacto?', answer: impact },
-    {
-      question: 'O que repetir?',
-      answer:
-        deliveryGreenRate >= 50
-          ? 'Ritmo de entregas com evidência + sign-off antes de escalar nova iniciativa.'
-          : 'Retomar diagnóstico de causa antes de abrir novas frentes paralelas.',
-    },
-    {
-      question: 'O que ajustar?',
-      answer:
-        redDeliveries.length > 0
-          ? 'Reduzir WIP: uma entrega vermelha por vez, com próxima ação explícita.'
-          : latestResumo
-            ? latestResumo.slice(0, 200)
-            : 'Gerar relatório Domínio para consolidar inteligência organizacional.',
-    },
-  ];
-}
-
-function buildEvolution(input: BuildMidInput, progress: SprintProgress): MidEvolutionItem[] {
-  const items: MidEvolutionItem[] = [];
-  const waveId = getActiveWaveId(progress);
-
-  if (!progress.formComplete) {
-    items.push({
-      label: 'Completar Diagnóstico',
-      priority: 'alta',
-      description: 'Sem verdade diagnóstica, o MID não evolui — finalize o Human-to-Business Canvas.',
-      route: '/dashboard/initial-form',
-    });
-  } else if (waveId === 'design') {
-    items.push({
-      label: 'Confirmar Gate Zero',
-      priority: 'alta',
-      description: 'Definir Caminho A ou B no MM Blueprint antes de escalar execução.',
-      route: '/dashboard/minha-equipe?tab=consultoria',
-    });
-  } else if (waveId === 'difusao') {
-    items.push({
-      label: 'Fechar ciclo de Difusão',
-      priority: 'alta',
-      description: 'Encerrar Action Canvas com sign-off e evidências para alimentar o Domínio.',
-      route: '/dashboard/objetivos',
-    });
-  } else {
-    items.push({
-      label: 'Continuous Loop',
-      priority: 'media',
-      description: 'Revisar aprendizados e decidir se retoma Onda 1 ou sobe nível de maturidade.',
-      route: '/dashboard/historico',
-    });
-  }
-
-  const openHigh = input.objectives
-    .filter((o) => o.status !== 'concluido' && o.prioridade === 'alta')
-    .slice(0, 2);
-  for (const obj of openHigh) {
-    items.push({
-      label: obj.titulo,
-      priority: 'alta',
-      description: obj.descricao.slice(0, 140),
-      route: '/dashboard/objetivos',
-    });
-  }
-
-  if (progress.reportsCount === 0 && progress.objectivesTotal > 0) {
-    items.push({
-      label: 'Gerar relatório Domínio',
-      priority: 'media',
-      description: 'Consolidar execução em inteligência — Kirkpatrick 4 + narrativa estratégica.',
-      route: '/dashboard/relatorios',
-    });
-  }
-
-  return items.slice(0, 5);
-}
-
 export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
   const objectives = input.objectives;
   const total = objectives.length;
@@ -488,15 +208,20 @@ export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
     input.formComplete
   );
 
-  const latestReport = input.reports[0];
+  const executiveKpis = buildExecutiveKpis({
+    formData: input.formData,
+    formComplete: input.formComplete,
+    cycleId: input.cycleId ?? undefined,
+    objectives,
+    canvases: input.canvases,
+    team: input.team,
+    reports: input.reports,
+  });
 
   return {
     overview: buildOverview(input, progress, healthPack),
-    businessImpact: buildBusinessImpact(input, objectiveRate, deliveryGreenRate, latestReport),
-    humanImpact: buildHumanImpact(input, objectiveRate, deliveryGreenRate),
+    executiveKpis,
     execution: buildExecution(input),
-    insights: buildInsights(input, deliveryGreenRate),
-    evolution: buildEvolution(input, progress),
     hasData: input.formComplete || total > 0 || input.canvases.length > 0,
   };
 }

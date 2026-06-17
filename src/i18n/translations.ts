@@ -10,6 +10,7 @@ export type TranslationTree = {
     domain: string;
     loop: string;
     account: string;
+    projects: string;
     logout: string;
     openMenu: string;
     skipToContent: string;
@@ -67,14 +68,15 @@ export type TranslationTree = {
 export const translations: Record<Locale, TranslationTree> = {
   pt: {
     nav: {
-      hub: 'Hub (MID)',
+      hub: 'MID',
       diagnostic: '1 · Diagnóstico',
-      design: '2 · Design (Blueprint)',
+      design: '2 · Design',
       diffusion: '3 · Difusão',
       team: 'Equipe',
-      domain: '4 · Domínio (MID)',
+      domain: '4 · Domínio',
       loop: 'Loop contínuo',
       account: 'Conta',
+      projects: 'Projetos',
       logout: 'Sair',
       openMenu: 'Abrir menu de navegação',
       skipToContent: 'Ir para o conteúdo principal',
@@ -130,14 +132,15 @@ export const translations: Record<Locale, TranslationTree> = {
   },
   en: {
     nav: {
-      hub: 'Hub (MID)',
+      hub: 'MID',
       diagnostic: '1 · Diagnostic',
-      design: '2 · Design (Blueprint)',
+      design: '2 · Design',
       diffusion: '3 · Diffusion',
       team: 'Team',
-      domain: '4 · Domain (MID)',
+      domain: '4 · Domain',
       loop: 'Continuous loop',
       account: 'Account',
+      projects: 'Projects',
       logout: 'Sign out',
       openMenu: 'Open navigation menu',
       skipToContent: 'Skip to main content',
@@ -193,14 +196,15 @@ export const translations: Record<Locale, TranslationTree> = {
   },
   es: {
     nav: {
-      hub: 'Hub (MID)',
+      hub: 'MID',
       diagnostic: '1 · Diagnóstico',
-      design: '2 · Diseño (Blueprint)',
+      design: '2 · Diseño',
       diffusion: '3 · Difusión',
       team: 'Equipo',
-      domain: '4 · Dominio (MID)',
+      domain: '4 · Dominio',
       loop: 'Bucle continuo',
       account: 'Cuenta',
+      projects: 'Proyectos',
       logout: 'Salir',
       openMenu: 'Abrir menú de navegación',
       skipToContent: 'Ir al contenido principal',

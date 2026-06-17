@@ -92,9 +92,9 @@ export async function loadMagnusWavesMemory(userId: string): Promise<MagnusWaves
   const statusLabel = selectedPath
     ? `Design confirmado: Caminho ${selectedPath}`
     : gateSkipped
-      ? 'Gate Zero adiado'
+      ? 'Escolha de caminho adiada'
       : diagnosticComplete
-        ? 'Diagnóstico pronto; Gate Zero pendente'
+        ? 'Diagnóstico pronto; caminho pendente'
         : 'Diagnóstico pendente';
 
   const sections: string[] = [

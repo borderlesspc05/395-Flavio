@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   CircleAlert,
   ClipboardCheck,
-  FileText,
   Gauge,
   Layers3,
   Save,
@@ -393,8 +392,6 @@ export function InitialFormPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
-  const [completedAt, setCompletedAt] = useState<Date | null>(null);
-  const [draftUpdatedAt, setDraftUpdatedAt] = useState<Date | null>(null);
   const [activePhaseId, setActivePhaseId] = useState<DiagnosticPhaseId>('decoding');
   const [activeLens, setActiveLens] = useState<DiagnosticLens>('performer');
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -410,8 +407,6 @@ export function InitialFormPage() {
   );
   const completion = useMemo(() => getDiagnosticCompletion(data), [data]);
   const fieldPhaseIndex = useMemo(() => buildFieldPhaseIndex(), []);
-  const contextPreview = useMemo(() => buildDiagnosticContext(data), [data]);
-
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUserId(u?.uid ?? null));
     return unsub;
@@ -422,11 +417,9 @@ export function InitialFormPage() {
     let cancelled = false;
     setLoading(true);
     getInitialForm(userId)
-      .then(({ data: formData, completedAt: at, draftUpdatedAt: draftAt }) => {
+      .then(({ data: formData }) => {
         if (cancelled) return;
         setData(formData);
-        setCompletedAt(at);
-        setDraftUpdatedAt(draftAt);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -450,16 +443,12 @@ export function InitialFormPage() {
   const reloadForm = useCallback(async () => {
     if (!userId) return;
     setData(createEmptyDiagnosticData());
-    setCompletedAt(null);
-    setDraftUpdatedAt(null);
     setErrors({});
     setFeedback(null);
     setActivePhaseId(DIAGNOSTIC_PHASES[0].id);
     try {
-      const { data: formData, completedAt: at, draftUpdatedAt: draftAt } = await getInitialForm(userId);
+      const { data: formData } = await getInitialForm(userId);
       setData(formData);
-      setCompletedAt(at);
-      setDraftUpdatedAt(draftAt);
     } catch {
       /* mantém formulário vazio */
     }
@@ -512,8 +501,7 @@ export function InitialFormPage() {
     setSavingDraft(true);
     setFeedback(null);
     try {
-      const at = await saveInitialFormDraft(userId, data);
-      setDraftUpdatedAt(at);
+      await saveInitialFormDraft(userId, data);
       scheduleMagnusMemorySyncFromForm(data);
       setFeedback('Rascunho salvo. A IA já poderá usar as respostas preenchidas quando você avançar.');
       scrollProjectToTop();
@@ -563,14 +551,13 @@ export function InitialFormPage() {
         clearNeedsDiagnosis();
       }
       setShowCycleNameModal(false);
-      setCompletedAt(at);
       scrollProjectToTop('auto');
       navigate('/dashboard/design', {
         state: {
           postDiagnosticNotice: {
             title: `Projeto "${trimmedName}" iniciado`,
             message:
-              'Seu Human-to-Business Canvas foi salvo. Valide os planos de ação ou use o Blueprint na Equipe.',
+              'Seu Human-to-Business Canvas foi salvo. Valide os planos de ação ou use a Consultoria IA na Equipe.',
             nextStepLabel: 'Próximo passo: validar planos no Design',
             completedAt: at.toISOString(),
           },
@@ -660,8 +647,7 @@ export function InitialFormPage() {
               onDataChange={setData}
               onSaveDraft={async (payload) => {
                 if (!userId) return;
-                const at = await saveInitialFormDraft(userId, payload);
-                setDraftUpdatedAt(at);
+                await saveInitialFormDraft(userId, payload);
                 scheduleMagnusMemorySyncFromForm(payload);
               }}
             />
@@ -701,36 +687,6 @@ export function InitialFormPage() {
 
       <section className="diagnostic-bottom-panel" aria-label="Resumo e loop do diagnóstico">
         <div className="diagnostic-bottom-meta">
-          <section className="diagnostic-deliverables">
-            <div className="diagnostic-inspector-title">
-              <FileText size={17} aria-hidden />
-              <h2>Output da fase</h2>
-            </div>
-            <ul>
-              {activePhase.deliverables.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="diagnostic-context-meter">
-            <div className="diagnostic-inspector-title">
-              <CheckCircle2 size={17} aria-hidden />
-              <h2>Contexto para IA</h2>
-            </div>
-            <p>
-              {contextPreview.length > 80
-                ? `${contextPreview.length.toLocaleString('pt-BR')} caracteres estruturados`
-                : 'Aguardando respostas para montar contexto consultivo.'}
-            </p>
-            {completedAt && (
-              <span>Concluído em {completedAt.toLocaleString('pt-BR')}</span>
-            )}
-            {!completedAt && draftUpdatedAt && (
-              <span>Rascunho salvo em {draftUpdatedAt.toLocaleString('pt-BR')}</span>
-            )}
-          </section>
-
           <LoopWorkspacePanel variant="compact" userId={userId} onReset={reloadForm} />
         </div>
       </section>

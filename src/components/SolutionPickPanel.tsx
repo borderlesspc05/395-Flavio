@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import {
   buildDiagnosticContextThroughTeamScan,
   isPhasesThroughTeamScanComplete,
 } from '../constants/diagnosticFlow';
+import { DiagnosticLaudoModal } from './DiagnosticLaudoModal';
 import { aiApi } from '../services/api';
 import {
   parseSelectedSolutionActions,
@@ -12,6 +13,8 @@ import {
   stashSelectedSolutionActions,
   withSelectedSolutionActions,
 } from '../services/solutionPick';
+import { buildDiagnosticLaudo } from '../utils/diagnosticLaudo';
+import { computeEvolutionIndex } from '../utils/evolutionIndex';
 import type { InitialFormData } from '../types';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 
@@ -46,6 +49,10 @@ export function SolutionPickPanel({ data, userId, onDataChange, onSaveDraft }: P
   const [demoMode, setDemoMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [goingDesign, setGoingDesign] = useState(false);
+  const [laudoOpen, setLaudoOpen] = useState(false);
+
+  const evolution = useMemo(() => computeEvolutionIndex(data), [data]);
+  const laudoText = useMemo(() => buildDiagnosticLaudo(data), [data]);
 
   const selected = useMemo(
     () => reconcileSelectedWithSuggestions(parseSelectedSolutionActions(data), suggestions),
@@ -158,11 +165,30 @@ export function SolutionPickPanel({ data, userId, onDataChange, onSaveDraft }: P
             score, maior a probabilidade de impacto segundo o que você reportou.
           </p>
         </div>
-        <button type="button" className="solution-pick-refresh" onClick={() => void loadSuggestions()} disabled={loading}>
-          {loading ? <Loader2 size={16} className="spin" aria-hidden /> : <RefreshCw size={16} aria-hidden />}
-          Atualizar sugestões
-        </button>
+        <div className="solution-pick-header-actions">
+          {evolution && (
+            <div className={`solution-pick-evolution is-${evolution.band}`} title="Evolution Index">
+              <span className="solution-pick-evolution-score">{evolution.score}</span>
+              <span className="solution-pick-evolution-label">{evolution.label}</span>
+            </div>
+          )}
+          <button
+            type="button"
+            className="solution-pick-read"
+            onClick={() => setLaudoOpen(true)}
+            disabled={!phasesReady}
+          >
+            <BookOpen size={16} aria-hidden />
+            Ler Diagnóstico
+          </button>
+          <button type="button" className="solution-pick-refresh" onClick={() => void loadSuggestions()} disabled={loading}>
+            {loading ? <Loader2 size={16} className="spin" aria-hidden /> : <RefreshCw size={16} aria-hidden />}
+            Atualizar sugestões
+          </button>
+        </div>
       </header>
+
+      <DiagnosticLaudoModal open={laudoOpen} content={laudoText} onClose={() => setLaudoOpen(false)} />
 
       {!phasesReady && (
         <p className="solution-pick-notice is-warn">
