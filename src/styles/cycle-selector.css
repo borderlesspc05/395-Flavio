@@ -194,6 +194,36 @@
   color: #ffbc7d;
 }
 
+.diagnostic-path-notice {
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(175, 146, 112, 0.18);
+  border-radius: 12px;
+  background: rgba(6, 18, 31, 0.42);
+}
+
+.diagnostic-path-notice p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(241, 235, 224, 0.74);
+}
+
+.diagnostic-path-notice-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ffbc7d;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.diagnostic-path-notice-link:hover {
+  color: #ffd4a8;
+}
+
 .cycle-selector .spinning {
   animation: cycle-spin 0.9s linear infinite;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import {
   ChevronDown,
   Layers,
@@ -41,7 +41,7 @@ const STATUS_LABELS = {
 } as const;
 
 export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onReset }: LoopWorkspacePanelProps) {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const {
     startNewCycle,
     refreshCycles,

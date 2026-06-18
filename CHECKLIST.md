@@ -754,4 +754,29 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 02 de junho de 2026 — fluxo Equipe/Design, escolha de projeto, nome do ciclo, Concluir MID, fix Consultoria IA*
+## Checklist — sessão 02/06/2026 (scans, transições e visual premium)
+
+> Trabalho da tarde — scans organizacionais, UX de diagnóstico focado, transições de rota e shell premium. **Ainda não commitado.**
+
+1. [x] **Scans organizacionais** — tipos, questionários (cultura, liderança, CX, EX, alinhamento, comunicação, turnover) e persistência em `organizationalScanData`
+2. [x] **Hub de scans** — rota `/dashboard/scans` com escolha entre diagnóstico completo e focado
+3. [x] **Runner de scan** — rota `/dashboard/scans/:scanId` com formulário por blocos e `ScanFieldControl`
+4. [x] **Diagnóstico focado opcional** — um scan temático pode substituir o canvas; sem obrigar todos os temas
+5. [x] **Salvar rascunho** — progresso parcial sem validação; **Concluir diagnóstico** exige 100% do scan escolhido
+6. [x] **Scans 5 e 6** — Alinhamento Estratégico e Comunicação com conteúdo completo (antes placeholder)
+7. [x] **Link no canvas** — botão **Diagnóstico focado** em `InitialFormPage` apontando para o hub de scans
+8. [x] **Contexto para IA** — seção “Diagnóstico focado” em `buildDiagnosticContext` (memória / sugestões)
+9. [x] **Modal nome do projeto** — CSS do overlay corrigido (centralizado, backdrop, botões alinhados)
+10. [x] **Transições de página** — `View Transitions API` + Framer Motion (`AnimatedOutlet`, `view-transitions.css`)
+11. [x] **Navegação com transição** — sidebar, links da landing, login, scans e CTAs usam `useViewTransitionNavigate` / `ViewTransitionLink`
+12. [x] **Chrome estável** — sidebar e header fixos na animação; conteúdo central transiciona
+13. [x] **Visual premium (referência zip)** — `premium-shell.css` com tokens escuros, âmbar Magnus e tipografia display
+14. [x] **Stage card** — conteúdo do dashboard dentro de card arredondado com textura e linha dourada no topo
+15. [x] **Sidebar refinada** — blur, logo em caixa, indicador ativo, tooltips no modo recolhido
+16. [x] **UI dos scans** — cards com hover/glow, badges pill e títulos em Newsreader
+17. [x] **Design e Consultoria** — layout fluido (sem stage card) para não quebrar telas largas
+18. [x] **Build** — `npm run build` passando após scans, transições e premium shell
+
+---
+
+*Última atualização: 02 de junho de 2026 — scans organizacionais, transições de rota, visual premium e modal de nome do projeto*

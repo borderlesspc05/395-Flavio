@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   ArrowRight,
@@ -34,6 +34,7 @@ import { LoopWorkspacePanel } from '../components/LoopWorkspacePanel';
 import { SolutionPickPanel } from '../components/SolutionPickPanel';
 import { parseSelectedSolutionActions } from '../services/solutionPick';
 import { useCycle } from '../context/CycleContext';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
 import { getInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
 import {
@@ -384,7 +385,7 @@ function PhaseHeader({
 }
 
 export function InitialFormPage() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const location = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<InitialFormData>(() => createEmptyDiagnosticData());
@@ -606,6 +607,14 @@ export function InitialFormPage() {
           </div>
         </div>
         <div className="diagnostic-actions">
+          <button
+            type="button"
+            className="diagnostic-secondary-button"
+            onClick={() => navigate('/dashboard/scans')}
+          >
+            <ClipboardCheck size={16} aria-hidden />
+            Diagnóstico focado
+          </button>
           <button type="button" className="diagnostic-secondary-button" onClick={handleDraft} disabled={savingDraft}>
             <Save size={16} aria-hidden />
             {savingDraft ? 'Salvando...' : 'Salvar rascunho'}
@@ -621,11 +630,21 @@ export function InitialFormPage() {
         <div className="diagnostic-cycle-notice" role="status">
           <Layers3 size={18} aria-hidden />
           <span>
-            Ciclo <strong>{activeCycle?.label ?? 'atual'}</strong> aguarda diagnóstico. Preencha o formulário para a IA
-            trabalhar neste ciclo.
+            Ciclo <strong>{activeCycle?.label ?? 'atual'}</strong> aguarda diagnóstico. Preencha o canvas
+            completo ou escolha um scan temático como alternativa mais rápida.
           </span>
         </div>
       )}
+
+      <div className="diagnostic-path-notice" role="note">
+        <p>
+          Prefere um diagnóstico mais enxuto?{' '}
+          <button type="button" className="diagnostic-path-notice-link" onClick={() => navigate('/dashboard/scans')}>
+            Escolha um scan temático
+          </button>{' '}
+          no lugar do canvas completo. Um único scan já é suficiente para iniciar o ciclo.
+        </p>
+      </div>
 
       {feedback && (
         <div className="diagnostic-feedback" role="status">

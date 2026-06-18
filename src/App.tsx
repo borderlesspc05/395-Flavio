@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { PublicAnimatedLayout } from './components/PublicAnimatedLayout';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardLayout } from './components/DashboardLayout';
@@ -19,17 +20,29 @@ import { AdminLoginPage } from './pages/AdminLoginPage';
 import { AdminPage } from './pages/AdminPage';
 import { AdminProtectedRoute } from './components/AdminProtectedRoute';
 import { EmployeeProfilePage } from './pages/EmployeeProfilePage';
+import { OrganizationalScansHubPage } from './pages/OrganizationalScansHubPage';
+import { OrganizationalScanRunnerPage } from './pages/OrganizationalScanRunnerPage';
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<PlansLandingPage />} />
-      <Route path="/planos" element={<PlansLandingPage />} />
-      <Route path="/mock-checkout" element={<MockCheckoutPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/colaborador/:memberId" element={<EmployeeProfilePage />} />
-      <Route path="/colaborador" element={<EmployeeProfilePage />} />
+      <Route element={<PublicAnimatedLayout />}>
+        <Route path="/" element={<PlansLandingPage />} />
+        <Route path="/planos" element={<PlansLandingPage />} />
+        <Route path="/mock-checkout" element={<MockCheckoutPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/colaborador/:memberId" element={<EmployeeProfilePage />} />
+        <Route path="/colaborador" element={<EmployeeProfilePage />} />
+        <Route
+          path="/escolher-projeto"
+          element={
+            <ProtectedRoute>
+              <ProjectSelectPage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route
         path="/admin"
@@ -37,14 +50,6 @@ export default function App() {
           <AdminProtectedRoute>
             <AdminPage />
           </AdminProtectedRoute>
-        }
-      />
-      <Route
-        path="/escolher-projeto"
-        element={
-          <ProtectedRoute>
-            <ProjectSelectPage />
-          </ProtectedRoute>
         }
       />
       <Route
@@ -61,6 +66,8 @@ export default function App() {
         <Route path="ciclos" element={<Navigate to="/escolher-projeto" replace />} />
         <Route path="inicio" element={<DashboardHome />} />
         <Route path="initial-form" element={<InitialFormPage />} />
+        <Route path="scans" element={<OrganizationalScansHubPage />} />
+        <Route path="scans/:scanId" element={<OrganizationalScanRunnerPage />} />
         <Route path="design" element={<DesignPlansPage />} />
         <Route
           path="consultoria-ia"

@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
 import { ArrowRight, Shield } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -37,7 +38,7 @@ export function AdminLoginPage() {
       backTo={{ href: '/', label: 'Voltar para a landing' }}
       footer={
         <>
-          Acesso de usuário? <Link to="/login" className="auth-link">Login normal</Link>
+          Acesso de usuário? <ViewTransitionLink to="/login" className="auth-link">Login normal</ViewTransitionLink>
         </>
       }
     >

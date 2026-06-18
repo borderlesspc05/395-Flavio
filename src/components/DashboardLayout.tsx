@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   FileText,
@@ -21,12 +21,14 @@ import { SupportChatWidget } from './SupportChatWidget';
 import { UserAvatar } from './UserAvatar';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { clearWorkspaceEntered } from '../services/projectWorkspace';
+import { AnimatedOutlet } from './navigation/AnimatedOutlet';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = 'mm.sidebar.collapsed';
 
 export function DashboardLayout() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { t } = useLocale();
   const { photoURL, initials } = useAuthProfile();
   const mainRef = useRef<HTMLElement>(null);
@@ -91,6 +93,8 @@ export function DashboardLayout() {
       document.body.style.overflow = previousOverflow;
     };
   }, [sidebarOpen]);
+
+  const isScansRoute = location.pathname.startsWith('/dashboard/scans');
 
   const handleNav = (_id: string, path: string) => {
     navigate(path);
@@ -208,7 +212,19 @@ export function DashboardLayout() {
             tabIndex={-1}
             className={`dashboard-main ${isConsultoriaChat ? 'consultoria-ia-active' : ''} ${isDesignPage ? 'design-page-active' : ''}`}
           >
-            <Outlet />
+            {isScansRoute ? (
+              <div className="scans-premium-shell">
+                <div className="premium-stage">
+                  <div className="premium-stage__pattern" aria-hidden />
+                  <div className="premium-stage__accent" aria-hidden />
+                  <div className="premium-stage__body">
+                    <AnimatedOutlet scope="full" variant="page" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <AnimatedOutlet scope="full" variant="page" />
+            )}
           </main>
         </div>
       </div>

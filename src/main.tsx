@@ -31,6 +31,8 @@ import './styles/design-plans.css';
 import './styles/diagnostic-laudo.css';
 import './styles/support-chat.css';
 import './styles/auth-refined.css';
+import './styles/view-transitions.css';
+import './styles/premium-shell.css';
 
 void initFirebaseAnalytics();
 

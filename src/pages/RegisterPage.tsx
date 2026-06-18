@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ArrowRight } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -10,7 +12,7 @@ import { isPlanId } from '../constants/plans';
 import { clearWorkspaceEntered } from '../services/projectWorkspace';
 
 export function RegisterPage() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [searchParams] = useSearchParams();
   const paymentSuccess = searchParams.get('payment') === 'success';
   const sessionFromUrl = searchParams.get('session_id');
@@ -70,7 +72,7 @@ export function RegisterPage() {
       backTo={{ href: '/planos', label: 'Voltar' }}
       footer={
         <>
-          Já tem uma conta? <Link to="/login" className="auth-link">Faça login</Link>
+          Já tem uma conta? <ViewTransitionLink to="/login" className="auth-link">Faça login</ViewTransitionLink>
         </>
       }
     >

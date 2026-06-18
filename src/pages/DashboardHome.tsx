@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowRight, CheckCircle, X } from 'lucide-react';
 import { auth } from '../config/firebase';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { getInitialForm } from '../services/initialForm';
 import { actionCanvasesApi, objectivesApi, teamApi, reportsApi } from '../services/api';
 import type { ActionCanvas, InitialFormData, Objective, TeamMember } from '../types';
@@ -14,7 +15,7 @@ import type { MidDashboardData } from '../types/mid';
 export function DashboardHome() {
   const { activeCycle } = useCycle();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const locationState = location.state as
     | {
         postDiagnosticNotice?: {

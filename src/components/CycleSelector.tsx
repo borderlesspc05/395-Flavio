@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { ChevronDown, FolderKanban, Layers, Loader2, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { useCycle } from '../context/CycleContext';
 
 export function CycleSelector() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { cycles, activeCycle, loading, switching, needsDiagnosis, switchCycle, startNewCycle } =
     useCycle();
   const [open, setOpen] = useState(false);

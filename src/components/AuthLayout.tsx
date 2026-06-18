@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { ViewTransitionLink } from './navigation/ViewTransitionLink';
 import { ArrowLeft } from 'lucide-react';
 import { CursorGlowBackground } from './CursorGlowBackground';
 
@@ -16,10 +16,10 @@ export function AuthLayout({ title, subtitle, children, footer, backTo, cardClas
     <div className="auth-page auth-page--refined">
       <CursorGlowBackground />
       {backTo && (
-        <Link to={backTo.href} className="auth-page-back">
+        <ViewTransitionLink to={backTo.href} className="auth-page-back">
           <ArrowLeft size={16} aria-hidden />
           <span>{backTo.label}</span>
-        </Link>
+        </ViewTransitionLink>
       )}
       <div className="auth-container">
         <div className={`auth-card auth-card-vivid auth-card--compact${cardClassName ? ` ${cardClassName}` : ''}`}>

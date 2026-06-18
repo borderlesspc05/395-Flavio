@@ -371,8 +371,11 @@ export function DesignPlansPage() {
 
       <div className="design-plans-workspace design-plans-workspace--single">
         <div className="design-plans-editor">
-          <div className="design-plans-grid">
-            {plans.map((plan) => (
+          <div
+            className="design-plans-grid"
+            data-plan-count={Math.min(plans.length, 4)}
+          >
+            {plans.map((plan, index) => (
               <article
                 key={plan.localId}
                 className={`design-plan-card ${plan.validated ? 'is-validated' : ''} ${
@@ -386,7 +389,12 @@ export function DesignPlansPage() {
                 tabIndex={0}
               >
                 <div className="design-plan-card-head">
-                  <h2>Plano de ação</h2>
+                  <div className="design-plan-card-title">
+                    <span className="design-plan-index" aria-hidden>
+                      {index + 1}
+                    </span>
+                    <h2>Plano de ação</h2>
+                  </div>
                   {plan.validated && (
                     <span className="design-plan-validated">
                       <CheckCircle2 size={15} aria-hidden />

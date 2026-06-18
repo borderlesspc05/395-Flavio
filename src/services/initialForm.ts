@@ -8,6 +8,7 @@ const PRESERVED_EXTENSION_KEYS = [
   SELECTED_SOLUTION_ACTIONS_KEY,
   'solucaoSelecionadaDesign',
   'solucoesPrioritarias',
+  'organizationalScanData',
 ] as const;
 
 const COLLECTION = 'initialForms';

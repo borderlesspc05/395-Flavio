@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ArrowRight } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -11,7 +12,7 @@ import { isAdminEmail } from '../constants/admin';
 import { clearWorkspaceEntered } from '../services/projectWorkspace';
 
 export function LoginPage() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [searchParams] = useSearchParams();
   const paymentSuccess = searchParams.get('payment') === 'success';
   const [email, setEmail] = useState('');

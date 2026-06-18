@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
 import {
   ArrowRight,
   Check,
@@ -112,21 +112,21 @@ export function PlansLandingPage() {
       </div>
 
       <header className="plans-nav scroll-reveal is-visible">
-        <Link to="/" className="plans-logo">
+        <ViewTransitionLink to="/" className="plans-logo">
           <img src="/icone-magnusmind.svg" alt="" width={36} height={36} />
           <span>
             Magnus <strong>Mind</strong>
           </span>
-        </Link>
+        </ViewTransitionLink>
         <nav className="plans-nav-links">
           <a href="#planos">Planos</a>
           <a href="#fluxo">Fluxo</a>
           <a href="#tecnologia">Tecnologia</a>
         </nav>
         <div className="plans-nav-cta">
-          <Link to="/login" className="plans-btn plans-btn--primary">
+          <ViewTransitionLink to="/login" className="plans-btn plans-btn--primary">
             Entrar
-          </Link>
+          </ViewTransitionLink>
         </div>
       </header>
 
@@ -147,9 +147,9 @@ export function PlansLandingPage() {
             Ver planos
             <ArrowRight size={18} />
           </a>
-          <Link to="/login" className="plans-btn plans-btn--outline plans-btn--lg">
+          <ViewTransitionLink to="/login" className="plans-btn plans-btn--outline plans-btn--lg">
             Já paguei — entrar
-          </Link>
+          </ViewTransitionLink>
         </ScrollReveal>
         <ScrollReveal className="plans-hero-metrics" delay={320}>
           <div>
@@ -281,9 +281,9 @@ export function PlansLandingPage() {
               Escolher um plano
               <ArrowRight size={18} />
             </a>
-            <Link to="/login" className="plans-btn plans-btn--ghost plans-btn--lg">
+            <ViewTransitionLink to="/login" className="plans-btn plans-btn--ghost plans-btn--lg">
               Já tenho acesso
-            </Link>
+            </ViewTransitionLink>
           </div>
         </ScrollReveal>
       </section>
@@ -291,8 +291,8 @@ export function PlansLandingPage() {
       <footer className="plans-footer">
         <p>© {new Date().getFullYear()} Magnus Mind · Magnus Waves™</p>
         <div className="plans-footer-links">
-          <Link to="/admin/login">Admin</Link>
-          <Link to="/login">Login</Link>
+          <ViewTransitionLink to="/admin/login">Admin</ViewTransitionLink>
+          <ViewTransitionLink to="/login">Login</ViewTransitionLink>
           <a href="https://magnusmind.io" target="_blank" rel="noreferrer">
             magnusmind.io
           </a>

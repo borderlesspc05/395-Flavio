@@ -1,4 +1,7 @@
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
+import { ORGANIZATIONAL_SCANS } from './organizationalScans';
+import { parseOrganizationalScanData } from '../services/organizationalScanStorage';
+import { buildOrganizationalScanContext } from '../utils/organizationalScans';
 
 export type DiagnosticPhaseId = 'decoding' | 'gapScan' | 'systemScan' | 'teamScan' | 'solutionPick';
 export type DiagnosticFieldType = 'textarea' | 'text' | 'single' | 'multi' | 'scale';
@@ -1464,5 +1467,10 @@ export function buildDiagnosticContext(data: InitialFormData): string {
     }
   }
 
-  return lines.join('\n').trim();
+  const base = lines.join('\n').trim();
+  const scans = buildOrganizationalScanContext(
+    ORGANIZATIONAL_SCANS,
+    parseOrganizationalScanData(data.organizationalScanData),
+  );
+  return scans ? `${base}\n\n${scans}` : base;
 }

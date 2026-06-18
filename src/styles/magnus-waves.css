@@ -778,6 +778,17 @@
   box-shadow: inset 0 0 0 4px rgba(6, 18, 31, 0.92);
 }
 
+.diagnostic-choice:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.diagnostic-choice:disabled:hover {
+  color: rgba(241, 235, 224, 0.78);
+  border-color: rgba(175, 146, 112, 0.2);
+  background: rgba(6, 18, 31, 0.42);
+}
+
 .diagnostic-choice.is-selected .diagnostic-choice-check {
   background: #ffbc7d;
 }
@@ -1133,5 +1144,180 @@
   .diagnostic-choice,
   .diagnostic-scale-option {
     transition: none !important;
+  }
+}
+
+/* ---------- Nome do ciclo (canvas completo ou scan focado) ---------- */
+.cycle-name-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vh, 2rem) 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.cycle-name-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(4, 8, 14, 0.78);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.cycle-name-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(480px, 100%);
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.35rem 1.4rem 1.2rem;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(14, 24, 38, 0.98), rgba(8, 18, 31, 0.96));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+  color: rgba(241, 235, 224, 0.88);
+}
+
+.cycle-name-modal__kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 188, 125, 0.82);
+}
+
+.cycle-name-modal__dialog h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #f8f4ee;
+}
+
+.cycle-name-modal__dialog p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.58;
+  color: rgba(241, 235, 224, 0.72);
+}
+
+.cycle-name-modal__dialog p strong {
+  color: #ffbc7d;
+  font-weight: 700;
+}
+
+.cycle-name-modal__field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cycle-name-modal__field span {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: rgba(241, 235, 224, 0.78);
+}
+
+.cycle-name-modal__field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  border-radius: 10px;
+  background: rgba(6, 18, 31, 0.55);
+  color: #f8f4ee;
+  font: inherit;
+  font-size: 0.92rem;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.cycle-name-modal__field input::placeholder {
+  color: rgba(241, 235, 224, 0.38);
+}
+
+.cycle-name-modal__field input:focus {
+  outline: none;
+  border-color: rgba(255, 188, 125, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 188, 125, 0.12);
+}
+
+.cycle-name-modal__field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cycle-name-modal__error {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #fca5a5;
+}
+
+.cycle-name-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.cycle-name-modal__ghost,
+.cycle-name-modal__primary {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, opacity 180ms ease;
+}
+
+.cycle-name-modal__ghost {
+  border: 1px solid rgba(175, 146, 112, 0.24);
+  color: #f3ead8;
+  background: rgba(6, 18, 31, 0.42);
+}
+
+.cycle-name-modal__ghost:hover {
+  transform: translateY(-1px);
+}
+
+.cycle-name-modal__ghost:disabled,
+.cycle-name-modal__primary:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cycle-name-modal__primary {
+  border: 1px solid transparent;
+  color: #1a222d;
+  background: linear-gradient(135deg, #f2d39c, #ffbc7d);
+  box-shadow: 0 12px 30px rgba(255, 188, 125, 0.18);
+}
+
+.cycle-name-modal__primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .cycle-name-modal__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .cycle-name-modal__ghost,
+  .cycle-name-modal__primary {
+    width: 100%;
   }
 }

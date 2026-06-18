@@ -1,0 +1,186 @@
+/* Premium visual — apenas rotas /dashboard/scans* */
+
+:root {
+  --mm-bg-0: #0b0f17;
+  --mm-bg-1: #101622;
+  --mm-bg-2: #151d2c;
+  --mm-bg-3: #1c2638;
+
+  --mm-fg-0: #f7f4ee;
+  --mm-fg-1: #e8e2d6;
+  --mm-fg-2: #c8c0b2;
+  --mm-fg-3: #9a9488;
+  --mm-fg-4: #6f6a60;
+
+  --mm-accent: #ffbc7d;
+  --mm-accent-2: #f2a85c;
+  --mm-accent-soft: rgba(255, 188, 125, 0.12);
+
+  --mm-font-display: 'Newsreader', Georgia, serif;
+  --mm-hairline: rgba(255, 255, 255, 0.07);
+  --mm-stage-radius: 24px;
+  --mm-shadow-stage: 0 40px 120px -40px rgba(0, 0, 0, 0.78);
+}
+
+.scans-premium-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .scans-premium-shell {
+    padding: 1rem 1.5rem 2rem;
+  }
+}
+
+.scans-premium-shell .premium-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--mm-stage-radius);
+  border: 1px solid var(--mm-hairline);
+  background: linear-gradient(180deg, var(--mm-bg-1) 0%, var(--mm-bg-0) 100%);
+  box-shadow: var(--mm-shadow-stage);
+}
+
+.scans-premium-shell .premium-stage__pattern {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+.scans-premium-shell .premium-stage__accent {
+  pointer-events: none;
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 188, 125, 0.5), transparent);
+}
+
+.scans-premium-shell .premium-stage__body {
+  position: relative;
+  padding: 1.5rem 1.25rem 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .scans-premium-shell .premium-stage__body {
+    padding: 2rem 2rem 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .scans-premium-shell .premium-stage__body {
+    padding: 2.25rem 2.75rem 2.5rem;
+  }
+}
+
+.scans-premium-shell .premium-display,
+.scans-premium-shell .organizational-scans-hero h1,
+.scans-premium-shell .organizational-scan-runner-header h1 {
+  font-family: var(--mm-font-display) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--mm-fg-0) !important;
+}
+
+.scans-premium-shell .diagnostic-primary-button {
+  border-radius: 999px !important;
+  padding-inline: 1.15rem !important;
+  background: linear-gradient(135deg, var(--mm-accent), var(--mm-accent-2)) !important;
+  color: var(--mm-bg-0) !important;
+  box-shadow: 0 10px 30px -10px rgba(255, 188, 125, 0.45) !important;
+}
+
+.scans-premium-shell .diagnostic-primary-button:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 14px 34px -10px rgba(255, 188, 125, 0.55) !important;
+}
+
+.scans-premium-shell .diagnostic-secondary-button {
+  border-radius: 999px !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--mm-fg-1) !important;
+}
+
+.scans-premium-shell .diagnostic-secondary-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--mm-fg-0) !important;
+}
+
+.scans-premium-shell .diagnostic-choice {
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--mm-fg-2) !important;
+  font-size: 0.82rem !important;
+  padding: 0.45rem 0.9rem !important;
+  min-height: 40px;
+}
+
+.scans-premium-shell .diagnostic-choice:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--mm-fg-0) !important;
+}
+
+.scans-premium-shell .diagnostic-choice.is-selected {
+  border-color: rgba(255, 188, 125, 0.4) !important;
+  background: var(--mm-accent-soft) !important;
+  color: var(--mm-accent) !important;
+  box-shadow: 0 0 0 3px rgba(255, 188, 125, 0.12);
+}
+
+.scans-premium-shell .diagnostic-field-label strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  padding: 0.12rem 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mm-accent);
+  background: var(--mm-accent-soft);
+  border: 1px solid rgba(255, 188, 125, 0.22);
+}
+
+.scans-premium-shell .organizational-scans-progress {
+  border-radius: 999px;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.scans-premium-shell .cycle-name-modal__dialog {
+  border-radius: 20px !important;
+  border-color: var(--mm-hairline) !important;
+  background: linear-gradient(165deg, rgba(20, 28, 42, 0.98), rgba(11, 15, 23, 0.96)) !important;
+}
+
+.scans-premium-shell .cycle-name-modal__primary {
+  border-radius: 999px !important;
+}
+
+.scans-premium-shell .form-loading {
+  color: var(--mm-fg-3);
+  border-radius: 16px;
+  border: 1px solid var(--mm-hairline);
+  background: rgba(21, 29, 44, 0.45);
+  padding: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scans-premium-shell .diagnostic-primary-button,
+  .scans-premium-shell .diagnostic-secondary-button,
+  .scans-premium-shell .diagnostic-choice {
+    transition: none !important;
+  }
+}

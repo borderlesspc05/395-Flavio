@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ArrowRight, FolderKanban, Loader2, LogOut, Plus } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -16,7 +16,7 @@ const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
 };
 
 export function ProjectSelectPage() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { cycles, loading, switching, switchCycle, startNewCycle, refreshCycles } = useCycle();
   const [enteringId, setEnteringId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);

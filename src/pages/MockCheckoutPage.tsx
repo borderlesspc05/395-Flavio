@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
+import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { CreditCard, LockKeyhole } from 'lucide-react';
 import { isPlanId, PLAN_LABELS, type PlanId } from '../constants/plans';
 
 export function MockCheckoutPage() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
 
@@ -79,9 +81,9 @@ export function MockCheckoutPage() {
           {loading ? 'Confirmando…' : 'Confirmar pagamento mock'}
         </button>
 
-        <Link to="/planos" className="mock-checkout-back">
+        <ViewTransitionLink to="/planos" className="mock-checkout-back">
           Voltar para os planos
-        </Link>
+        </ViewTransitionLink>
       </section>
     </main>
   );
