@@ -1,8 +1,12 @@
 import { ActionCanvas, Objective, Report, ReportStats, TeamMember } from '../types';
 import { generateId, nowIso } from '../utils/id';
 import { listByUser, create, COLLECTIONS } from './storage';
-import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
+import { chatCompletion, getDefaultModel, isLlmConfigured } from './llm';
 import { logActivity, getActivities } from './activities';
+import { loadDomainWaveReportContext } from './domainWaveContext';
+import { retrieveRelevantContext } from './rag';
+import { indexReportAfterSave } from './ragHooks';
+import { AppError } from '../utils/errors';
 
 function computeStats(objectives: Objective[], team: TeamMember[]): ReportStats {
   const total = objectives.length;
@@ -21,11 +25,20 @@ function computeStats(objectives: Objective[], team: TeamMember[]): ReportStats 
 }
 
 export async function generateReport(userId: string): Promise<Report> {
-  const [objectives, team, actionCanvases, activities] = await Promise.all([
+  if (!isLlmConfigured()) {
+    throw new AppError(
+      503,
+      'IA não configurada no servidor. Defina OPENROUTER_API_KEY ou OPENAI_API_KEY para gerar relatórios.',
+      'LLM_NOT_CONFIGURED',
+    );
+  }
+
+  const [objectives, team, actionCanvases, activities, domainContext] = await Promise.all([
     listByUser<Objective>(COLLECTIONS.objectives, userId),
     listByUser<TeamMember>(COLLECTIONS.teamMembers, userId),
     listByUser<ActionCanvas>(COLLECTIONS.actionCanvases, userId),
     getActivities(userId),
+    loadDomainWaveReportContext(userId),
   ]);
 
   const closedCanvases = actionCanvases.filter((c) => c.fechado);
@@ -73,35 +86,34 @@ Histórico recente do usuário (${recentActivities.length} eventos):
 ${activitySummary}
 `.trim();
 
+  const ragQuery =
+    'relatorio estrategico diagnostico planos action canvas objetivos aprendizados dominio evidencias impacto atrasos';
+  const ragContext = await retrieveRelevantContext(userId, ragQuery);
+
   const prompt = `Com base nos dados abaixo, gere um relatório estratégico executivo em português brasileiro.
-Inclua: resumo executivo, análise de progresso, leitura do histórico de atividades do usuário, riscos, recomendações e próximos passos.
+Inclua: resumo executivo, análise de progresso, leitura do histórico de atividades do usuário, síntese da Onda 4 — Domínio (quando houver), riscos, recomendações e próximos passos.
+Use trechos reais do ciclo do cliente quando disponíveis no contexto RAG. Não invente evidências.
 Use markdown com seções claras.
 
 Dados:
-${dataSummary}`;
+${dataSummary}${domainContext ? `\n\n${domainContext}` : ''}${
+    ragContext
+      ? `\n\n## Contexto RAG — evidências do ciclo do cliente\n${ragContext}`
+      : ''
+  }`;
 
-  let conteudo: string;
-  try {
-    conteudo = await chatCompletion({
-      model: getDefaultModel(),
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Você é um consultor estratégico sênior. Produza relatórios concisos e acionáveis para executivos.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      maxTokens: 3000,
-    });
-  } catch (err) {
-    const e = err as { code?: string };
-    if (isLlmNotConfiguredError(err)) {
-      conteudo = buildFallbackReport(stats, objectives);
-    } else {
-      throw err;
-    }
-  }
+  const conteudo = await chatCompletion({
+    model: getDefaultModel(),
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Você é um consultor estratégico sênior. Produza relatórios concisos e acionáveis para executivos.',
+      },
+      { role: 'user', content: prompt },
+    ],
+    maxTokens: 3000,
+  });
 
   const resumo =
     conteudo.split('\n').find((l) => l.trim().length > 20)?.slice(0, 200) ??
@@ -124,33 +136,7 @@ ${dataSummary}`;
     entidadeId: id,
   });
 
+  indexReportAfterSave(report);
+
   return report;
-}
-
-function buildFallbackReport(stats: ReportStats, objectives: Objective[]): string {
-  return `# Relatório Estratégico (Modo Demonstração)
-
-## Resumo Executivo
-Plataforma Magnus Mind registra **${stats.totalObjectives}** objetivos estratégicos com taxa de conclusão de **${stats.completionRate}%**.
-
-## Progresso
-- Objetivos concluídos: ${stats.objectivesCompleted}
-- Em andamento: ${stats.objectivesInProgress}
-- Sugeridos por IA: ${stats.aiObjectives}
-- Equipe ativa: ${stats.teamSize} membros
-
-## Objetivos em Destaque
-${objectives
-  .slice(0, 5)
-  .map((o) => `- **${o.titulo}** — ${o.status} (${o.categoria})`)
-  .join('\n')}
-
-## Recomendações
-1. Priorizar objetivos em andamento com prazo próximo
-2. Revisar OKRs no próximo ciclo de planejamento
-3. Configurar OPENROUTER_API_KEY para análises enriquecidas por IA
-
----
-*Relatório gerado automaticamente pelo Magnus Mind*
-`;
 }

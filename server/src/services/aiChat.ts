@@ -9,7 +9,7 @@ import {
   isLlmNotConfiguredError,
   type ChatCompletionMessage,
 } from './llm';
-import { retrieveRelevantContext } from './rag';
+import { retrieveRelevantContextDetailed } from './rag';
 import { shouldSearchWeb, webSearch, formatSearchResults, isSearchConfigured } from './search';
 import { create, getById, update, COLLECTIONS } from './storage';
 import { logActivity } from './activities';
@@ -214,7 +214,8 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
   const invokedSkills = await resolveMentionedSkills(req.userId, req.message);
   const agentContext = buildAgentContext(agentSettings, invokedSkills);
 
-  const ragContext = await retrieveRelevantContext(req.userId, req.message);
+  const ragResult = await retrieveRelevantContextDetailed(req.userId, req.message);
+  const ragContext = ragResult.context;
   let webContext = '';
 
   if (shouldSearchWeb(req.message)) {
@@ -232,9 +233,6 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
   if (agentContext) {
     systemParts.push(agentContext);
   }
-  if (ragContext) {
-    systemParts.push(`\n\n## Frameworks consultivos relevantes\n${ragContext}`);
-  }
   const magnusMemory = await buildMagnusWavesMemoryContext(req.userId, {
     diagnosticContext: req.diagnosticContext,
     gateContext: req.gateContext,
@@ -243,6 +241,22 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
     systemParts.push(
       `\n\n## Memória Magnus Waves (diagnóstico → design → difusão)\n${MAGNUS_MEMORY_SYSTEM_PREAMBLE}\n\n${magnusMemory}`
     );
+  }
+  if (ragContext) {
+    systemParts.push(`
+## Contexto RAG Magnus Mind
+
+Use os trechos abaixo como fonte de verdade do cliente.
+
+Regras:
+- Não invente dados que não estejam no contexto.
+- Quando houver conflito, priorize dados mais recentes e específicos.
+- Use a Magnus Memory como contexto amplo.
+- Use o RAG vetorial como evidência específica.
+- Use frameworks apenas como apoio metodológico.
+
+${ragContext}
+`);
   }
   const projectSnapshot = await buildProjectSnapshot(req.userId, req.cycleId);
   systemParts.push(`\n\n## Estado atual do projeto\n${projectSnapshot}`);
@@ -331,10 +345,16 @@ export async function handleChat(req: ChatRequest): Promise<ChatResponse> {
     conversationId: conversation.id,
     reply: cleanContent,
     model,
-    usedRag: Boolean(ragContext),
+    usedRag: ragResult.usedVectorRag || ragResult.usedFrameworkRag,
     usedWebSearch: Boolean(webContext),
     ...(demoMode ? { demoMode: true } : {}),
   };
+
+  if (ragResult.usedVectorRag) {
+    console.log(
+      `[RAG] usedRag=true chunks=${ragResult.vectorChunkCount} userId=${req.userId}`
+    );
+  }
 
   if (suggested.length > 0) {
     response.suggestedObjectives = suggested;

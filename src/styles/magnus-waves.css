@@ -583,6 +583,11 @@
   line-height: 1.4;
 }
 
+.diagnostic-solution-pick-host.is-hidden,
+.diagnostic-blocks.is-hidden {
+  display: none;
+}
+
 .diagnostic-blocks {
   display: flex;
   flex-direction: column;

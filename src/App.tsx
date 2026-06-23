@@ -22,6 +22,8 @@ import { AdminProtectedRoute } from './components/AdminProtectedRoute';
 import { EmployeeProfilePage } from './pages/EmployeeProfilePage';
 import { OrganizationalScansHubPage } from './pages/OrganizationalScansHubPage';
 import { OrganizationalScanRunnerPage } from './pages/OrganizationalScanRunnerPage';
+import { SolutionPickPage } from './pages/SolutionPickPage';
+import { DailyChecklistPage } from './pages/DailyChecklistPage';
 
 export default function App() {
   return (
@@ -68,6 +70,8 @@ export default function App() {
         <Route path="initial-form" element={<InitialFormPage />} />
         <Route path="scans" element={<OrganizationalScansHubPage />} />
         <Route path="scans/:scanId" element={<OrganizationalScanRunnerPage />} />
+        <Route path="solution-pick" element={<SolutionPickPage />} />
+        <Route path="checklist-diario" element={<DailyChecklistPage />} />
         <Route path="design" element={<DesignPlansPage />} />
         <Route
           path="consultoria-ia"

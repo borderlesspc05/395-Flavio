@@ -3,6 +3,7 @@ import type { Locale } from '../constants/locales';
 export type TranslationTree = {
   nav: {
     hub: string;
+    checklist: string;
     diagnostic: string;
     design: string;
     diffusion: string;
@@ -13,6 +14,8 @@ export type TranslationTree = {
     projects: string;
     logout: string;
     openMenu: string;
+    collapseSidebar: string;
+    expandSidebar: string;
     skipToContent: string;
   };
   account: {
@@ -69,6 +72,7 @@ export const translations: Record<Locale, TranslationTree> = {
   pt: {
     nav: {
       hub: 'MID',
+      checklist: 'Checklist diário',
       diagnostic: '1 · Diagnóstico',
       design: '2 · Design',
       diffusion: '3 · Difusão',
@@ -79,6 +83,8 @@ export const translations: Record<Locale, TranslationTree> = {
       projects: 'Projetos',
       logout: 'Sair',
       openMenu: 'Abrir menu de navegação',
+      collapseSidebar: 'Recolher menu lateral',
+      expandSidebar: 'Expandir menu lateral',
       skipToContent: 'Ir para o conteúdo principal',
     },
     account: {
@@ -133,6 +139,7 @@ export const translations: Record<Locale, TranslationTree> = {
   en: {
     nav: {
       hub: 'MID',
+      checklist: 'Daily checklist',
       diagnostic: '1 · Diagnostic',
       design: '2 · Design',
       diffusion: '3 · Diffusion',
@@ -143,6 +150,8 @@ export const translations: Record<Locale, TranslationTree> = {
       projects: 'Projects',
       logout: 'Sign out',
       openMenu: 'Open navigation menu',
+      collapseSidebar: 'Collapse sidebar',
+      expandSidebar: 'Expand sidebar',
       skipToContent: 'Skip to main content',
     },
     account: {
@@ -197,6 +206,7 @@ export const translations: Record<Locale, TranslationTree> = {
   es: {
     nav: {
       hub: 'MID',
+      checklist: 'Checklist diário',
       diagnostic: '1 · Diagnóstico',
       design: '2 · Diseño',
       diffusion: '3 · Difusión',
@@ -207,6 +217,8 @@ export const translations: Record<Locale, TranslationTree> = {
       projects: 'Proyectos',
       logout: 'Salir',
       openMenu: 'Abrir menú de navegación',
+      collapseSidebar: 'Contraer menú lateral',
+      expandSidebar: 'Expandir menú lateral',
       skipToContent: 'Ir al contenido principal',
     },
     account: {

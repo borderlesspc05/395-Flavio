@@ -659,7 +659,14 @@ export function InitialFormPage() {
         <main className="diagnostic-main">
           <PhaseHeader phase={activePhase} activeLens={activeLens} onLensChange={setActiveLens} />
 
-          {activePhase.id === 'solutionPick' ? (
+          <div
+            className={
+              activePhase.id === 'solutionPick'
+                ? 'diagnostic-solution-pick-host'
+                : 'diagnostic-solution-pick-host is-hidden'
+            }
+            aria-hidden={activePhase.id !== 'solutionPick'}
+          >
             <SolutionPickPanel
               data={data}
               userId={userId}
@@ -670,8 +677,13 @@ export function InitialFormPage() {
                 scheduleMagnusMemorySyncFromForm(payload);
               }}
             />
-          ) : (
-          <div className="diagnostic-blocks">
+          </div>
+          <div
+            className={
+              activePhase.id === 'solutionPick' ? 'diagnostic-blocks is-hidden' : 'diagnostic-blocks'
+            }
+            aria-hidden={activePhase.id === 'solutionPick'}
+          >
             {activePhase.blocks.map((block) => (
               <section key={block.id} className="diagnostic-block">
                 <div className="diagnostic-block-header">
@@ -700,7 +712,6 @@ export function InitialFormPage() {
               </section>
             ))}
           </div>
-          )}
         </main>
       </div>
 

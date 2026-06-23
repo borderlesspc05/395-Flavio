@@ -89,13 +89,9 @@ export async function loadMagnusWavesMemory(userId: string): Promise<MagnusWaves
   const closed = canvases.filter((c) => c.fechado);
   const open = canvases.filter((c) => !c.fechado);
 
-  const statusLabel = selectedPath
-    ? `Design confirmado: Caminho ${selectedPath}`
-    : gateSkipped
-      ? 'Escolha de caminho adiada'
-      : diagnosticComplete
-        ? 'Diagnóstico pronto; caminho pendente'
-        : 'Diagnóstico pendente';
+  const statusLabel = diagnosticComplete
+    ? 'Diagnóstico pronto — consultoria ativa'
+    : 'Diagnóstico pendente';
 
   const sections: string[] = [
     '# Memória Magnus Waves (consultoria integrada)',
@@ -129,9 +125,9 @@ export async function loadMagnusWavesMemory(userId: string): Promise<MagnusWaves
     sections.push(`## Objetivos estratégicos (${objectives.length})\n${formatObjectivesBrief(objectives)}`);
   }
 
-  if (diagnosticComplete && selectedPath) {
+  if (diagnosticComplete) {
     sections.push(
-      '## Instrução para objetivos de Difusão\nConverta diagnóstico + Blueprint + Action Canvas em objetivos 3.1 4 WS, 3.2 Imprint e 3.3 Follow-up. Cada objetivo deve citar a evidência em insightOrigem.'
+      '## Instrução para objetivos de Difusão\nConverta diagnóstico + planos do Design + Action Canvas em objetivos 3.1 4 WS, 3.2 Imprint e 3.3 Follow-up. Cada objetivo deve citar a evidência em insightOrigem.'
     );
   }
 
@@ -145,7 +141,7 @@ export async function loadMagnusWavesMemory(userId: string): Promise<MagnusWaves
     diagnosticComplete,
     selectedPath,
     gateSkipped,
-    ready: diagnosticComplete && Boolean(selectedPath),
+    ready: diagnosticComplete,
     meta: {
       diagnosticComplete,
       hasGate: Boolean(selectedPath),

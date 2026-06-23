@@ -57,13 +57,11 @@
 }
 
 .minha-equipe--consultoria .equipe-consultoria-embed {
-  margin: 0 -1.25rem;
-}
-
-@media (min-width: 769px) {
-  .minha-equipe--consultoria .equipe-consultoria-embed {
-    margin: 0;
-  }
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .minha-equipe .equipe-header {

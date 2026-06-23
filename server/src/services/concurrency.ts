@@ -1,5 +1,5 @@
 import { AppError } from '../utils/errors';
-import type { PlanId } from './plans';
+import { DEFAULT_PLAN_ID, type PlanId } from './plans';
 import { getPlanIdForUser } from './subscriptions';
 import { getConcurrencyLimitFromSettings } from './adminSettings';
 import { COLLECTIONS } from '../config/env';
@@ -9,12 +9,17 @@ import type { UserProfile } from './users';
 const activeByUser = new Map<string, number>();
 
 export async function getConcurrencyLimitForUser(userId: string): Promise<number | null> {
-  const profile = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
-  if (profile && profile.concurrencyOverride !== undefined) {
-    return profile.concurrencyOverride;
+  try {
+    const profile = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
+    if (profile && profile.concurrencyOverride !== undefined) {
+      return profile.concurrencyOverride;
+    }
+    const planId: PlanId = await getPlanIdForUser(userId);
+    return getConcurrencyLimitFromSettings(planId);
+  } catch (err) {
+    console.warn('[concurrency] fallback to default plan limit:', err);
+    return getConcurrencyLimitFromSettings(DEFAULT_PLAN_ID);
   }
-  const planId: PlanId = await getPlanIdForUser(userId);
-  return getConcurrencyLimitFromSettings(planId);
 }
 
 export function tryAcquireSlot(userId: string, limit: number | null): boolean {

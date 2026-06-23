@@ -6,7 +6,7 @@ import { auth } from '../config/firebase';
 import { AuthLayout } from '../components/AuthLayout';
 import { useCycle } from '../context/CycleContext';
 import type { DiagnosticCycle } from '../services/diagnosticCycles';
-import { getCycleWaveFromDoc, resolveCycleEntryRoute, WAVE_STEP_LABELS } from '../services/cycleRouting';
+import { getCycleWaveFromDoc, getRouteForCycleDoc, resolveCycleEntryRoute, WAVE_STEP_LABELS } from '../services/cycleRouting';
 import { clearWorkspaceEntered, markWorkspaceEntered } from '../services/projectWorkspace';
 
 const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
@@ -17,7 +17,7 @@ const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
 
 export function ProjectSelectPage() {
   const navigate = useViewTransitionNavigate();
-  const { cycles, loading, switching, switchCycle, startNewCycle, refreshCycles } = useCycle();
+  const { cycles, activeCycle, loading, switching, switchCycle, startNewCycle, refreshCycles } = useCycle();
   const [enteringId, setEnteringId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,10 +29,12 @@ export function ProjectSelectPage() {
     setEnteringId(cycle.id);
     setError(null);
     try {
-      await switchCycle(cycle.id);
+      if (activeCycle?.id !== cycle.id) {
+        await switchCycle(cycle.id);
+      }
       markWorkspaceEntered();
-      const route = await resolveCycleEntryRoute(cycle);
-      navigate(route, {
+      const fallbackRoute = getRouteForCycleDoc(cycle);
+      navigate(fallbackRoute, {
         replace: true,
         state: {
           cycleEntry: {
@@ -40,6 +42,11 @@ export function ProjectSelectPage() {
             label: cycle.label,
           },
         },
+      });
+      void resolveCycleEntryRoute(cycle).then((route) => {
+        if (route !== fallbackRoute) {
+          navigate(route, { replace: true });
+        }
       });
     } catch {
       setError('Não foi possível abrir este projeto. Tente novamente.');
@@ -64,7 +71,7 @@ export function ProjectSelectPage() {
       if (result.ok) {
         await refreshCycles();
         markWorkspaceEntered();
-        navigate('/dashboard/initial-form', {
+        navigate('/dashboard/scans', {
           replace: true,
           state: { newProjectName: trimmed },
         });
@@ -98,45 +105,47 @@ export function ProjectSelectPage() {
           </div>
         ) : (
           <>
-            <p className="project-select-hint">
-              Escolha um projeto existente ou crie um novo no final. Ao concluir o diagnóstico você pode
-              confirmar ou ajustar o nome.
-            </p>
+            <div className="project-select-existing">
+              <p className="project-select-hint">
+                Escolha um projeto existente ou crie um novo no final. Ao concluir o diagnóstico você pode
+                confirmar ou ajustar o nome.
+              </p>
 
-            <ul className="project-select-list" role="listbox" aria-label="Projetos disponíveis">
-              {cycles.length === 0 ? (
-                <li className="project-select-empty">Nenhum projeto ainda. Defina o nome abaixo e comece.</li>
-              ) : (
-                cycles.map((cycle) => {
-                  const step = getCycleWaveFromDoc(cycle);
-                  const busy = enteringId === cycle.id;
-                  return (
-                    <li key={cycle.id}>
-                      <button
-                        type="button"
-                        role="option"
-                        className="project-select-item"
-                        disabled={Boolean(enteringId) || switching || creating}
-                        onClick={() => void enterCycle(cycle)}
-                      >
-                        <span className="project-select-item-icon" aria-hidden>
-                          <FolderKanban size={18} />
-                        </span>
-                        <span className="project-select-item-copy">
-                          <strong>{cycle.label}</strong>
-                          <span>
-                            {STATUS_LABELS[cycle.status]} · {WAVE_STEP_LABELS[step]}
+              <ul className="project-select-list" role="listbox" aria-label="Projetos disponíveis">
+                {cycles.length === 0 ? (
+                  <li className="project-select-empty">Nenhum projeto ainda. Defina o nome abaixo e comece.</li>
+                ) : (
+                  cycles.map((cycle) => {
+                    const step = getCycleWaveFromDoc(cycle);
+                    const busy = enteringId === cycle.id;
+                    return (
+                      <li key={cycle.id}>
+                        <button
+                          type="button"
+                          role="option"
+                          className="project-select-item"
+                          disabled={Boolean(enteringId) || switching || creating}
+                          onClick={() => void enterCycle(cycle)}
+                        >
+                          <span className="project-select-item-icon" aria-hidden>
+                            <FolderKanban size={18} />
                           </span>
-                        </span>
-                        <span className="project-select-item-action" aria-hidden>
-                          {busy ? <Loader2 size={16} className="spin" /> : <ArrowRight size={16} />}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })
-              )}
-            </ul>
+                          <span className="project-select-item-copy">
+                            <strong>{cycle.label}</strong>
+                            <span>
+                              {STATUS_LABELS[cycle.status]} · {WAVE_STEP_LABELS[step]}
+                            </span>
+                          </span>
+                          <span className="project-select-item-action" aria-hidden>
+                            {busy ? <Loader2 size={16} className="spin" /> : <ArrowRight size={16} />}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            </div>
 
             <section className="project-select-create" aria-labelledby="project-select-create-title">
               <div className="project-select-divider" aria-hidden />

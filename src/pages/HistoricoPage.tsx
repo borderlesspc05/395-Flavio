@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCycle } from '../context/CycleContext';
 import { ActivityTimeline } from '../components/ActivityTimeline';
+import { EvolutionLoopPanel } from '../components/EvolutionLoopPanel';
 import { LoopWorkspacePanel } from '../components/LoopWorkspacePanel';
 import { History } from 'lucide-react';
 
@@ -16,15 +17,17 @@ export function HistoricoPage() {
             <History size={28} aria-hidden />
           </div>
           <div>
-            <h1 className="historico-title">Loop contínuo · 4.2</h1>
+            <h1 className="historico-title">Loop contínuo · Evolution Loop</h1>
             <p className="historico-subtitle">
-              Follow-up e evolução do método Magnus Waves. Ciclo ativo:{' '}
-              <strong>{activeCycle?.label ?? '—'}</strong> — troque o ciclo à esquerda ou inicie um novo
-              diagnóstico para subir de nível.
+              Magnus Mind fecha o ciclo com recomendações da IA. Ciclo ativo:{' '}
+              <strong>{activeCycle?.label ?? '—'}</strong> — use o painel abaixo para evoluir ou
+              gerencie ciclos na coluna lateral.
             </p>
           </div>
         </div>
       </header>
+
+      <EvolutionLoopPanel onWaveCreated={() => setRefreshKey((k) => k + 1)} />
 
       <div className="historico-layout">
         <aside className="historico-loop-column" aria-label="Controle de ciclos">

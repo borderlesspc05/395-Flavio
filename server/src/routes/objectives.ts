@@ -5,6 +5,7 @@ import { AppError } from '../utils/errors';
 import { listByUser, getById, create, update, remove, COLLECTIONS } from '../services/storage';
 import { logActivity } from '../services/activities';
 import { suggestObjectives } from '../services/objectivesSuggest';
+import { indexObjectiveAfterSave } from '../services/ragHooks';
 import { withConcurrencyLimit } from '../services/concurrency';
 
 const router = Router();
@@ -70,6 +71,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       entidadeId: id,
     });
 
+    indexObjectiveAfterSave(objective);
+
     res.status(201).json(objective);
   } catch (err) {
     next(err);
@@ -117,6 +120,9 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
     }
 
     const updated = await update<Objective>(COLLECTIONS.objectives, id, withoutUndefined(patch));
+    if (updated) {
+      indexObjectiveAfterSave(updated);
+    }
     res.json(updated);
   } catch (err) {
     next(err);

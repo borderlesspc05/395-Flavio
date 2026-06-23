@@ -209,6 +209,10 @@ export const workspaceApi = {
 };
 
 export const aiApi = {
+  status: () =>
+    api
+      .get('/api/ai/status')
+      .then((r) => r.data as { configured: boolean; provider: string; defaultModel: string | null }),
   models: () => api.get('/api/ai/models').then((r) => normalizeModels(r.data)),
   conversations: () =>
     withUserId((userId) =>
@@ -288,9 +292,31 @@ export const aiApi = {
           (r) =>
             r.data as {
               suggestions: import('../types/solutionPick').SuggestedSolutionAction[];
+              companySummary?: string;
+              companySituation?: string;
               demoMode?: boolean;
             }
         )
+    ),
+  suggestDomainLearnings: (context: string) =>
+    withUserId((userId) =>
+      api
+        .post(
+          '/api/ai/domain-learnings',
+          { context, userId: userId || undefined },
+          { timeout: CHAT_TIMEOUT }
+        )
+        .then((r) => r.data as { learnings: string[] })
+    ),
+  suggestEvolutionLoop: (context: string) =>
+    withUserId((userId) =>
+      api
+        .post(
+          '/api/ai/evolution-loop',
+          { context, userId: userId || undefined },
+          { timeout: CHAT_TIMEOUT }
+        )
+        .then((r) => r.data as import('../types/evolutionLoop').EvolutionLoopResult)
     ),
 };
 
@@ -383,4 +409,30 @@ export const agentApi = {
     api.patch(`/api/agent/skills/${id}`, data).then((r) => r.data as AgentSkillDto),
   removeSkill: (id: string) =>
     api.delete(`/api/agent/skills/${id}`).then((r) => r.data),
+};
+
+export const ragApi = {
+  indexInitialForm: () =>
+    withUserId((userId) => {
+      if (!userId) return Promise.resolve({ ok: false });
+      return api
+        .post('/api/rag/index-initial-form')
+        .then((r) => r.data as { ok: boolean })
+        .catch((err) => {
+          console.warn('[RAG] index-initial-form failed:', err);
+          return { ok: false };
+        });
+    }),
+  reindex: () =>
+    withUserId(() =>
+      api.post('/api/rag/reindex').then(
+        (r) =>
+          r.data as {
+            ok: boolean;
+            indexedDocuments: number;
+            message: string;
+            errors: string[];
+          }
+      )
+    ),
 };

@@ -14,7 +14,7 @@ export function getCycleWaveFromDoc(cycle: DiagnosticCycle): CycleWaveStep {
 export function getRouteForWaveStep(step: CycleWaveStep): string {
   switch (step) {
     case 'diagnostico':
-      return '/dashboard/initial-form';
+      return '/dashboard/scans';
     case 'design':
       return '/dashboard/design';
     case 'difusao':
@@ -39,7 +39,7 @@ export function getRouteForCycleDoc(cycle: DiagnosticCycle): string {
  */
 export async function resolveCycleEntryRoute(cycle: DiagnosticCycle): Promise<string> {
   if (cycle.status === 'archived') return '/dashboard/historico';
-  if (!cycle.completedAt) return '/dashboard/initial-form';
+  if (!cycle.completedAt) return '/dashboard/scans';
 
   try {
     const [canvases, objectives, reports] = await Promise.all([

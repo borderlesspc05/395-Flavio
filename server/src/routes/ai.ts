@@ -6,6 +6,8 @@ import { getAiModels, getLlmStatus } from '../services/llm';
 import { handleChat } from '../services/aiChat';
 import { runBlueprintGateSuggestion } from '../services/blueprintGate';
 import { suggestSolutionPickActions } from '../services/solutionPickSuggest';
+import { suggestDomainLearnings } from '../services/domainLearnings';
+import { suggestEvolutionLoop } from '../services/evolutionLoop';
 import { withConcurrencyLimit } from '../services/concurrency';
 
 const router = Router();
@@ -72,6 +74,36 @@ router.post('/blueprint-gate', async (req: Request, res: Response, next: NextFun
     }
     const result = await withConcurrencyLimit(req.userId, () =>
       runBlueprintGateSuggestion({ diagnosticContext })
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/domain-learnings', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { context } = req.body;
+    if (!context || typeof context !== 'string') {
+      throw new AppError(400, 'context is required');
+    }
+    const result = await withConcurrencyLimit(req.userId, () =>
+      suggestDomainLearnings(req.userId, context)
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/evolution-loop', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { context } = req.body;
+    if (!context || typeof context !== 'string') {
+      throw new AppError(400, 'context is required');
+    }
+    const result = await withConcurrencyLimit(req.userId, () =>
+      suggestEvolutionLoop(req.userId, context)
     );
     res.json(result);
   } catch (err) {

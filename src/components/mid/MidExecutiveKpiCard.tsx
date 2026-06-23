@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowRight, ArrowUp, BarChart3, Rocket, Waves, Zap } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, BarChart3, Rocket, Shield, Waves, Zap } from 'lucide-react';
 import type { MidExecutiveKpi, MidTrend } from '../../types/mid';
 
 const ICONS = {
@@ -6,6 +6,7 @@ const ICONS = {
   bolt: Zap,
   wave: Waves,
   chart: BarChart3,
+  shield: Shield,
 } as const;
 
 function TrendGlyph({ trend }: { trend: MidTrend }) {

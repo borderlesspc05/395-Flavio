@@ -2,10 +2,19 @@ import { billingApi, clearPendingCheckout, readPendingCheckout } from './billing
 import { setClientConcurrencyLimit } from './requestConcurrency';
 import type { PlanSummary } from './billingApi';
 
+let claimInflight: Promise<PlanSummary | null> | null = null;
+let claimInflightUserId: string | null = null;
+
 export async function claimSubscriptionForUser(
   userId: string,
   email: string
 ): Promise<PlanSummary | null> {
+  if (claimInflight && claimInflightUserId === userId) {
+    return claimInflight;
+  }
+
+  claimInflightUserId = userId;
+  claimInflight = (async () => {
   const pending = readPendingCheckout();
   try {
     const result = await billingApi.claim({
@@ -24,4 +33,10 @@ export async function claimSubscriptionForUser(
     if (plan) setClientConcurrencyLimit(plan.concurrencyLimit);
     return plan;
   }
+  })().finally(() => {
+    claimInflight = null;
+    claimInflightUserId = null;
+  });
+
+  return claimInflight;
 }

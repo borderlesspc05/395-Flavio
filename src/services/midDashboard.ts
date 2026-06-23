@@ -6,6 +6,9 @@ import {
 } from '../constants/magnusWaves';
 import { getDiagnosticCompletion } from '../constants/diagnosticFlow';
 import { buildExecutiveKpis } from './midExecutiveKpis';
+import { parseDailyProgressChecklist } from './dailyProgressChecklist';
+import { computeDailyProgressStats } from './dailyProgressStats';
+import { DAILY_CHECKLIST_ITEMS, DAILY_PROGRESS_CHECKLIST_KEY } from '../types/dailyProgress';
 import type {
   ActionCanvas,
   InitialFormData,
@@ -13,6 +16,7 @@ import type {
   TeamMember,
 } from '../types';
 import type {
+  MidDailyRhythm,
   MidDashboardData,
   MidExecutionRow,
   MidHealth,
@@ -174,6 +178,28 @@ function buildExecution(input: BuildMidInput): MidExecutionRow[] {
   return rows.slice(0, 12);
 }
 
+function buildDailyRhythm(formData: InitialFormData | null): MidDailyRhythm {
+  const checklist = parseDailyProgressChecklist(
+    formData ? formData[DAILY_PROGRESS_CHECKLIST_KEY] : undefined
+  );
+  const stats = computeDailyProgressStats(checklist);
+  const pendingLabels = checklist.items
+    .filter((item) => !item.checked)
+    .map((item) => DAILY_CHECKLIST_ITEMS.find((cfg) => cfg.id === item.id)?.waveLabel ?? item.label)
+    .slice(0, 3);
+
+  return {
+    todayPercent: stats.todayPercent,
+    todayDone: stats.todayDone,
+    todayTotal: stats.todayTotal,
+    streakDays: stats.streakDays,
+    weekAvgPercent: stats.weekAvgPercent,
+    lastSevenDays: stats.lastSevenDays,
+    pendingLabels,
+    route: '/dashboard/checklist-diario',
+  };
+}
+
 export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
   const objectives = input.objectives;
   const total = objectives.length;
@@ -221,6 +247,7 @@ export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
   return {
     overview: buildOverview(input, progress, healthPack),
     executiveKpis,
+    dailyRhythm: buildDailyRhythm(input.formData),
     execution: buildExecution(input),
     hasData: input.formComplete || total > 0 || input.canvases.length > 0,
   };

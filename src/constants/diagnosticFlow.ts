@@ -1,7 +1,7 @@
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
 import { ORGANIZATIONAL_SCANS } from './organizationalScans';
 import { parseOrganizationalScanData } from '../services/organizationalScanStorage';
-import { buildOrganizationalScanContext } from '../utils/organizationalScans';
+import { buildOrganizationalScanContext, getScanStatus } from '../utils/organizationalScans';
 
 export type DiagnosticPhaseId = 'decoding' | 'gapScan' | 'systemScan' | 'teamScan' | 'solutionPick';
 export type DiagnosticFieldType = 'textarea' | 'text' | 'single' | 'multi' | 'scale';
@@ -1473,4 +1473,56 @@ export function buildDiagnosticContext(data: InitialFormData): string {
     parseOrganizationalScanData(data.organizationalScanData),
   );
   return scans ? `${base}\n\n${scans}` : base;
+}
+
+function buildCompanyProfileBlock(data: InitialFormData): string {
+  const lines: string[] = [];
+  const push = (label: string, value: DiagnosticFieldValue | undefined) => {
+    const text = formatValue(value);
+    if (text) lines.push(`- ${label}: ${text}`);
+  };
+
+  push('Organização', data.organizacao);
+  push('Produto / serviço', data.produtoServico);
+  push('Estágio do negócio', data.estagioNegocio);
+  push('Fatores externos', data.fatoresExternos);
+  push('Mudanças recentes', data.mudancasRecentes);
+  push('Bloqueio principal (resumo)', data.bloqueioPrincipalResumo);
+
+  return lines.length ? `## Perfil e contexto da empresa\n${lines.join('\n')}` : '';
+}
+
+/** Contexto robusto para Solution Pick: empresa + canvas 1.1–1.5 + scans focados. */
+export function buildSolutionPickContext(data: InitialFormData): string {
+  const parts: string[] = [];
+  const company = buildCompanyProfileBlock(data);
+  if (company) parts.push(company);
+
+  let diagnostic = buildDiagnosticContextThroughTeamScan(data);
+  const scans = buildOrganizationalScanContext(
+    ORGANIZATIONAL_SCANS,
+    parseOrganizationalScanData(data.organizationalScanData),
+  );
+  if (scans) diagnostic = diagnostic ? `${diagnostic}\n\n${scans}` : scans;
+  if (diagnostic) parts.push(diagnostic);
+
+  return parts.join('\n\n').trim();
+}
+
+export function hasCompleteOrganizationalScan(data: InitialFormData): boolean {
+  const answers = parseOrganizationalScanData(data.organizationalScanData);
+  return ORGANIZATIONAL_SCANS.filter((scan) => scan.id !== 'fullScan' && !scan.comingSoon).some(
+    (scan) => getScanStatus(scan, answers[scan.id] ?? {}) === 'complete'
+  );
+}
+
+/** Solution Pick disponível com canvas 1.1–1.4, scan focado concluído ou diagnóstico parcial robusto. */
+export function isSolutionPickReady(data: InitialFormData): boolean {
+  if (isPhasesThroughTeamScanComplete(data)) return true;
+  if (hasCompleteOrganizationalScan(data)) return true;
+
+  const completion = getDiagnosticCompletion(data);
+  const hasCompany = isDiagnosticValueAnswered(data.organizacao);
+  const hasBlocker = isDiagnosticValueAnswered(data.bloqueioPrincipalResumo);
+  return hasCompany && (hasBlocker || completion.requiredPercent >= 35);
 }

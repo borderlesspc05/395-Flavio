@@ -640,7 +640,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                           />
                         </label>
                         <label className="ac-field ac-field--wide">
-                          <span>Objetivo específico (1 frase, com números)</span>
+                          <span>Objetivo específico (resultado mensurável, contexto e critério de sucesso)</span>
                           <textarea
                             rows={2}
                             value={draft.objetivoEspecifico}

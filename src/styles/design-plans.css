@@ -431,6 +431,18 @@
   color: rgba(241, 235, 224, 0.75);
 }
 
+.design-plan-field-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(241, 235, 224, 0.48);
+}
+
+.design-plan-field--objective textarea {
+  min-height: 7.5rem;
+  line-height: 1.55;
+}
+
 .design-plan-field input,
 .design-plan-field textarea {
   width: 100%;

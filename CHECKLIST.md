@@ -779,4 +779,65 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 02 de junho de 2026 — scans organizacionais, transições de rota, visual premium e modal de nome do projeto*
+## Checklist — sessão Onda 4 · Domínio (inteligência organizacional)
+
+> Reestruturação da Onda 4, integração MID, refinamento visual e fluxo real (sem mocks de IA).
+
+### Arquitetura e dados
+
+1. [x] **Tipos** — `src/types/domainWave.ts` (planos, impacto, learning, sustentação, scores)
+2. [x] **Utilitários** — `src/utils/domainWave.ts` (derivar planos da Onda 3, métricas, sustainability score, contexto IA)
+3. [x] **Persistência** — `src/services/domainWaveStorage.ts` + chave `domainWaveData` em `initialForm.ts` (Firebase)
+4. [x] **API IA** — `POST /api/ai/domain-learnings` + `server/src/services/domainLearnings.ts`
+5. [x] **Contexto para relatórios** — `server/src/services/domainWaveContext.ts` (lê Domínio do Firestore no dossiê)
+
+### Página Onda 4 (`/dashboard/relatorios`)
+
+6. [x] **Pergunta central** — “O que aprendemos com o que fizemos?” como foco da página
+7. [x] **Bloco 1 — Resultado dos Planos** — tabela auto da Difusão + % execução, concluídos, atrasados, Action Velocity
+8. [x] **Bloco 2 — Impacto Gerado** — escala 1–5 + evidências por plano concluído
+9. [x] **Bloco 3 — Learning & Insights** — 5 campos reflexivos + Top 5 via IA
+10. [x] **Bloco 4 — Radar de Sustentação** — 5 critérios (1–5) → Sustainability Score
+11. [x] **Componente** — `src/components/domain/DomainWaveWorkspace.tsx`
+12. [x] **Relatórios secundários** — seção colapsável “Relatórios e histórico” (dossiê + timeline)
+
+### MID (Magnus Intelligence Dashboard)
+
+13. [x] **5º KPI** — Sustainability Score em `midExecutiveKpis.ts` (ícone shield)
+14. [x] **Grid MID** — 5 colunas em `mid-dashboard.css`
+15. [x] **Copy MID** — subtítulo atualizado para cinco indicadores
+
+### UI / UX (refinamento)
+
+16. [x] **Visual editorial** — tokens alinhados ao MID (Newsreader, Figtree, bronze/dourado)
+17. [x] **Hero assimétrico** — pergunta central + card-resumo de planos
+18. [x] **Nav sticky** — âncoras Planos · Impacto · Aprendizados · Sustentação
+19. [x] **Skeleton loading** — em vez de texto “Carregando…”
+20. [x] **Acessibilidade** — `h1`, labels `htmlFor`, `aria-live`, focus-visible, `tabular-nums`
+21. [x] **CSS** — `src/styles/domain-wave.css` + import em `main.tsx`
+22. [x] **Ícones no lugar de emojis** — badges de sustentação com Lucide
+
+### Fluxo real (sem demo silencioso)
+
+23. [x] **Top 5 IA** — removido mock; exige LLM configurado; erro explícito se falhar
+24. [x] **Dossiê** — removido template “Modo Demonstração”; só gera com IA real
+25. [x] **Dossiê enriquecido** — inclui dados do Domínio salvos no prompt
+26. [x] **Status IA** — `aiApi.status()` + banner quando `configured: false`
+27. [x] **Auto-save** — rascunho do Domínio no Firebase a cada ~2s após edição
+28. [x] **Utilitário de erro** — `src/utils/apiError.ts` (`readApiErrorMessage`, `isLlmNotConfiguredApiError`)
+
+### Integração frontend
+
+29. [x] **`aiApi.suggestDomainLearnings`** — em `src/services/api.ts`
+30. [x] **`RelatoriosPage.tsx`** — workspace principal + archive + erros de IA no dossiê
+31. [x] **Build** — `npm run build` (frontend + server) passando
+
+### Para ativar IA em produção
+
+32. [ ] **Servidor** — `OPENROUTER_API_KEY` ou `OPENAI_API_KEY` em `server/.env`
+33. [ ] **Validar** — `GET /api/ai/status` → `{ configured: true }`
+34. [ ] **Testar fluxo** — planos na Difusão → preencher Domínio → Top 5 → salvar → ver score no MID → gerar dossiê
+
+---
+
+*Última atualização: 02 de junho de 2026 — Onda 4 Domínio, Sustainability Score no MID, UI refinada e fluxo real*

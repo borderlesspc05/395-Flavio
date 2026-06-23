@@ -6,17 +6,12 @@ import { buildDiagnosticContext } from '../constants/diagnosticFlow';
 import { MagnusMemoryBanner } from '../components/MagnusMemoryBanner';
 import { loadMagnusWavesMemory, type MagnusWavesMemoryMeta } from '../services/magnusWavesMemory';
 import { syncMagnusMemoryFromFirebase } from '../services/magnusMemorySync';
-import { buildGateContextAppendix } from '../constants/blueprintFlow';
 import { getInitialForm } from '../services/initialForm';
-import { resolveConsultoriaUiPhase, writeConsultoriaGateUiPhase } from '../constants/consultoriaGateUi';
-import { getBlueprintGate, type BlueprintGateDoc } from '../services/blueprintGate';
-import { GateZeroPanel } from '../components/GateZeroPanel';
 import ReactMarkdown from 'react-markdown';
 import {
   Bot,
   ChevronRight,
   Clock,
-  GitBranch,
   MessageSquare,
   Pencil,
   Plus,
@@ -87,7 +82,7 @@ type ConsultoriaIAPageProps = {
   onBlueprintCommitted?: () => void;
 };
 
-export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: ConsultoriaIAPageProps = {}) {
+export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted: _onBlueprintCommitted }: ConsultoriaIAPageProps = {}) {
   const { refreshCycles } = useCycle();
   const [models, setModels] = useState<AiModel[]>([]);
   const [conversations, setConversations] = useState<ConvSummary[]>([]);
@@ -100,21 +95,18 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
   const [loadingConv, setLoadingConv] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showObjectivesBanner, setShowObjectivesBanner] = useState(true);
+  const [showObjectivesBanner, setShowObjectivesBanner] = useState(false);
   const [chatDemoModeBanner, setChatDemoModeBanner] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [diagnosticComplete, setDiagnosticComplete] = useState<boolean | null>(null);
   const [diagnosticData, setDiagnosticData] = useState<InitialFormData | null>(null);
   const [memoryMeta, setMemoryMeta] = useState<MagnusWavesMemoryMeta | null>(null);
-  const [gateDoc, setGateDoc] = useState<BlueprintGateDoc | null>(null);
-  const [gateLoading, setGateLoading] = useState(false);
-  /** Com diagnóstico completo: `gate` = só tela Gate Zero; `chat` = só chat (persistido por utilizador). */
-  const [uiPhase, setUiPhase] = useState<'gate' | 'chat'>('chat');
   const [skills, setSkills] = useState<AgentSkillDto[]>([]);
   const [skillMenuOpen, setSkillMenuOpen] = useState(false);
   const [skillSearch, setSkillSearch] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const activeConv = conversations.find((c) => c.id === activeId);
@@ -139,9 +131,6 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
     const state = location.state as { prefillMessage?: string } | null;
     if (!state?.prefillMessage) return;
     setInput(state.prefillMessage);
-    setUiPhase('chat');
-    const uid = auth.currentUser?.uid;
-    if (uid) writeConsultoriaGateUiPhase(uid, 'chat');
   }, [location.state]);
 
   const insertSkillSlug = (slug: string) => {
@@ -191,7 +180,6 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
     const unsub = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setDiagnosticComplete(null);
-        setUiPhase('chat');
         return;
       }
       getInitialForm(user.uid)
@@ -206,77 +194,26 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
           } else {
             setMemoryMeta(null);
           }
-          if (completedAt) {
-            setGateLoading(true);
-            getBlueprintGate(user.uid)
-              .then((g) => {
-                setGateDoc(g);
-                setUiPhase(resolveConsultoriaUiPhase(user.uid, g));
-              })
-              .catch(() => {
-                setGateDoc(null);
-                setUiPhase('gate');
-              })
-              .finally(() => setGateLoading(false));
-          } else {
-            setGateDoc(null);
-            setGateLoading(false);
-            setUiPhase('chat');
-          }
         })
         .catch(() => {
           setDiagnosticComplete(false);
           setDiagnosticData(null);
-          setGateDoc(null);
-          setGateLoading(false);
-          setUiPhase('chat');
+          setMemoryMeta(null);
         });
     });
     return unsub;
   }, []);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = chatMessagesRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
 
-  const handleGateDocChange = useCallback((doc: BlueprintGateDoc | null) => {
-    setGateDoc(doc);
-    const has = Boolean(doc?.selectedPath || doc?.skipped);
-    if (!doc || !has) {
-      setUiPhase('gate');
-    }
-  }, []);
-
-  const commitToChatPhase = useCallback(() => {
-    const uid = auth.currentUser?.uid;
-    if (uid) {
-      writeConsultoriaGateUiPhase(uid, 'chat');
-      void loadMagnusWavesMemory(uid).then((m) => {
-        setMemoryMeta(m.meta);
-      });
-    }
-    if (onBlueprintCommitted) {
-      onBlueprintCommitted();
-      return;
-    }
-    setUiPhase('chat');
-  }, [onBlueprintCommitted]);
-
-  const openGateRevision = useCallback(() => {
-    const uid = auth.currentUser?.uid;
-    if (uid) writeConsultoriaGateUiPhase(uid, 'gate');
-    setUiPhase('gate');
-  }, []);
-
-  const cancelGateRevision = useCallback(() => {
-    const uid = auth.currentUser?.uid;
-    if (uid) writeConsultoriaGateUiPhase(uid, 'chat');
-    setUiPhase('chat');
-  }, []);
 
   const loadConversations = useCallback(async () => {
     const data = await aiApi.conversations();
@@ -359,20 +296,12 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
 
     try {
       const diagnosticContext = diagnosticData ? buildDiagnosticContext(diagnosticData) : undefined;
-      const gateContext =
-        gateDoc?.selectedPath != null
-          ? buildGateContextAppendix(gateDoc.selectedPath, {
-              aiRecommendedPath: gateDoc.aiRecommendedPath,
-              rationale: gateDoc.rationale,
-            })
-          : undefined;
 
       const result = await aiApi.chat({
         conversationId: activeId || undefined,
         content,
         modelId: selectedModel || undefined,
         diagnosticContext,
-        gateContext,
       });
 
       const convId = result.conversationId as string;
@@ -449,41 +378,15 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
 
   const chatTitle = activeConv?.title || titleDraft || 'Consultoria IA';
 
-  const showConsultoriaGate = diagnosticComplete === true && (gateLoading || uiPhase === 'gate');
-  const showConsultoriaChat =
-    diagnosticComplete !== true || (!gateLoading && uiPhase === 'chat');
-  const gateRevisionMode =
-    !gateLoading &&
-    uiPhase === 'gate' &&
-    Boolean(gateDoc?.selectedPath || gateDoc?.skipped);
-
   return (
-    <div
-      className={`consultoria-ia${
-        showConsultoriaGate && !gateLoading ? ' consultoria-ia--gate-phase' : ''
-      }${embedded ? ' consultoria-ia--embedded' : ''}`}
-    >
+    <div className={`consultoria-ia${embedded ? ' consultoria-ia--embedded' : ''}`}>
       {diagnosticComplete === false && (
         <div className="consultoria-gate-banner" style={{ margin: '0 1rem 0', maxWidth: 1200 }}>
           Complete o <strong>Human-to-Business Canvas</strong> (Onda 1 — Diagnóstico) antes da Consultoria IA.{' '}
           <Link to="/dashboard/initial-form">Ir para o diagnóstico</Link>
         </div>
       )}
-      {showConsultoriaGate && (
-        <GateZeroPanel
-          diagnosticContext={
-            diagnosticData ? buildDiagnosticContext(diagnosticData) : ''
-          }
-          gateDoc={gateDoc}
-          gateLoading={gateLoading}
-          onGateDocChange={handleGateDocChange}
-          revisionMode={gateRevisionMode}
-          onCommitted={commitToChatPhase}
-          onCancelRevision={gateRevisionMode ? cancelGateRevision : undefined}
-        />
-      )}
-      {showConsultoriaChat && (
-        <div className="consultoria-container">
+      <div className="consultoria-container">
         {sidebarOpen && (
           <div className="history-overlay" onClick={() => setSidebarOpen(false)} />
         )}
@@ -593,18 +496,6 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
               </div>
             </div>
             <div className="chat-header-actions">
-              {diagnosticComplete === true &&
-                uiPhase === 'chat' &&
-                (gateDoc?.selectedPath || gateDoc?.skipped) && (
-                  <button
-                    type="button"
-                    className="chat-header-icon-btn"
-                    onClick={openGateRevision}
-                    title="Refazer escolha de caminho"
-                  >
-                    <GitBranch size={16} aria-hidden />
-                  </button>
-                )}
               <div className="chat-model-selector">
                 <select
                   className="chat-model-select"
@@ -622,13 +513,45 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
             </div>
           </header>
 
-          {diagnosticComplete === true && uiPhase === 'chat' && memoryMeta && (
+          {diagnosticComplete === true && memoryMeta && (
             <div className="consultoria-memory-wrap consultoria-memory-wrap--minimal">
               <MagnusMemoryBanner meta={memoryMeta} minimal />
             </div>
           )}
 
-          <div className="chat-messages">
+          {showObjectivesBanner && messages.length > 0 && (
+            <div
+              className={`chat-objectives-banner chat-objectives-banner--pinned${embedded ? ' chat-objectives-banner--embedded' : ''}`}
+            >
+              <div className="chat-objectives-banner-content">
+                <Target size={20} />
+                <div>
+                  <p className="chat-objectives-banner-title">Transforme insights em objetivos</p>
+                  <p className="chat-objectives-banner-description">
+                    Leve o diagnóstico e os planos validados para a Difusão e execute com o time.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/dashboard/objetivos"
+                state={{ generateFromDesign: true }}
+                className="chat-objectives-banner-button"
+              >
+                Gerar objetivos
+                <ChevronRight size={16} />
+              </Link>
+              <button
+                type="button"
+                className="chat-objectives-banner-close"
+                onClick={() => setShowObjectivesBanner(false)}
+                aria-label="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
+
+          <div className="chat-messages" ref={chatMessagesRef}>
             {chatDemoModeBanner && (
               <div className="chat-demo-mode-banner" role="status">
                 <div className="chat-demo-mode-banner-inner">
@@ -673,36 +596,6 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
               </div>
             )}
 
-            {showObjectivesBanner && messages.length > 0 && (
-              <div className="chat-objectives-banner">
-                <div className="chat-objectives-banner-content">
-                  <Target size={20} />
-                  <div>
-                    <p className="chat-objectives-banner-title">Transforme insights em objetivos</p>
-                    <p className="chat-objectives-banner-description">
-                      Leve o diagnóstico e os planos validados para a Difusão e execute com o time.
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  to="/dashboard/objetivos"
-                  state={{ generateFromDesign: true }}
-                  className="chat-objectives-banner-button"
-                >
-                  Gerar objetivos
-                  <ChevronRight size={16} />
-                </Link>
-                <button
-                  type="button"
-                  className="chat-objectives-banner-close"
-                  onClick={() => setShowObjectivesBanner(false)}
-                  aria-label="Fechar"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            )}
-
             {loadingConv ? (
               <div className="chat-loading">Carregando conversa...</div>
             ) : messages.length === 0 ? (
@@ -711,9 +604,9 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
                   <p className="chat-empty-eyebrow">Consultoria estratégica</p>
                   <h2 className="chat-empty-title">Como posso ajudar?</h2>
                   <p className="chat-empty-description">
-                    {gateDoc?.selectedPath || gateDoc?.skipped
-                      ? 'Diagnóstico e escolha de caminho no contexto. Escolha uma sugestão ou escreva sua pergunta.'
-                      : 'Confirme a escolha de caminho para liberar a consultoria completa.'}
+                    {diagnosticComplete
+                      ? 'Diagnóstico no contexto. Escolha uma sugestão ou escreva sua pergunta estratégica.'
+                      : 'Complete o diagnóstico para liberar a consultoria com contexto da empresa.'}
                   </p>
                 </div>
                 <div className="chat-suggestions chat-suggestions--grid">
@@ -855,7 +748,6 @@ export function ConsultoriaIAPage({ embedded = false, onBlueprintCommitted }: Co
           </div>
         </div>
       </div>
-      )}
     </div>
   );
 }

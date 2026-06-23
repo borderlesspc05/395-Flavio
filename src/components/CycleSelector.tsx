@@ -27,7 +27,7 @@ export function CycleSelector() {
     try {
       const result = await startNewCycle();
       if (result.ok) {
-        navigate('/dashboard/initial-form');
+        navigate('/dashboard/scans');
       } else if (result.message) {
         window.alert(result.message);
       }

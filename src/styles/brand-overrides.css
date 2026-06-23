@@ -41,8 +41,8 @@
   background: linear-gradient(90deg, var(--accent-blue) 0%, var(--light-blue) 100%) !important;
 }
 
-.message.user-message .message-bubble,
-.message-avatar:not(.user) {
+.dashboard-main:not(.consultoria-ia-active) .message.user-message .message-bubble,
+.dashboard-main:not(.consultoria-ia-active) .message-avatar:not(.user) {
   background: linear-gradient(135deg, var(--accent-blue), var(--light-blue)) !important;
   border-color: var(--accent-blue) !important;
 }
@@ -63,6 +63,10 @@
       rgba(47, 58, 76, 0.88) 72%,
       rgba(26, 34, 45, 0.98) 100%
     ) !important;
+}
+
+.dashboard-main:focus {
+  outline: none;
 }
 
 .dashboard-main:before {
@@ -132,6 +136,33 @@
 .dashboard-sidebar .sidebar-header > * {
   position: relative;
   z-index: 1;
+}
+
+.dashboard-sidebar .sidebar-collapse-toggle {
+  position: absolute;
+  top: 0.35rem;
+  right: 0;
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.dashboard-sidebar.collapsed .sidebar-collapse-toggle {
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.dashboard-sidebar .sidebar-collapse-toggle:focus-visible {
+  opacity: 1;
+  outline: 2px solid rgba(255, 188, 125, 0.45);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
 .dashboard-sidebar .sidebar-logo {
@@ -251,6 +282,10 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard-sidebar .sidebar-collapse-toggle {
+    display: none;
+  }
+
   .dashboard-sidebar {
     height: 100vh;
     height: 100dvh;
@@ -262,6 +297,7 @@
     flex-direction: column;
   }
 
+  .dashboard-sidebar,
   .dashboard-sidebar.collapsed {
     width: 280px !important;
     min-width: 280px !important;
@@ -269,25 +305,34 @@
     padding-right: var(--spacing-lg) !important;
   }
 
+  .dashboard-sidebar .sidebar-logo,
   .dashboard-sidebar.collapsed .sidebar-logo {
     max-width: 72px !important;
     margin-bottom: var(--spacing-sm) !important;
   }
 
-  .dashboard-sidebar.collapsed .logo-text {
+  .dashboard-sidebar .logo-text,
+  .dashboard-sidebar.collapsed .logo-text,
+  .dashboard-sidebar .nav-label,
+  .dashboard-sidebar.collapsed .nav-label,
+  .dashboard-sidebar.open .logo-text,
+  .dashboard-sidebar.open .nav-label {
     opacity: 1 !important;
     transform: translateX(0) !important;
     max-width: 220px !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
   }
 
-  .dashboard-sidebar.collapsed .nav-label {
-    opacity: 1 !important;
-    transform: translateX(0) !important;
-    max-width: 220px !important;
-  }
-
+  .dashboard-sidebar .nav-item,
   .dashboard-sidebar.collapsed .nav-item {
     justify-content: flex-start !important;
+    align-items: center !important;
+    gap: var(--spacing-sm) !important;
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }

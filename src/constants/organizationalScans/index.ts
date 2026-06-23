@@ -13,9 +13,9 @@ export const fullScanIntro: OrganizationalScanDefinition = {
   title: 'Full Scan',
   subtitle: 'Diagnóstico completo da organização',
   intro:
-    'Você pode diagnosticar a organização de duas formas: o canvas completo (mais profundo) ou um scan temático (mais rápido). Escolha apenas uma via por ciclo. Não é necessário preencher todos os scans.',
+    'Diagnostique a organização pelo canvas completo Magnus Waves (1.1–1.5, com Solution Pick e resumo executivo) ou por um scan temático mais rápido. As duas vias levam ao mesmo Solution Pick para escolher planos de ação.',
   guidance:
-    'Para o diagnóstico focado, selecione o tema mais relevante para o momento da organização. Um único scan bem respondido já substitui o canvas completo para iniciar o ciclo.',
+    'O diagnóstico completo fica no canvas 1.1 a 1.5. O scan focado é alternativa quando você precisa de profundidade em um tema só — ambos alimentam o Solution Pick com o contexto real da empresa.',
   blocks: [],
 };
 

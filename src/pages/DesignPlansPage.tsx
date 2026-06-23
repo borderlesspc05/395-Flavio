@@ -19,6 +19,8 @@ import {
 } from '../services/solutionPick';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 import { syncMagnusMemoryAfterCanvasChange } from '../services/magnusMemorySync';
+import { readStashedEvolution } from '../services/evolutionLoopStorage';
+import { enrichDraftObjetivo } from '../utils/enrichObjetivoEspecifico';
 import type { ActionCanvas, SuggestedActionCanvasDraft } from '../types';
 
 type EditablePlan = SuggestedActionCanvasDraft & {
@@ -58,12 +60,17 @@ function blankPlan(): EditablePlan {
   };
 }
 
-function fromDraft(draft: SuggestedActionCanvasDraft, canvasId?: string): EditablePlan {
+function fromDraft(
+  draft: SuggestedActionCanvasDraft,
+  canvasId?: string,
+  meta?: { descricao?: string; rationale?: string; categoria?: string }
+): EditablePlan {
+  const enriched = enrichDraftObjetivo(draft, meta);
   return {
     localId: newId(),
     validated: Boolean(canvasId),
     canvasId,
-    ...draft,
+    ...enriched,
   };
 }
 
@@ -124,9 +131,17 @@ function linkPlansToCanvases(
     const match = byTitle.get(key);
     if (match && !used.has(match.id)) {
       used.add(match.id);
-      return fromDraft(item.draft, match.id);
+      return fromDraft(item.draft, match.id, {
+        descricao: item.descricao,
+        rationale: item.rationale,
+        categoria: item.categoria,
+      });
     }
-    return fromDraft(item.draft);
+    return fromDraft(item.draft, undefined, {
+      descricao: item.descricao,
+      rationale: item.rationale,
+      categoria: item.categoria,
+    });
   });
 }
 
@@ -319,15 +334,29 @@ export function DesignPlansPage() {
   }
 
   if (plans.length === 0) {
+    const evolution = readStashedEvolution();
     return (
       <div className="design-plans-empty">
+        {evolution && (
+          <div className="design-evolution-banner">
+            <p className="design-evolution-banner__eyebrow">Nova onda · Evolution Loop</p>
+            <h2>Foco: {evolution.nextWave.focus}</h2>
+            <p>{evolution.nextWave.rationale}</p>
+          </div>
+        )}
         <Sparkles size={32} aria-hidden />
         <h1>Design — planos de ação</h1>
         <p>
-          Conclua o diagnóstico e escolha ações no Solution Pick (1.5), ou use a Consultoria IA na Equipe para
-          chegar aqui.
+          {evolution
+            ? 'Crie os planos desta nova onda com base nos aprendizados do ciclo anterior.'
+            : 'Conclua o diagnóstico e escolha ações no Solution Pick (1.5), ou use a Consultoria IA na Equipe para chegar aqui.'}
         </p>
         <div className="design-plans-empty-actions">
+          {evolution ? (
+            <button type="button" className="design-plans-link" onClick={addPlan}>
+              Criar primeiro plano da nova onda
+            </button>
+          ) : null}
           <Link to="/dashboard/initial-form" className="design-plans-link">
             Ir para o diagnóstico
           </Link>
@@ -339,8 +368,17 @@ export function DesignPlansPage() {
     );
   }
 
+  const evolutionCarryOver = readStashedEvolution();
+
   return (
     <div className="design-plans-page">
+      {evolutionCarryOver && (
+        <div className="design-evolution-banner">
+          <p className="design-evolution-banner__eyebrow">Nova onda · Evolution Loop</p>
+          <h2>Foco: {evolutionCarryOver.nextWave.focus}</h2>
+          <p>{evolutionCarryOver.nextWave.rationale}</p>
+        </div>
+      )}
       <header className="design-plans-header">
         <div>
           <span className="design-plans-kicker">Onda 2 · Design</span>
@@ -413,12 +451,16 @@ export function DesignPlansPage() {
                     onChange={(e) => updatePlan(plan.localId, { nomeIniciativa: e.target.value })}
                   />
                 </label>
-                <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
+                <label className="design-plan-field design-plan-field--objective" onClick={(e) => e.stopPropagation()}>
                   <span>Objetivo específico</span>
+                  <small className="design-plan-field-hint">
+                    Resultado mensurável, contexto do diagnóstico, critério de sucesso e escopo
+                  </small>
                   <textarea
-                    rows={3}
+                    rows={5}
                     value={plan.objetivoEspecifico}
                     onChange={(e) => updatePlan(plan.localId, { objetivoEspecifico: e.target.value })}
+                    placeholder="Ex.: Até 30/09, reduzir em 20% o retrabalho no processo X, com piloto em 2 squads, métrica semanal validada pelo sponsor e evidências nas entregas do canvas."
                   />
                 </label>
                 <div className="design-plan-row">

@@ -4,6 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import {
   ArrowLeft,
   BarChart3,
+  ChevronDown,
+  ChevronUp,
   Download,
   FileText,
   Loader2,
@@ -12,9 +14,11 @@ import {
   Target,
   Users,
 } from 'lucide-react';
-import { reportsApi } from '../services/api';
+import { reportsApi, aiApi } from '../services/api';
 import type { NormalizedReport } from '../services/apiNormalize';
 import { ActivityTimeline } from '../components/ActivityTimeline';
+import { DomainWaveWorkspace } from '../components/domain/DomainWaveWorkspace';
+import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../utils/apiError';
 
 interface ReportStats {
   totalObjectives?: number;
@@ -64,6 +68,15 @@ export function RelatoriosPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [midNotice, setMidNotice] = useState<string | null>(null);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    aiApi
+      .status()
+      .then((s) => setAiConfigured(s.configured))
+      .catch(() => setAiConfigured(false));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,6 +97,12 @@ export function RelatoriosPage() {
   }, [load]);
 
   const handleGenerate = useCallback(async () => {
+    if (!aiConfigured) {
+      setError(
+        'IA não configurada no servidor. Defina OPENROUTER_API_KEY ou OPENAI_API_KEY para gerar o dossiê.',
+      );
+      return;
+    }
     setGenerating(true);
     setError(null);
     try {
@@ -93,12 +112,16 @@ export function RelatoriosPage() {
       setSelectedId(normalized.id);
       setDetail(normalized);
       setHistoryRefreshKey((k) => k + 1);
-    } catch {
-      setError('Erro ao gerar relatório. Tente novamente.');
+    } catch (err) {
+      setError(
+        isLlmNotConfiguredApiError(err)
+          ? 'IA não configurada no servidor. Defina OPENROUTER_API_KEY ou OPENAI_API_KEY.'
+          : readApiErrorMessage(err, 'Erro ao gerar relatório. Tente novamente.'),
+      );
     } finally {
       setGenerating(false);
     }
-  }, []);
+  }, [aiConfigured]);
 
   useEffect(() => {
     const state = location.state as { autoGenerate?: boolean; midConcludeNotice?: string } | null;
@@ -107,6 +130,7 @@ export function RelatoriosPage() {
     if (state.midConcludeNotice) {
       setMidNotice(state.midConcludeNotice);
     }
+    setArchiveOpen(true);
     navigate(location.pathname, { replace: true, state: {} });
     void handleGenerate();
   }, [location, navigate, handleGenerate]);
@@ -251,102 +275,126 @@ export function RelatoriosPage() {
   }
 
   return (
-    <div className="relatorios-page">
-      <header className="relatorios-header">
-        <div className="relatorios-header-content">
-          <div className="relatorios-icon-wrapper">
-            <BarChart3 size={28} />
-          </div>
-          <div>
-            <h1 className="relatorios-title">Onda 4 — Domínio · MID</h1>
-            <p className="relatorios-subtitle">
-              Magnus Intelligence Dashboard — avaliação Kirkpatrick nível 4, histórico do usuário e loop
-              contínuo
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {midNotice && (
-        <p className="relatorios-mid-notice" role="status">
+    <div className="relatorios-page relatorios-page--domain">
+      {midNotice ? (
+        <p
+          className="domain-wave-notice domain-reveal"
+          role="status"
+          aria-live="polite"
+          style={{ position: 'relative', zIndex: 1 }}
+        >
           {midNotice}
         </p>
-      )}
+      ) : null}
 
-      <section className="relatorios-generate-section">
-        <h2 className="section-title">Gerar novo relatório</h2>
-        <p className="section-description">
-          Consolida execução (Difusão) e contexto para medir impacto com honestidade — base do
-          dashboard 4.1. Se não satisfeito, retome o Diagnóstico (loop 4.2).
-        </p>
-        <button type="button" className="generate-button" onClick={handleGenerate} disabled={generating}>
-          {generating ? <Loader2 size={20} className="spinning" /> : <Sparkles size={20} />}
-          {generating ? 'Gerando relatório...' : 'Gerar relatório completo'}
+      <DomainWaveWorkspace />
+
+      <section className="relatorios-archive domain-reveal" aria-labelledby="relatorios-archive-title">
+        <button
+          type="button"
+          className="relatorios-archive-toggle"
+          onClick={() => setArchiveOpen((open) => !open)}
+          aria-expanded={archiveOpen}
+          aria-controls="relatorios-archive-panel"
+        >
+          <div>
+            <h2 id="relatorios-archive-title">Relatórios e histórico</h2>
+            <span>Dossiês gerados, exportação e linha do tempo do ciclo</span>
+          </div>
+          {archiveOpen ? <ChevronUp size={20} aria-hidden /> : <ChevronDown size={20} aria-hidden />}
         </button>
-      </section>
 
-      {error && <div className="relatorios-error">{error}</div>}
-
-      <div className="relatorios-mid-layout">
-        <div className="relatorios-mid-primary">
-          <section className="relatorios-list-section">
-            <h2 className="section-title">Relatórios gerados</h2>
-            {loading ? (
-              <div className="relatorios-loading">
-                <Loader2 size={32} className="spinning" />
-                <p>Carregando relatórios...</p>
-              </div>
-            ) : reports.length === 0 ? (
-              <div className="relatorios-empty">
-                <FileText size={48} style={{ opacity: 0.4, marginBottom: 16 }} />
-                <p>Nenhum relatório gerado ainda.</p>
-              </div>
-            ) : (
-              <div className="relatorios-list">
-                {reports.map((report) => (
-                  <article key={report.id} className="report-card">
-                    <div className="report-card-header">
-                      <div className="report-icon-wrapper">
-                        <FileText size={24} />
-                      </div>
-                      <div className="report-card-content">
-                        <h3 className="report-card-title">{report.titulo || report.title}</h3>
-                        <p className="report-card-date">
-                          {new Date(report.createdAt).toLocaleString('pt-BR')}
-                        </p>
-                        {report.stats && (
-                          <div className="report-card-stats">
-                            <span className="report-stat">
-                              {report.stats.totalObjectives ?? 0} objetivos
-                            </span>
-                            <span className="report-stat">
-                              {report.stats.completionRate ?? 0}% conclusão
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="report-card-actions">
-                      <button type="button" className="view-button" onClick={() => openDetail(report.id)}>
-                        Ver detalhes
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
+        <div
+          id="relatorios-archive-panel"
+          className="relatorios-archive-body"
+          hidden={!archiveOpen}
+        >
+          <section className="relatorios-generate-section">
+            <h3 className="section-title">Gerar dossiê consolidado</h3>
+            <p className="section-description">
+              Exporta execução, Domínio e contexto do ciclo em Markdown via IA. Requer chave de modelo
+              configurada no servidor.
+            </p>
+            <button
+              type="button"
+              className="generate-button"
+              onClick={handleGenerate}
+              disabled={generating || aiConfigured === false}
+              title={
+                aiConfigured === false
+                  ? 'Configure OPENROUTER_API_KEY ou OPENAI_API_KEY no servidor'
+                  : undefined
+              }
+            >
+              {generating ? <Loader2 size={20} className="spinning" /> : <Sparkles size={20} />}
+              {generating ? 'Gerando relatório...' : 'Gerar relatório completo'}
+            </button>
           </section>
-        </div>
 
-        <aside className="relatorios-mid-history historico-page--refined">
-          <ActivityTimeline
-            title="Histórico do usuário"
-            subtitle="Todas as ações registradas na plataforma alimentam o Domínio MID."
-            showFilters
-            refreshKey={historyRefreshKey}
-          />
-        </aside>
-      </div>
+          {error && <div className="relatorios-error">{error}</div>}
+
+          <div className="relatorios-mid-layout">
+            <div className="relatorios-mid-primary">
+              <section className="relatorios-list-section">
+                <h3 className="section-title">Relatórios gerados</h3>
+                {loading ? (
+                  <div className="relatorios-loading">
+                    <Loader2 size={32} className="spinning" />
+                    <p>Carregando relatórios...</p>
+                  </div>
+                ) : reports.length === 0 ? (
+                  <div className="relatorios-empty">
+                    <FileText size={48} style={{ opacity: 0.4, marginBottom: 16 }} />
+                    <p>Nenhum relatório gerado ainda.</p>
+                  </div>
+                ) : (
+                  <div className="relatorios-list">
+                    {reports.map((report) => (
+                      <article key={report.id} className="report-card">
+                        <div className="report-card-header">
+                          <div className="report-icon-wrapper">
+                            <FileText size={24} />
+                          </div>
+                          <div className="report-card-content">
+                            <h4 className="report-card-title">{report.titulo || report.title}</h4>
+                            <p className="report-card-date">
+                              {new Date(report.createdAt).toLocaleString('pt-BR')}
+                            </p>
+                            {report.stats && (
+                              <div className="report-card-stats">
+                                <span className="report-stat">
+                                  {report.stats.totalObjectives ?? 0} objetivos
+                                </span>
+                                <span className="report-stat">
+                                  {report.stats.completionRate ?? 0}% conclusão
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="report-card-actions">
+                          <button type="button" className="view-button" onClick={() => openDetail(report.id)}>
+                            Ver detalhes
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            <aside className="relatorios-mid-history historico-page--refined">
+              <ActivityTimeline
+                title="Histórico do usuário"
+                subtitle="Todas as ações registradas na plataforma alimentam o Domínio."
+                showFilters
+                refreshKey={historyRefreshKey}
+              />
+            </aside>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

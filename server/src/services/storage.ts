@@ -1,4 +1,4 @@
-import { getFirestore, isFirebaseEnabled } from './firebase';
+import { getFirestore, isFirebaseEnabled, isFirestoreCredentialError, markFirestoreUnavailable } from './firebase';
 import { COLLECTIONS } from '../config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,12 +24,22 @@ export async function listByUser<T>(
   let items: T[] = [];
 
   if (db && isFirebaseEnabled()) {
-    const snap = await db
-      .collection(collection)
-      .where('userId', '==', userId)
-      .get();
-    items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
-  } else {
+    try {
+      const snap = await db
+        .collection(collection)
+        .where('userId', '==', userId)
+        .get();
+      items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
+    } catch (err) {
+      if (isFirestoreCredentialError(err)) {
+        markFirestoreUnavailable(err);
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  if (items.length === 0 && (!db || !isFirebaseEnabled())) {
     const col = memoryCollection(collection);
     items = Array.from(col.values()).filter((d) => d.userId === userId) as unknown as T[];
   }
@@ -48,9 +58,14 @@ export async function getById<T>(
 ): Promise<T | null> {
   const db = getFirestore();
   if (db && isFirebaseEnabled()) {
-    const doc = await db.collection(collection).doc(id).get();
-    if (!doc.exists) return null;
-    return { id: doc.id, ...doc.data() } as unknown as T;
+    try {
+      const doc = await db.collection(collection).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() } as unknown as T;
+    } catch (err) {
+      if (!isFirestoreCredentialError(err)) throw err;
+      markFirestoreUnavailable(err);
+    }
   }
 
   const col = memoryCollection(collection);
@@ -67,8 +82,13 @@ export async function create<T extends DocData>(
   const doc = { ...data, id };
 
   if (db && isFirebaseEnabled()) {
-    await db.collection(collection).doc(id).set(data);
-    return doc as T;
+    try {
+      await db.collection(collection).doc(id).set(data);
+      return doc as T;
+    } catch (err) {
+      if (!isFirestoreCredentialError(err)) throw err;
+      markFirestoreUnavailable(err);
+    }
   }
 
   memoryCollection(collection).set(id, doc as DocData);
@@ -87,9 +107,14 @@ export async function update<T>(
   const db = getFirestore();
 
   if (db && isFirebaseEnabled()) {
-    const { id: _id, ...rest } = updated;
-    await db.collection(collection).doc(id).update(rest as DocData);
-    return updated;
+    try {
+      const { id: _id, ...rest } = updated;
+      await db.collection(collection).doc(id).update(rest as DocData);
+      return updated;
+    } catch (err) {
+      if (!isFirestoreCredentialError(err)) throw err;
+      markFirestoreUnavailable(err);
+    }
   }
 
   memoryCollection(collection).set(id, updated as DocData);

@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { upsertMagnusMemorySnapshot } from '../services/magnusMemory';
+import { triggerInitialFormIndex } from '../services/ragHooks';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
     }
 
     const snapshot = await upsertMagnusMemorySnapshot(req.userId, patch);
+    triggerInitialFormIndex(req.userId);
     res.json({ ok: true, updatedAt: snapshot.updatedAt });
   } catch (err) {
     next(err);

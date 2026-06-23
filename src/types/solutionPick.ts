@@ -15,6 +15,7 @@ export interface SuggestedSolutionAction {
   score: number;
   categoria: SolutionActionCategory;
   rationale: string;
+  detalhes?: string;
   draft: SuggestedActionCanvasDraft;
 }
 

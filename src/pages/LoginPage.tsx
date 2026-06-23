@@ -6,7 +6,6 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { AuthLayout } from '../components/AuthLayout';
 import { storePendingCheckout } from '../services/billingApi';
-import { claimSubscriptionForUser } from '../services/claimSubscription';
 import { isPlanId } from '../constants/plans';
 import { isAdminEmail } from '../constants/admin';
 import { clearWorkspaceEntered } from '../services/projectWorkspace';
@@ -42,7 +41,6 @@ export function LoginPage() {
         navigate('/admin');
         return;
       }
-      await claimSubscriptionForUser(cred.user.uid, cred.user.email ?? email);
       clearWorkspaceEntered();
       navigate('/escolher-projeto');
     } catch {

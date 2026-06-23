@@ -12,6 +12,7 @@ import {
   Menu,
   UserCircle,
   FolderKanban,
+  ClipboardList,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -44,12 +45,18 @@ export function DashboardLayout() {
   const isConsultoriaChat = isEquipeConsultoria || location.pathname === '/dashboard/consultoria-ia';
   const isDesignPage = location.pathname === '/dashboard/design';
 
+  const isDiagnosticRoute =
+    location.pathname.startsWith('/dashboard/scans') ||
+    location.pathname === '/dashboard/initial-form' ||
+    location.pathname === '/dashboard/solution-pick';
+
   const navItems = [
     { id: 'dashboard', label: t.nav.hub, icon: LayoutDashboard, path: '/dashboard/inicio' },
-    { id: 'formulario', label: t.nav.diagnostic, icon: FileText, path: '/dashboard/initial-form' },
+    { id: 'formulario', label: t.nav.diagnostic, icon: FileText, path: '/dashboard/scans' },
     { id: 'consultoria', label: t.nav.design, icon: Bot, path: '/dashboard/design' },
     { id: 'objetivos', label: t.nav.diffusion, icon: Target, path: '/dashboard/objetivos' },
     { id: 'relatorios', label: t.nav.domain, icon: BarChart3, path: '/dashboard/relatorios' },
+    { id: 'checklist', label: t.nav.checklist, icon: ClipboardList, path: '/dashboard/checklist-diario' },
     { id: 'equipe', label: t.nav.team, icon: Users, path: '/dashboard/minha-equipe' },
     { id: 'historico', label: t.nav.loop, icon: History, path: '/dashboard/historico' },
     { id: 'conta', label: t.nav.account, icon: UserCircle, path: '/dashboard/conta' },
@@ -61,24 +68,20 @@ export function DashboardLayout() {
   }, [sidebarCollapsed]);
 
   useEffect(() => {
-    const isDesktop = () => window.innerWidth >= 769;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!isDesktop() || sidebarCollapsed) return;
-      const sidebar = sidebarRef.current;
-      if (!sidebar) return;
-      if (!sidebar.contains(event.target as Node)) {
-        setSidebarCollapsed(true);
+    if (typeof window === 'undefined') return;
+    const syncForViewport = () => {
+      if (window.innerWidth < 769) {
+        setSidebarCollapsed(false);
       }
     };
-
-    document.addEventListener('mousedown', onPointerDown);
-    return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [sidebarCollapsed]);
+    syncForViewport();
+    window.addEventListener('resize', syncForViewport);
+    return () => window.removeEventListener('resize', syncForViewport);
+  }, []);
 
   useEffect(() => {
     setSidebarOpen(false);
     mainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    mainRef.current?.focus({ preventScroll: true });
   }, [location.pathname]);
 
   useEffect(() => {
@@ -94,7 +97,9 @@ export function DashboardLayout() {
     };
   }, [sidebarOpen]);
 
-  const isScansRoute = location.pathname.startsWith('/dashboard/scans');
+  const isScansRoute =
+    location.pathname.startsWith('/dashboard/scans') ||
+    location.pathname === '/dashboard/solution-pick';
 
   const handleNav = (_id: string, path: string) => {
     navigate(path);
@@ -129,11 +134,19 @@ export function DashboardLayout() {
             const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 769;
             if (!isDesktop || !sidebarCollapsed) return;
             const target = event.target as HTMLElement;
-            if (target.closest('button.nav-item')) return;
+            if (target.closest('button')) return;
             setSidebarCollapsed(false);
           }}
         >
           <div className="sidebar-header">
+            <button
+              type="button"
+              className="sidebar-collapse-toggle"
+              onClick={() => setSidebarCollapsed((value) => !value)}
+              aria-label={sidebarCollapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
+              aria-expanded={!sidebarCollapsed}
+              title={sidebarCollapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
+            />
             <img src="/icone-magnusmind.svg" alt="" className="sidebar-logo" aria-hidden />
             <p className="logo-text">magnus mind</p>
           </div>
@@ -143,6 +156,8 @@ export function DashboardLayout() {
               const active =
                 location.pathname === item.path ||
                 (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
+                (item.id === 'formulario' && isDiagnosticRoute) ||
+                (item.id === 'checklist' && location.pathname === '/dashboard/checklist-diario') ||
                 (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe');
               return (
                 <button
@@ -198,7 +213,10 @@ export function DashboardLayout() {
             <button
               type="button"
               className="menu-toggle"
-              onClick={() => setSidebarOpen(true)}
+              onClick={() => {
+                setSidebarOpen(true);
+                setSidebarCollapsed(false);
+              }}
               aria-label={t.nav.openMenu}
               aria-expanded={sidebarOpen}
             >

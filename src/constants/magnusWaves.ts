@@ -27,7 +27,7 @@ export const MAGNUS_WAVES: MagnusWave[] = [
     label: 'Diagnóstico',
     subtitle: 'Human-to-Business Canvas',
     miroRef: 'Canvas desenhado ao final das 5 etapas',
-    route: '/dashboard/initial-form',
+    route: '/dashboard/scans',
     steps: [
       { id: '1.1', label: 'Decoding', description: 'Decodificar contexto e valor' },
       { id: '1.2', label: 'Gap Scan', description: 'Onde está versus onde precisa chegar' },

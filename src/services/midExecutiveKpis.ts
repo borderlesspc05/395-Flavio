@@ -1,6 +1,8 @@
 import type { ActionCanvas, InitialFormData, Objective, TeamMember } from '../types';
 import type { MidExecutiveKpi, MidTrend } from '../types/mid';
 import { computeEvolutionIndex, getEvolutionBand, getEvolutionLabel } from '../utils/evolutionIndex';
+import { computeSustainabilityScore } from '../utils/domainWave';
+import { parseDomainWaveData } from './domainWaveStorage';
 import { ensureMidScanBaseline, getMidScanBaseline } from './midBaseline';
 
 interface ReportLike {
@@ -232,6 +234,51 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
   const business = computeBusinessImpact(form, objectiveRate, deliveryGreenRate, reportRate);
   const businessMeta = businessBand(business.score);
 
+  const domainData = input.formData ? parseDomainWaveData(input.formData.domainWaveData) : null;
+  const sustainability = domainData
+    ? computeSustainabilityScore(domainData.sustainability)
+    : null;
+
+  const sustainabilityKpi: MidExecutiveKpi = sustainability
+    ? {
+        id: 'sustainability-score',
+        question: 'A mudança vai sobreviver?',
+        title: 'Sustainability Score',
+        icon: 'shield',
+        score: sustainability.score,
+        label: sustainability.label,
+        band:
+          sustainability.band === 'green'
+            ? 'strong'
+            : sustainability.band === 'yellow'
+              ? 'attention'
+              : 'low',
+        trend: 'flat',
+        trendValue:
+          sustainability.band === 'green' ? '🟢 Forte' : sustainability.band === 'yellow' ? '🟡 Atenção' : '🔴 Risco',
+        meta: [
+          `Média ${sustainability.average}/5`,
+          'Onda 4 — Domínio',
+          'Radar de Sustentação',
+        ],
+        detail:
+          'Prevê se a transformação permanecerá viva após o projeto, com base em rotina, dono, indicadores, liderança e crença da equipe.',
+      }
+    : {
+        id: 'sustainability-score',
+        question: 'A mudança vai sobreviver?',
+        title: 'Sustainability Score',
+        icon: 'shield',
+        score: 0,
+        label: 'Preencher no Domínio',
+        band: 'attention',
+        trend: 'flat',
+        trendValue: 'Onda 4',
+        meta: ['Radar de Sustentação', '5 critérios (1–5)', '/dashboard/relatorios'],
+        detail:
+          'Avalie rotina, responsável, indicadores, liderança e crença da equipe na Onda 4 para alimentar este score.',
+      };
+
   return [
     {
       id: 'evolution-index',
@@ -298,5 +345,6 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
       meta: business.indicators.slice(0, 3).map((i) => `${i.label} ${i.evolution}`),
       detail: 'Média ponderada da evolução dos indicadores de negócio selecionados para o ciclo.',
     },
+    sustainabilityKpi,
   ];
 }

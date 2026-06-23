@@ -4,6 +4,29 @@ import { env } from '../config/env';
 let initialized = false;
 let useMemoryFallback = false;
 
+export function isFirestoreCredentialError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { code?: number | string; details?: string; message?: string };
+  const code = e.code;
+  if (code === 16 || code === 7 || code === 'UNAUTHENTICATED' || code === 'PERMISSION_DENIED') {
+    return true;
+  }
+  const text = `${e.details ?? ''} ${e.message ?? ''}`.toLowerCase();
+  return (
+    text.includes('invalid authentication') ||
+    text.includes('unauthenticated') ||
+    text.includes('permission denied')
+  );
+}
+
+/** Desativa Firestore após erro de credencial e passa a usar memória local. */
+export function markFirestoreUnavailable(err: unknown): void {
+  if (useMemoryFallback) return;
+  useMemoryFallback = true;
+  const detail = err instanceof Error ? err.message : String(err);
+  console.warn('[firebase] Firestore indisponível — fallback em memória:', detail);
+}
+
 export function isFirebaseEnabled(): boolean {
   return initialized && !useMemoryFallback;
 }

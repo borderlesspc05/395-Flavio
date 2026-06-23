@@ -11,7 +11,7 @@ export interface MidExecutiveKpi {
   id: string;
   question: string;
   title: string;
-  icon: 'rocket' | 'bolt' | 'wave' | 'chart';
+  icon: 'rocket' | 'bolt' | 'wave' | 'chart' | 'shield';
   score: number;
   label: string;
   band: MidKpiBand;
@@ -74,9 +74,21 @@ export interface MidEvolutionItem {
   route?: string;
 }
 
+export interface MidDailyRhythm {
+  todayPercent: number;
+  todayDone: number;
+  todayTotal: number;
+  streakDays: number;
+  weekAvgPercent: number;
+  lastSevenDays: Array<{ date: string; percent: number }>;
+  pendingLabels: string[];
+  route: string;
+}
+
 export interface MidDashboardData {
   overview: MidOverview;
   executiveKpis: MidExecutiveKpi[];
+  dailyRhythm: MidDailyRhythm;
   execution: MidExecutionRow[];
   hasData: boolean;
 }

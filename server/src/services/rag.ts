@@ -1,5 +1,6 @@
 import { listFrameworks } from './storage';
 import { ConsultantFramework } from '../types';
+import { searchUserRagContext } from './ragSearch';
 
 const DEFAULT_FRAMEWORKS: Omit<ConsultantFramework, 'id' | 'createdAt'>[] = [
   {
@@ -29,7 +30,14 @@ function scoreFramework(query: string, framework: { titulo?: string; conteudo?: 
   return words.reduce((acc, w) => (text.includes(w) ? acc + 1 : acc), 0);
 }
 
-export async function retrieveRelevantContext(
+export type RetrieveContextResult = {
+  context: string;
+  vectorChunkCount: number;
+  usedVectorRag: boolean;
+  usedFrameworkRag: boolean;
+};
+
+async function retrieveFrameworkContext(
   userId: string,
   query: string,
   topK = 3
@@ -57,6 +65,48 @@ export async function retrieveRelevantContext(
         `### ${f.titulo}\n${f.conteudo}${f.tags?.length ? `\nTags: ${f.tags.join(', ')}` : ''}`
     )
     .join('\n\n');
+}
+
+export async function retrieveRelevantContext(
+  userId: string,
+  query: string,
+  topK = 5
+): Promise<string> {
+  const result = await retrieveRelevantContextDetailed(userId, query, topK);
+  return result.context;
+}
+
+export async function retrieveRelevantContextDetailed(
+  userId: string,
+  query: string,
+  topK = 5
+): Promise<RetrieveContextResult> {
+  const parts: string[] = [];
+
+  const vectorSearch = await searchUserRagContext(userId, query, topK);
+  if (vectorSearch.context) {
+    parts.push(`
+## Contexto recuperado do ciclo do cliente
+
+${vectorSearch.context}
+`.trim());
+  }
+
+  const frameworkContext = await retrieveFrameworkContext(userId, query, 3);
+  if (frameworkContext) {
+    parts.push(`
+## Frameworks consultivos relevantes
+
+${frameworkContext}
+`.trim());
+  }
+
+  return {
+    context: parts.join('\n\n'),
+    vectorChunkCount: vectorSearch.chunkCount,
+    usedVectorRag: vectorSearch.chunkCount > 0,
+    usedFrameworkRag: Boolean(frameworkContext),
+  };
 }
 
 export async function seedDefaultFrameworks(userId: string): Promise<void> {

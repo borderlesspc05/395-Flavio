@@ -11,6 +11,7 @@ import { AppError } from '../utils/errors';
 import { listByUser, getById, create, update, remove, COLLECTIONS } from '../services/storage';
 import { logActivity } from '../services/activities';
 import { suggestActionCanvases } from '../services/actionCanvasSuggest';
+import { indexActionCanvasAfterSave } from '../services/ragHooks';
 import { withConcurrencyLimit } from '../services/concurrency';
 
 const router = Router();
@@ -119,6 +120,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       entidade: 'action_canvas',
       entidadeId: canvas.id,
     });
+    indexActionCanvasAfterSave(canvas);
     res.status(201).json(canvas);
   } catch (err) {
     next(err);
@@ -147,6 +149,10 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
         `Action Canvas encerrado (${canvas.signOff === 'sim' ? 'SIM' : 'NÃO'}): ${canvas.nomeIniciativa}`,
         { entidade: 'action_canvas', entidadeId: id }
       );
+    }
+
+    if (updated) {
+      indexActionCanvasAfterSave(updated);
     }
 
     res.json(updated);

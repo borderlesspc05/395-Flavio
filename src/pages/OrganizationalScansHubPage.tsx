@@ -4,7 +4,7 @@ import { ArrowRight, ClipboardList, Layers3, Sparkles } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ORGANIZATIONAL_SCANS } from '../constants/organizationalScans';
-import { createEmptyDiagnosticData } from '../constants/diagnosticFlow';
+import { createEmptyDiagnosticData, isSolutionPickReady } from '../constants/diagnosticFlow';
 import { getInitialForm } from '../services/initialForm';
 import {
   ORGANIZATIONAL_SCAN_DATA_KEY,
@@ -34,6 +34,7 @@ export function OrganizationalScansHubPage() {
     () => getActiveFocusedScans(ORGANIZATIONAL_SCANS, scanAnswers),
     [scanAnswers],
   );
+  const solutionPickReady = useMemo(() => isSolutionPickReady(formData), [formData]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null));
@@ -70,18 +71,25 @@ export function OrganizationalScansHubPage() {
       </header>
 
       <div className="diagnostic-path-grid" role="list">
-        <article className="diagnostic-path-card">
+        <article className="diagnostic-path-card is-primary">
           <div className="diagnostic-path-card-icon" aria-hidden>
             <Layers3 size={22} />
           </div>
           <h2>Diagnóstico completo</h2>
-          <p>Canvas Magnus Waves 1.1 a 1.5. Mais profundo, com múltiplas fases e lentes de análise.</p>
+          <p>
+            Canvas Magnus Waves 1.1 a 1.5 — Decoding, Gap Scan, System Scan, Team Scan e{' '}
+            <strong>Solution Pick</strong> com resumo executivo da empresa e planos priorizados pela IA.
+          </p>
+          <ul className="diagnostic-path-features">
+            <li>Múltiplas lentes e profundidade máxima</li>
+            <li>Laudo e resumo após o diagnóstico</li>
+          </ul>
           <button
             type="button"
             className="diagnostic-primary-button"
             onClick={() => navigate('/dashboard/initial-form')}
           >
-            Abrir canvas completo
+            Abrir diagnóstico completo
             <ArrowRight size={16} aria-hidden />
           </button>
         </article>
@@ -92,10 +100,20 @@ export function OrganizationalScansHubPage() {
           </div>
           <h2>Diagnóstico focado</h2>
           <p>
-            Um scan temático substitui o canvas quando você precisa de algo mais rápido. Escolha apenas o tema
-            prioritário.
+            Um scan temático substitui o canvas quando você precisa de algo mais rápido. Após concluir, você
+            segue para o <strong>Solution Pick</strong> — o mesmo motor de planos de ação da jornada completa.
           </p>
           <p className="diagnostic-path-card-note">Não é obrigatório responder todos os scans abaixo.</p>
+          {solutionPickReady ? (
+            <button
+              type="button"
+              className="diagnostic-secondary-button"
+              onClick={() => navigate('/dashboard/solution-pick')}
+            >
+              Ir para Solution Pick
+              <ArrowRight size={16} aria-hidden />
+            </button>
+          ) : null}
         </article>
       </div>
 
@@ -109,8 +127,8 @@ export function OrganizationalScansHubPage() {
       <section className="organizational-scans-picker" aria-labelledby="scan-picker-title">
         <h2 id="scan-picker-title">Escolha um tema para o diagnóstico focado</h2>
         <p className="organizational-scans-picker-lead">
-          Selecione o scan que melhor representa o desafio atual. Você pode responder um por vez e concluir o
-          ciclo com aquele que fizer mais sentido.
+          Selecione o scan que melhor representa o desafio atual. Ao concluir, você passa pelo Solution Pick
+          com resumo da situação da empresa e escolha de planos para o Design.
         </p>
 
         <div className="organizational-scans-grid">
@@ -162,6 +180,16 @@ export function OrganizationalScansHubPage() {
           <ClipboardList size={16} aria-hidden />
           Voltar ao início
         </button>
+        {solutionPickReady ? (
+          <button
+            type="button"
+            className="diagnostic-primary-button"
+            onClick={() => navigate('/dashboard/solution-pick')}
+          >
+            Solution Pick
+            <ArrowRight size={16} aria-hidden />
+          </button>
+        ) : null}
       </div>
     </div>
   );

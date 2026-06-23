@@ -96,6 +96,12 @@ export const env = {
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean),
+  rag: {
+    enabled: process.env.RAG_ENABLED === 'true',
+    topK: parseInt(process.env.RAG_TOP_K ?? '5', 10),
+    supabaseUrl: process.env.SUPABASE_URL?.trim() || undefined,
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || undefined,
+  },
 };
 
 export const COLLECTIONS = {

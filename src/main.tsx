@@ -25,6 +25,7 @@ import './styles/cycle-selector.css';
 import './styles/project-select.css';
 import './styles/equipe-diffusao.css';
 import './styles/historico-loop.css';
+import './styles/evolution-loop.css';
 import './styles/employee-profile.css';
 import './styles/solution-pick.css';
 import './styles/design-plans.css';
@@ -33,6 +34,7 @@ import './styles/support-chat.css';
 import './styles/auth-refined.css';
 import './styles/view-transitions.css';
 import './styles/premium-shell.css';
+import './styles/domain-wave.css';
 
 void initFirebaseAnalytics();
 

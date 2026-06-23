@@ -71,11 +71,11 @@ export async function suggestObjectives(userId: string, context?: string): Promi
 
   const ragContext = await retrieveRelevantContext(
     userId,
-    context ?? 'objetivos estrategicos planejamento difusao make the move action canvas'
+    context ?? 'objetivos estrategicos planejamento difusao diagnostico aprendizados dominio action canvas'
   );
 
   const prompt = `Sugira 3 a 5 objetivos estrategicos novos para a etapa 3 - Difusao (Make the Move) de uma empresa.
-Os objetivos devem nascer do diagnostico, MM Blueprint, Action Canvas encerrados e objetivos ja existentes — use a memoria abaixo.
+Os objetivos devem nascer do diagnostico, MM Blueprint, Action Canvas encerrados, aprendizados do Dominio, relatorios anteriores e objetivos ja existentes — use a memoria e o contexto RAG abaixo.
 Cubra, quando fizer sentido:
 - 3.1 4 WS: objetivo de acao com What, Why, Who e When
 - 3.2 Imprint: objetivo para incorporar a solucao no trabalho real
@@ -84,8 +84,8 @@ Cubra, quando fizer sentido:
 ${memoryBlock ? `Memoria Magnus Waves:\n${memoryBlock}` : context ? `Contexto do usuario:\n${context}` : ''}
 Objetivos existentes (evite duplicar): ${existing.map((o) => o.titulo).join(', ') || 'nenhum'}
 
-Frameworks:
-${ragContext}
+Contexto RAG (diagnostico, planos, aprendizados, relatorios, frameworks):
+${ragContext || 'nenhum trecho recuperado'}
 
 Regras:
 - Nao recomende treinamento como ponto de partida sem evidencia de gap treinavel.

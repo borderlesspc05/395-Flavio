@@ -173,12 +173,12 @@ export function OrganizationalScanRunnerPage() {
         clearNeedsDiagnosis();
       }
       setShowCycleNameModal(false);
-      navigate('/dashboard/design', {
+      navigate('/dashboard/solution-pick', {
         state: {
           postDiagnosticNotice: {
             title: `Projeto "${trimmedName}" iniciado`,
-            message: `Diagnóstico focado (${scan.title}) salvo. Valide os planos de ação ou use a Consultoria IA na Equipe.`,
-            nextStepLabel: 'Próximo passo: validar planos no Design',
+            message: `Diagnóstico focado (${scan.title}) salvo. Revise o resumo da empresa e escolha os planos no Solution Pick.`,
+            nextStepLabel: 'Próximo passo: Solution Pick → Design',
             completedAt: at.toISOString(),
           },
         },

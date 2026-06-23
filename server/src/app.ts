@@ -22,6 +22,7 @@ import publicPlansRouter from './routes/publicPlans';
 import workspaceRouter from './routes/workspace';
 import supportRouter from './routes/support';
 import meRouter from './routes/me';
+import ragRouter from './routes/rag';
 import { requestLogger } from './middleware/requestLogger';
 import { getLlmStatus } from './services/llm';
 
@@ -92,6 +93,7 @@ app.use('/api/whatsapp', whatsappRouter);
 app.use('/api/workspace', workspaceRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/me', meRouter);
+app.use('/api/rag', ragRouter);
 
 app.use((_req, res) => {
   res.status(404).json({

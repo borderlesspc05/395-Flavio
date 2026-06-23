@@ -7,6 +7,7 @@ export interface SuggestedSolutionActionDraft {
   score: number;
   categoria: string;
   rationale: string;
+  detalhes?: string;
   draft: {
     nomeIniciativa: string;
     objetivoEspecifico: string;
@@ -25,10 +26,101 @@ export interface SuggestedSolutionActionDraft {
   };
 }
 
+export type SolutionPickSuggestResult = {
+  suggestions: SuggestedSolutionActionDraft[];
+  companySummary?: string;
+  companySituation?: string;
+  demoMode?: boolean;
+};
+
 function defaultPrazo(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0];
+}
+
+const CATEGORY_FOCUS: Record<string, string> = {
+  pessoas: 'capacitação, comportamento e engajamento das pessoas',
+  processo: 'rituais, fluxos e padronização de processos',
+  tecnologia: 'ferramentas, automação e infraestrutura',
+  estrutura: 'papéis, governança e estrutura organizacional',
+  comunicacao: 'alinhamento, narrativa e colaboração entre áreas',
+  outro: 'mudança organizacional integrada',
+};
+
+function formatPrazoBR(iso: string): string {
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return iso || 'o prazo final definido';
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+function enrichObjetivoEspecifico(
+  raw: string,
+  ctx: {
+    titulo: string;
+    descricao: string;
+    rationale: string;
+    categoria: string;
+    prazoFinal: string;
+    entregas: Array<{ entrega: string }>;
+  }
+): string {
+  const trimmed = raw.trim();
+  const descricao = ctx.descricao.trim();
+  if (trimmed.length >= 200 && trimmed !== descricao) return trimmed;
+
+  const prazo = formatPrazoBR(ctx.prazoFinal);
+  const foco = CATEGORY_FOCUS[ctx.categoria] ?? CATEGORY_FOCUS.outro;
+  const marcos = ctx.entregas
+    .map((e) => e.entrega.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join('; ');
+
+  const parts = [
+    `Até ${prazo}, executar "${ctx.titulo}" com foco em ${foco}, convertendo o diagnóstico em resultado operacional concreto.`,
+    descricao,
+    ctx.rationale ? `Fundamento no diagnóstico: ${ctx.rationale}` : '',
+    marcos ? `Marcos principais: ${marcos}.` : '',
+    'Critério de sucesso: adoção sustentada pela equipe, evidências nas entregas e validação do sponsor ao encerrar o prazo.',
+  ];
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function buildDetalhes(ctx: {
+  titulo: string;
+  descricao: string;
+  rationale: string;
+  categoria: string;
+  objetivoEspecifico: string;
+  prazoFinal: string;
+  owner: string;
+  sponsor: string;
+  entregas: Array<{ entrega: string; responsavel: string; prazo: string }>;
+  riscos: Array<{ risco: string; acaoTomar: string }>;
+}): string {
+  const marcos = ctx.entregas
+    .map((e) => `${e.entrega} (${e.responsavel}, até ${formatPrazoBR(e.prazo)})`)
+    .join('; ');
+  const risco = ctx.riscos[0];
+  const parts = [
+    `Esta ação responde a um gap de ${ctx.categoria} identificado no diagnóstico. ${ctx.rationale}`,
+    ctx.objetivoEspecifico,
+    marcos ? `Na prática, comece por: ${marcos}.` : '',
+    risco ? `Principal risco: ${risco.risco}. Mitigação sugerida: ${risco.acaoTomar}.` : '',
+    `Horizonte da iniciativa até ${formatPrazoBR(ctx.prazoFinal)}, com owner ${ctx.owner} e sponsor ${ctx.sponsor}.`,
+  ];
+  return parts.filter(Boolean).join(' ');
+}
+
+function defaultCompanySummary(): { companySummary: string; companySituation: string } {
+  return {
+    companySummary:
+      'Resumo executivo indisponível no modo demonstração. Com IA configurada, a síntese será gerada a partir do diagnóstico completo da empresa.',
+    companySituation:
+      'Situação organizacional não sintetizada — complete o diagnóstico ou configure a chave de IA no servidor.',
+  };
 }
 
 function defaultSuggestions(): SuggestedSolutionActionDraft[] {
@@ -105,39 +197,66 @@ function defaultSuggestions(): SuggestedSolutionActionDraft[] {
     },
   ];
 
-  return samples.map((s, i) => ({
-    id: `sol-${i + 1}`,
-    ...s,
-    draft: {
-      nomeIniciativa: s.titulo,
-      objetivoEspecifico: s.descricao,
-      owner: 'Líder da iniciativa',
-      sponsor: 'Sponsor executivo',
-      prazoFinal: defaultPrazo(60 + i * 7),
-      entregas: [
-        {
-          entrega: `Planejar escopo: ${s.titulo}`,
-          responsavel: 'Owner',
-          prazo: defaultPrazo(14),
-          status: 'amarelo',
-          evidencia: 'Documento de alinhamento',
-        },
-        {
-          entrega: 'Executar piloto e medir resultado',
-          responsavel: 'Equipe núcleo',
-          prazo: defaultPrazo(45),
-          status: 'amarelo',
-        },
-      ],
-      riscos: [
-        {
-          risco: 'Baixa adesão das partes envolvidas',
-          acaoTomar: 'Ritual semanal de decisão com sponsor',
-        },
-      ],
-      insightOrigem: s.rationale,
-    },
-  }));
+  return samples.map((s, i) => {
+    const prazoFinal = defaultPrazo(60 + i * 7);
+    const entregas = [
+      {
+        entrega: `Planejar escopo: ${s.titulo}`,
+        responsavel: 'Owner',
+        prazo: defaultPrazo(14),
+        status: 'amarelo',
+        evidencia: 'Documento de alinhamento',
+      },
+      {
+        entrega: 'Executar piloto e medir resultado',
+        responsavel: 'Equipe núcleo',
+        prazo: defaultPrazo(45),
+        status: 'amarelo',
+      },
+    ];
+
+    const riscos = [
+      {
+        risco: 'Baixa adesão das partes envolvidas',
+        acaoTomar: 'Ritual semanal de decisão com sponsor',
+      },
+    ];
+    const objetivoEspecifico = enrichObjetivoEspecifico(s.descricao, {
+      titulo: s.titulo,
+      descricao: s.descricao,
+      rationale: s.rationale,
+      categoria: s.categoria,
+      prazoFinal,
+      entregas,
+    });
+
+    return {
+      id: `sol-${i + 1}`,
+      ...s,
+      detalhes: buildDetalhes({
+        titulo: s.titulo,
+        descricao: s.descricao,
+        rationale: s.rationale,
+        categoria: s.categoria,
+        objetivoEspecifico,
+        prazoFinal,
+        owner: 'Líder da iniciativa',
+        sponsor: 'Sponsor executivo',
+        entregas,
+        riscos,
+      }),
+      draft: {
+        nomeIniciativa: s.titulo,
+        objetivoEspecifico,
+        owner: 'Líder da iniciativa',
+        sponsor: 'Sponsor executivo',
+        prazoFinal,
+        entregas,
+        riscos,
+        insightOrigem: s.rationale,
+      },
+    };
+  });
 }
 
 function normalizeCategory(value: unknown): string {
@@ -176,84 +295,167 @@ function normalizeAction(raw: unknown, index: number): SuggestedSolutionActionDr
   }).filter((r) => r.risco);
 
   const score = Math.min(100, Math.max(0, Number(o.score ?? 50) || 50));
+  const descricao = String(o.descricao ?? o.description ?? titulo).trim();
+  const rationale = String(o.rationale ?? o.motivo ?? '').trim() || 'Sugerido com base no diagnóstico da empresa.';
+  const prazoFinal = String(draftRaw.prazoFinal ?? defaultPrazo(90)).trim();
+  const owner = String(draftRaw.owner ?? 'Líder da iniciativa').trim();
+  const sponsor = String(draftRaw.sponsor ?? 'Sponsor executivo').trim();
+  const categoria = normalizeCategory(o.categoria ?? o.category);
+  const objetivoEspecifico = enrichObjetivoEspecifico(
+    String(draftRaw.objetivoEspecifico ?? descricao).trim(),
+    {
+      titulo,
+      descricao,
+      rationale,
+      categoria,
+      prazoFinal,
+      entregas: entregas.length ? entregas : [{ entrega: `Primeira entrega: ${titulo}` }],
+    }
+  );
+  const finalEntregas = entregas.length
+    ? entregas
+    : [
+        {
+          entrega: `Primeira entrega: ${titulo}`,
+          responsavel: 'Owner',
+          prazo: defaultPrazo(21),
+          status: 'amarelo',
+        },
+      ];
+  const finalRiscos = riscos.length
+    ? riscos
+    : [{ risco: 'Desalinhamento de prioridades', acaoTomar: 'Checkpoint com sponsor' }];
 
   return {
     id: `sol-${index + 1}`,
     titulo,
-    descricao: String(o.descricao ?? o.description ?? titulo).trim(),
+    descricao,
     score,
-    categoria: normalizeCategory(o.categoria ?? o.category),
-    rationale: String(o.rationale ?? o.motivo ?? '').trim() || 'Sugerido com base no diagnóstico 1.1–1.4.',
+    categoria,
+    rationale,
+    detalhes:
+      String(o.detalhes ?? '').trim() ||
+      buildDetalhes({
+        titulo,
+        descricao,
+        rationale,
+        categoria,
+        objetivoEspecifico,
+        prazoFinal,
+        owner,
+        sponsor,
+        entregas: finalEntregas,
+        riscos: finalRiscos,
+      }),
     draft: {
       nomeIniciativa: String(draftRaw.nomeIniciativa ?? titulo).trim(),
-      objetivoEspecifico: String(draftRaw.objetivoEspecifico ?? o.descricao ?? titulo).trim(),
-      owner: String(draftRaw.owner ?? 'Líder da iniciativa').trim(),
-      sponsor: String(draftRaw.sponsor ?? 'Sponsor executivo').trim(),
-      prazoFinal: String(draftRaw.prazoFinal ?? defaultPrazo(90)).trim(),
-      entregas: entregas.length
-        ? entregas
-        : [
-            {
-              entrega: `Primeira entrega: ${titulo}`,
-              responsavel: 'Owner',
-              prazo: defaultPrazo(21),
-              status: 'amarelo',
-            },
-          ],
-      riscos: riscos.length ? riscos : [{ risco: 'Desalinhamento de prioridades', acaoTomar: 'Checkpoint com sponsor' }],
+      objetivoEspecifico,
+      owner,
+      sponsor,
+      prazoFinal,
+      entregas: finalEntregas,
+      riscos: finalRiscos,
       insightOrigem: String(draftRaw.insightOrigem ?? o.rationale ?? '').trim() || undefined,
     },
   };
 }
 
-export async function suggestSolutionPickActions(diagnosticContext: string): Promise<{
-  suggestions: SuggestedSolutionActionDraft[];
-  demoMode?: boolean;
-}> {
-  const prompt = `Voce e o motor de Solution Pick do Magnus Mind (etapa 1.5).
-Leia o diagnostico das etapas 1.1 a 1.4 abaixo e proponha exatamente 10 acoes de plano de mudanca.
+function extractJsonPayload(text: string): unknown | null {
+  const trimmed = text.trim();
+  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fence ? fence[1].trim() : trimmed;
+  const objStart = candidate.indexOf('{');
+  const arrStart = candidate.indexOf('[');
+  const start =
+    objStart === -1 ? arrStart : arrStart === -1 ? objStart : Math.min(objStart, arrStart);
+  if (start === -1) return null;
+  const isArray = candidate[start] === '[';
+  const end = isArray ? candidate.lastIndexOf(']') : candidate.lastIndexOf('}');
+  if (end <= start) return null;
+  try {
+    return JSON.parse(candidate.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
 
-Cada acao deve ser concreta e executavel (exemplos de tom: "Treinar equipe em resolucao de problemas", "Comprar computador para recepcionista", "Palestra motivacional").
-Atribua score de 0 a 100 = probabilidade de dar certo / prioridade dado o que foi reportado em 1.1-1.4.
+export async function suggestSolutionPickActions(diagnosticContext: string): Promise<SolutionPickSuggestResult> {
+  const prompt = `Voce e o motor de Solution Pick do Magnus Mind (etapa 1.5).
+
+Leia o diagnostico completo da empresa abaixo — perfil, canvas Magnus Waves 1.1 a 1.5 e scans organizacionais quando houver.
+
+PRIMEIRO sintetize em portugues do Brasil:
+1) companySummary: resumo executivo em 3-5 frases sobre o que a empresa vive hoje (contexto, dor, estagio, pressoes).
+2) companySituation: paragrafo claro sobre a situacao organizacional atual — o que esta travando, o que ja funciona e o que esta em risco.
+
+DEPOIS proponha exatamente 10 acoes de plano de mudanca concretas e executaveis.
+Cada acao deve nascer das evidencias do diagnostico — cite o tipo de gap (pessoas, processo, sistema, gestao) no rationale.
+Atribua score de 0 a 100 = probabilidade de impacto real dado o que foi reportado.
 Ordene mentalmente do maior para o menor score.
 
-Para cada acao retorne:
+Para cada acao em "suggestions", inclua também o objeto "draft" com:
+- nomeIniciativa (igual ou refinado do titulo)
+- objetivoEspecifico: 3 a 5 frases em portugues do Brasil com (1) resultado mensuravel e prazo, (2) contexto ligado ao diagnostico, (3) criterio de sucesso com metrica ou evidencia, (4) escopo resumido. NAO repita apenas a descricao curta.
+- owner, sponsor, prazoFinal (YYYY-MM-DD)
+- entregas: 2 a 3 itens com entrega, responsavel, prazo, status
+- riscos: 1 a 2 itens com risco e acaoTomar
+- insightOrigem (ligacao com o diagnostico)
+
+Campos de topo de cada sugestao:
 - titulo (curto)
-- descricao (1-2 frases)
+- descricao (1-2 frases resumo)
 - score (0-100)
 - categoria: pessoas|processo|tecnologia|estrutura|comunicacao|outro
-- rationale (por que este score)
-- draft: plano de acao pre-preenchido com nomeIniciativa, objetivoEspecifico, owner, sponsor, prazoFinal (YYYY-MM-DD), entregas (2-3 com entrega, responsavel, prazo, status verde|amarelo|vermelho), riscos (1-2), insightOrigem
+- rationale (por que este score, ligado ao diagnostico)
+- detalhes (2-3 frases narrativas: como executar, impacto esperado e o que observar)
 
-Diagnostico 1.1-1.4:
+Diagnostico da empresa:
 ${diagnosticContext}
 
-Responda APENAS com JSON array valido (sem markdown), 10 itens:
-[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"...","draft":{"nomeIniciativa":"...","objetivoEspecifico":"...","owner":"...","sponsor":"...","prazoFinal":"2026-09-01","entregas":[{"entrega":"...","responsavel":"...","prazo":"2026-07-01","status":"amarelo"}],"riscos":[{"risco":"...","acaoTomar":"..."}],"insightOrigem":"..."}}]`;
+Responda APENAS com JSON valido (sem markdown):
+{"companySummary":"...","companySituation":"...","suggestions":[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"...","detalhes":"...","draft":{"nomeIniciativa":"...","objetivoEspecifico":"...","owner":"...","sponsor":"...","prazoFinal":"2026-08-01","entregas":[{"entrega":"...","responsavel":"...","prazo":"2026-06-01","status":"amarelo"}],"riscos":[{"risco":"...","acaoTomar":"..."}],"insightOrigem":"..."}}]}`;
 
   try {
     const raw = await chatCompletion({
       model: getDefaultModel(),
       messages: [
-        { role: 'system', content: 'Retorne somente JSON array valido com 10 objetos, sem markdown.' },
+        { role: 'system', content: 'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens).' },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.7,
+      temperature: 0.4,
+      maxTokens: 4200,
     });
 
-    const jsonMatch = raw.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]) as unknown[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const suggestions = parsed
+    const parsed = extractJsonPayload(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const root = parsed as Record<string, unknown>;
+      const list = Array.isArray(root.suggestions) ? root.suggestions : [];
+      if (list.length > 0) {
+        const suggestions = list
           .map((item, i) => normalizeAction(item, i))
           .filter((a): a is SuggestedSolutionActionDraft => Boolean(a))
           .sort((a, b) => b.score - a.score)
           .slice(0, 10)
           .map((s, i) => ({ ...s, id: `sol-${i + 1}` }));
         if (suggestions.length >= 3) {
-          return { suggestions };
+          return {
+            suggestions,
+            companySummary: String(root.companySummary ?? '').trim() || undefined,
+            companySituation: String(root.companySituation ?? '').trim() || undefined,
+          };
         }
+      }
+    }
+
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const suggestions = parsed
+        .map((item, i) => normalizeAction(item, i))
+        .filter((a): a is SuggestedSolutionActionDraft => Boolean(a))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+        .map((s, i) => ({ ...s, id: `sol-${i + 1}` }));
+      if (suggestions.length >= 3) {
+        return { suggestions };
       }
     }
   } catch (err) {
@@ -262,5 +464,10 @@ Responda APENAS com JSON array valido (sem markdown), 10 itens:
     }
   }
 
-  return { suggestions: defaultSuggestions(), demoMode: true };
+  const fallback = defaultCompanySummary();
+  return {
+    suggestions: defaultSuggestions(),
+    ...fallback,
+    demoMode: true,
+  };
 }

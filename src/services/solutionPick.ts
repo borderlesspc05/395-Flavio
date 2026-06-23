@@ -80,3 +80,45 @@ export function withSelectedSolutionActions(
     solucoesPrioritarias: summary,
   };
 }
+
+const SUGGESTIONS_CACHE_PREFIX = 'mm.solutionPick.cache.';
+
+export type CachedSolutionPickResult = {
+  suggestions: SuggestedSolutionAction[];
+  companySummary?: string | null;
+  companySituation?: string | null;
+  demoMode?: boolean;
+};
+
+function hashDiagnosticContext(context: string): string {
+  let hash = 0;
+  for (let i = 0; i < context.length; i += 1) {
+    hash = (Math.imul(31, hash) + context.charCodeAt(i)) | 0;
+  }
+  return `${context.length}-${(hash >>> 0).toString(36)}`;
+}
+
+export function readCachedSolutionPick(context: string): CachedSolutionPickResult | null {
+  if (!context.trim()) return null;
+  try {
+    const raw = sessionStorage.getItem(`${SUGGESTIONS_CACHE_PREFIX}${hashDiagnosticContext(context)}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CachedSolutionPickResult;
+    if (!parsed?.suggestions?.length) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function writeCachedSolutionPick(context: string, result: CachedSolutionPickResult): void {
+  if (!context.trim() || !result.suggestions.length) return;
+  try {
+    sessionStorage.setItem(
+      `${SUGGESTIONS_CACHE_PREFIX}${hashDiagnosticContext(context)}`,
+      JSON.stringify(result)
+    );
+  } catch {
+    /* quota / private mode */
+  }
+}

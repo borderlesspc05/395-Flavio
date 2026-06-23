@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+
+  /* Palette: dark corporate premium */
+  --bg-0: #0b0f17;
+  --bg-1: #0f1420;
+  --bg-2: #151b29;
+  --bg-3: #1c2333;
+  --bg-4: #242c3e;
+
+  --fg-0: #f7f9fc;
+  --fg-1: #e3e7ef;
+  --fg-2: #c2c8d6;
+  --fg-3: #9aa3b8;
+  --fg-4: #6f7890;
+  --fg-5: #4d5468;
+
+  /* Accent: amber-gold primary, teal secondary */
+  --accent: #f4b860;
+  --accent-2: #e8a03c;
+  --accent-soft: rgba(244, 184, 96, 0.12);
+  --accent-ring: rgba(244, 184, 96, 0.35);
+
+  --teal: #5ac8c8;
+  --rose: #e07a87;
+  --violet: #9b8cff;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  --shadow-2: 0 4px 12px rgba(0,0,0,.5), 0 24px 60px -20px rgba(0,0,0,.7);
+}
+
+@layer base {
+  html, body {
+    background: var(--bg-0);
+    color: var(--fg-1);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: var(--accent-soft); color: var(--fg-0); }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.08);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.16); background-clip: padding-box; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .hairline { border: 1px solid rgba(255,255,255,.07); }
+  .ring-accent { box-shadow: 0 0 0 3px var(--accent-ring); }
+
+  /* Reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* Noise */
+  .noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Option chip selection pulse */
+  @keyframes sweep {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(200%); }
+  }
+  .sweep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+    animation: sweep 1.2s ease-in-out;
+    pointer-events: none;
+  }
+
+  /* Radial bg */
+  .bg-radial-ambient {
+    background:
+      radial-gradient(1000px 600px at 15% -10%, rgba(244,184,96,0.08), transparent 60%),
+      radial-gradient(800px 500px at 100% 10%, rgba(90,200,200,0.05), transparent 55%),
+      radial-gradient(900px 600px at 50% 120%, rgba(155,140,255,0.06), transparent 60%);
+  }
+
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--bg-0), 0 0 0 4px var(--accent);
+  }
+}
+
+/* Smooth radio appearance */
+input[type="radio"] { accent-color: var(--accent); }

@@ -3,12 +3,15 @@ import { createEmptyDiagnosticData, getAllDiagnosticFields, getFieldKeys } from 
 import { db } from '../config/firebase';
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
 import { SELECTED_SOLUTION_ACTIONS_KEY } from '../types/solutionPick';
+import { DAILY_PROGRESS_CHECKLIST_KEY } from '../types/dailyProgress';
 
 const PRESERVED_EXTENSION_KEYS = [
   SELECTED_SOLUTION_ACTIONS_KEY,
+  DAILY_PROGRESS_CHECKLIST_KEY,
   'solucaoSelecionadaDesign',
   'solucoesPrioritarias',
   'organizationalScanData',
+  'domainWaveData',
 ] as const;
 
 const COLLECTION = 'initialForms';
@@ -85,6 +88,7 @@ export async function saveInitialFormDraft(userId: string, data: InitialFormData
     },
     { merge: true }
   );
+  void import('./api').then(({ ragApi }) => ragApi.indexInitialForm());
   return new Date();
 }
 
@@ -107,5 +111,6 @@ export async function saveInitialForm(userId: string, data: InitialFormData) {
     },
     { merge: true }
   );
+  void import('./api').then(({ ragApi }) => ragApi.indexInitialForm());
   return new Date();
 }

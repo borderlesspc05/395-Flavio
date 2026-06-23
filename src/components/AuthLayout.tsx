@@ -12,8 +12,12 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ title, subtitle, children, footer, backTo, cardClassName }: AuthLayoutProps) {
+  const isProjectsPage = cardClassName?.includes('projects');
+
   return (
-    <div className="auth-page auth-page--refined">
+    <div
+      className={`auth-page auth-page--refined${isProjectsPage ? ' auth-page--projects' : ''}`}
+    >
       <CursorGlowBackground />
       {backTo && (
         <ViewTransitionLink to={backTo.href} className="auth-page-back">
