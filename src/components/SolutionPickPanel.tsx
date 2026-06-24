@@ -14,6 +14,7 @@ import {
   readCachedSolutionPick,
   reconcileSelectedWithSuggestions,
   stashSelectedSolutionActions,
+  clearCachedSolutionPick,
   withSelectedSolutionActions,
   writeCachedSolutionPick,
 } from '../services/solutionPick';
@@ -119,6 +120,7 @@ export function SolutionPickPanel({
       companySummary?: string | null;
       companySituation?: string | null;
       demoMode?: boolean;
+      demoReason?: string;
       usedRag?: boolean;
     }) => {
       setSuggestions(result.suggestions);
@@ -139,6 +141,9 @@ export function SolutionPickPanel({
       }
 
       const context = buildSolutionPickContext(data);
+      if (options?.force) {
+        clearCachedSolutionPick(context);
+      }
       if (!options?.force) {
         const cached = readCachedSolutionPick(context);
         if (cached) {
@@ -154,7 +159,14 @@ export function SolutionPickPanel({
         const result = await aiApi.suggestSolutionPick(context);
         if (requestId !== loadRequestRef.current) return;
         applyResult(result);
-        writeCachedSolutionPick(context, result);
+        if (result.demoMode) {
+          setError(
+            result.demoReason ??
+              'A IA no servidor não gerou sugestões personalizadas. Verifique OPENROUTER_API_KEY ou OPENAI_API_KEY no Render e clique em Atualizar sugestões.',
+          );
+        } else {
+          writeCachedSolutionPick(context, result);
+        }
       } catch (err) {
         if (requestId !== loadRequestRef.current) return;
         const fallback = localSolutionPickFallback();
@@ -350,8 +362,9 @@ export function SolutionPickPanel({
 
       {demoMode && (
         <p className="solution-pick-notice is-demo" role="status">
-          Modo demonstração: resumo e sugestões de exemplo. Com IA configurada, tudo será personalizado ao
-          diagnóstico real da empresa.
+          Modo demonstração: {error ?? 'resumo e sugestões de exemplo.'} Configure uma chave válida de IA
+          no Render (<code>OPENROUTER_API_KEY</code> ou <code>OPENAI_API_KEY</code>) e use{' '}
+          <strong>Atualizar sugestões</strong>.
         </p>
       )}
 

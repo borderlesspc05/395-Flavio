@@ -32,6 +32,7 @@ export type SolutionPickSuggestResult = {
   companySummary?: string;
   companySituation?: string;
   demoMode?: boolean;
+  demoReason?: string;
   usedRag?: boolean;
   ragChunkCount?: number;
 };
@@ -387,7 +388,17 @@ export async function suggestSolutionPickActions(
   userId: string
 ): Promise<SolutionPickSuggestResult> {
   const ragQuery = `${diagnosticContext.slice(0, 600)} solution pick planos de acao diagnostico gaps pessoas processo sistema gestao organizational scan action canvas objetivos relatorios`;
-  const ragResult = await retrieveRelevantContextDetailed(userId, ragQuery, 6);
+  let ragResult: Awaited<ReturnType<typeof retrieveRelevantContextDetailed>> = {
+    context: '',
+    vectorChunkCount: 0,
+    usedVectorRag: false,
+    usedFrameworkRag: false,
+  };
+  try {
+    ragResult = await retrieveRelevantContextDetailed(userId, ragQuery, 6);
+  } catch (err) {
+    console.warn('[solutionPickSuggest] RAG skipped:', err);
+  }
   const ragBlock = ragResult.context
     ? `
 
@@ -440,6 +451,8 @@ ${diagnosticContext}${ragBlock}
 Responda APENAS com JSON valido (sem markdown):
 {"companySummary":"...","companySituation":"...","suggestions":[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"...","detalhes":"...","draft":{"nomeIniciativa":"...","objetivoEspecifico":"...","owner":"...","sponsor":"...","prazoFinal":"2026-08-01","entregas":[{"entrega":"...","responsavel":"...","prazo":"2026-06-01","status":"amarelo"}],"riscos":[{"risco":"...","acaoTomar":"..."}],"insightOrigem":"..."}}]}`;
 
+  let demoReason = 'A IA não retornou JSON válido com sugestões suficientes.';
+
   try {
     const raw = await chatCompletion({
       model: getDefaultModel(),
@@ -448,7 +461,7 @@ Responda APENAS com JSON valido (sem markdown):
         { role: 'user', content: prompt },
       ],
       temperature: 0.4,
-      maxTokens: 4200,
+      maxTokens: 8192,
     });
 
     const parsed = extractJsonPayload(raw);
@@ -484,9 +497,14 @@ Responda APENAS com JSON valido (sem markdown):
       }
     }
   } catch (err) {
-    if (!isLlmNotConfiguredError(err)) {
-      console.warn('[solutionPickSuggest] AI failed:', err);
+    if (isLlmNotConfiguredError(err)) {
+      throw err;
     }
+    console.warn('[solutionPickSuggest] AI failed:', err);
+    demoReason =
+      err instanceof Error
+        ? err.message
+        : 'Falha ao chamar o modelo de IA. Verifique OPENROUTER_API_KEY ou OPENAI_API_KEY no Render.';
   }
 
   const fallback = defaultCompanySummary();
@@ -494,5 +512,6 @@ Responda APENAS com JSON valido (sem markdown):
     suggestions: defaultSuggestions(),
     ...fallback,
     demoMode: true,
+    demoReason,
   });
 }

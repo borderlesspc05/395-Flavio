@@ -37,6 +37,24 @@ function parseCorsOrigins(): string | string[] {
   return raw.split(',').map((o) => o.trim()).filter(Boolean);
 }
 
+/** Ignora placeholders comuns colados no painel do Render sem substituir a chave real. */
+function normalizeApiKey(raw: string | undefined): string | undefined {
+  const key = raw?.trim();
+  if (!key) return undefined;
+  const lower = key.toLowerCase();
+  if (
+    lower.includes('cole_sua') ||
+    lower.includes('your_api_key') ||
+    lower.includes('sk-...') ||
+    lower.includes('changeme') ||
+    lower.includes('placeholder') ||
+    key === 'COLE_SUA_CHAVE_OPENROUTER_AQUI'
+  ) {
+    return undefined;
+  }
+  return key;
+}
+
 export const env = {
   port: parseInt(process.env.PORT ?? '3001', 10),
   nodeEnv: process.env.NODE_ENV ?? 'development',
@@ -54,11 +72,11 @@ export const env = {
         : undefined),
   },
   openai: {
-    apiKey: process.env.OPENAI_API_KEY?.trim() || undefined,
+    apiKey: normalizeApiKey(process.env.OPENAI_API_KEY),
     defaultModel: process.env.OPENAI_DEFAULT_MODEL ?? 'gpt-4o-mini',
   },
   openrouter: {
-    apiKey: process.env.OPENROUTER_API_KEY?.trim() || undefined,
+    apiKey: normalizeApiKey(process.env.OPENROUTER_API_KEY),
     defaultModel: process.env.OPENROUTER_DEFAULT_MODEL ?? 'openai/gpt-4o-mini',
     siteUrl: process.env.OPENROUTER_SITE_URL ?? 'https://magnusmind.app',
     appName: process.env.OPENROUTER_APP_NAME ?? 'Magnus Mind',

@@ -88,7 +88,25 @@ export type CachedSolutionPickResult = {
   companySummary?: string | null;
   companySituation?: string | null;
   demoMode?: boolean;
+  demoReason?: string;
 };
+
+export function clearCachedSolutionPick(context?: string): void {
+  try {
+    if (context?.trim()) {
+      sessionStorage.removeItem(`${SUGGESTIONS_CACHE_PREFIX}${hashDiagnosticContext(context)}`);
+      return;
+    }
+    const keys: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith(SUGGESTIONS_CACHE_PREFIX)) keys.push(key);
+    }
+    keys.forEach((key) => sessionStorage.removeItem(key));
+  } catch {
+    /* private mode */
+  }
+}
 
 function hashDiagnosticContext(context: string): string {
   let hash = 0;
@@ -105,6 +123,7 @@ export function readCachedSolutionPick(context: string): CachedSolutionPickResul
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedSolutionPickResult;
     if (!parsed?.suggestions?.length) return null;
+    if (parsed.demoMode) return null;
     return parsed;
   } catch {
     return null;
@@ -112,7 +131,7 @@ export function readCachedSolutionPick(context: string): CachedSolutionPickResul
 }
 
 export function writeCachedSolutionPick(context: string, result: CachedSolutionPickResult): void {
-  if (!context.trim() || !result.suggestions.length) return;
+  if (!context.trim() || !result.suggestions.length || result.demoMode) return;
   try {
     sessionStorage.setItem(
       `${SUGGESTIONS_CACHE_PREFIX}${hashDiagnosticContext(context)}`,
