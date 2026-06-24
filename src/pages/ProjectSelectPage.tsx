@@ -7,7 +7,7 @@ import { AuthLayout } from '../components/AuthLayout';
 import { useCycle } from '../context/CycleContext';
 import type { DiagnosticCycle } from '../services/diagnosticCycles';
 import { getCycleWaveFromDoc, getRouteForCycleDoc, resolveCycleEntryRoute, WAVE_STEP_LABELS } from '../services/cycleRouting';
-import { clearWorkspaceEntered, markWorkspaceEntered } from '../services/projectWorkspace';
+import { clearWorkspaceEntered, hasEnteredWorkspace, markWorkspaceEntered } from '../services/projectWorkspace';
 
 const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
   draft: 'Rascunho',
@@ -96,6 +96,11 @@ export function ProjectSelectPage() {
       title="Escolha o projeto"
       subtitle="Selecione um ciclo Magnus Waves para continuar"
       cardClassName="auth-card--projects"
+      backTo={
+        hasEnteredWorkspace()
+          ? { href: '/dashboard/inicio', label: 'Voltar ao painel' }
+          : undefined
+      }
     >
       <div className="project-select">
         {loading && cycles.length === 0 ? (

@@ -6,6 +6,7 @@ import { getAiModels, getLlmStatus } from '../services/llm';
 import { handleChat } from '../services/aiChat';
 import { runBlueprintGateSuggestion } from '../services/blueprintGate';
 import { suggestSolutionPickActions } from '../services/solutionPickSuggest';
+import { triggerInitialFormIndex } from '../services/ragHooks';
 import { suggestDomainLearnings } from '../services/domainLearnings';
 import { suggestEvolutionLoop } from '../services/evolutionLoop';
 import { withConcurrencyLimit } from '../services/concurrency';
@@ -57,8 +58,9 @@ router.post('/solution-pick-suggest', async (req: Request, res: Response, next: 
     if (!diagnosticContext || typeof diagnosticContext !== 'string') {
       throw new AppError(400, 'diagnosticContext is required');
     }
+    triggerInitialFormIndex(req.userId);
     const result = await withConcurrencyLimit(req.userId, () =>
-      suggestSolutionPickActions(diagnosticContext)
+      suggestSolutionPickActions(diagnosticContext, req.userId)
     );
     res.json(result);
   } catch (err) {

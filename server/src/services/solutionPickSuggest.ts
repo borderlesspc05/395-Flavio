@@ -1,4 +1,5 @@
 import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
+import { retrieveRelevantContextDetailed } from './rag';
 
 export interface SuggestedSolutionActionDraft {
   id: string;
@@ -31,6 +32,8 @@ export type SolutionPickSuggestResult = {
   companySummary?: string;
   companySituation?: string;
   demoMode?: boolean;
+  usedRag?: boolean;
+  ragChunkCount?: number;
 };
 
 function defaultPrazo(days: number): string {
@@ -379,10 +382,32 @@ function extractJsonPayload(text: string): unknown | null {
   }
 }
 
-export async function suggestSolutionPickActions(diagnosticContext: string): Promise<SolutionPickSuggestResult> {
+export async function suggestSolutionPickActions(
+  diagnosticContext: string,
+  userId: string
+): Promise<SolutionPickSuggestResult> {
+  const ragQuery = `${diagnosticContext.slice(0, 600)} solution pick planos de acao diagnostico gaps pessoas processo sistema gestao organizational scan action canvas objetivos relatorios`;
+  const ragResult = await retrieveRelevantContextDetailed(userId, ragQuery, 6);
+  const ragBlock = ragResult.context
+    ? `
+
+## Contexto RAG — evidencias do ciclo do cliente
+
+Use os trechos abaixo como fonte complementar ao diagnostico. Priorize evidencias especificas ao montar scores, rationale e detalhes de cada acao.
+
+${ragResult.context}`
+    : '';
+
+  const attachRagMeta = (result: Omit<SolutionPickSuggestResult, 'usedRag' | 'ragChunkCount'>) => ({
+    ...result,
+    usedRag: ragResult.usedVectorRag,
+    ragChunkCount: ragResult.vectorChunkCount,
+  });
+
   const prompt = `Voce e o motor de Solution Pick do Magnus Mind (etapa 1.5).
 
 Leia o diagnostico completo da empresa abaixo — perfil, canvas Magnus Waves 1.1 a 1.5 e scans organizacionais quando houver.
+Quando houver contexto RAG, cruze com o diagnostico e cite evidencias concretas no rationale de cada acao.
 
 PRIMEIRO sintetize em portugues do Brasil:
 1) companySummary: resumo executivo em 3-5 frases sobre o que a empresa vive hoje (contexto, dor, estagio, pressoes).
@@ -410,7 +435,7 @@ Campos de topo de cada sugestao:
 - detalhes (2-3 frases narrativas: como executar, impacto esperado e o que observar)
 
 Diagnostico da empresa:
-${diagnosticContext}
+${diagnosticContext}${ragBlock}
 
 Responda APENAS com JSON valido (sem markdown):
 {"companySummary":"...","companySituation":"...","suggestions":[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"...","detalhes":"...","draft":{"nomeIniciativa":"...","objetivoEspecifico":"...","owner":"...","sponsor":"...","prazoFinal":"2026-08-01","entregas":[{"entrega":"...","responsavel":"...","prazo":"2026-06-01","status":"amarelo"}],"riscos":[{"risco":"...","acaoTomar":"..."}],"insightOrigem":"..."}}]}`;
@@ -438,11 +463,11 @@ Responda APENAS com JSON valido (sem markdown):
           .slice(0, 10)
           .map((s, i) => ({ ...s, id: `sol-${i + 1}` }));
         if (suggestions.length >= 3) {
-          return {
+          return attachRagMeta({
             suggestions,
             companySummary: String(root.companySummary ?? '').trim() || undefined,
             companySituation: String(root.companySituation ?? '').trim() || undefined,
-          };
+          });
         }
       }
     }
@@ -455,7 +480,7 @@ Responda APENAS com JSON valido (sem markdown):
         .slice(0, 10)
         .map((s, i) => ({ ...s, id: `sol-${i + 1}` }));
       if (suggestions.length >= 3) {
-        return { suggestions };
+        return attachRagMeta({ suggestions });
       }
     }
   } catch (err) {
@@ -465,9 +490,9 @@ Responda APENAS com JSON valido (sem markdown):
   }
 
   const fallback = defaultCompanySummary();
-  return {
+  return attachRagMeta({
     suggestions: defaultSuggestions(),
     ...fallback,
     demoMode: true,
-  };
+  });
 }

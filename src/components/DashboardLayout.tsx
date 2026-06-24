@@ -187,7 +187,10 @@ export function DashboardLayout() {
             <button
               type="button"
               className="nav-item"
-              onClick={() => handleNav('projetos', '/escolher-projeto')}
+              onClick={() => {
+                navigate('/escolher-projeto', { state: { fromDashboard: true } });
+                setSidebarOpen(false);
+              }}
               aria-label={t.nav.projects}
               title={sidebarCollapsed ? t.nav.projects : undefined}
             >

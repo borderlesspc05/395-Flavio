@@ -143,6 +143,12 @@
   color: rgba(241, 235, 224, 0.85);
 }
 
+.solution-pick-notice.is-rag {
+  background: rgba(74, 107, 66, 0.14);
+  border: 1px solid rgba(120, 180, 110, 0.28);
+  color: #b8ddb0;
+}
+
 .solution-pick-notice.is-error {
   background: rgba(143, 74, 66, 0.18);
   border: 1px solid rgba(143, 74, 66, 0.35);

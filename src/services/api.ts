@@ -295,6 +295,8 @@ export const aiApi = {
               companySummary?: string;
               companySituation?: string;
               demoMode?: boolean;
+              usedRag?: boolean;
+              ragChunkCount?: number;
             }
         )
     ),

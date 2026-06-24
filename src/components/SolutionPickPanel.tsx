@@ -60,6 +60,7 @@ export function SolutionPickPanel({
   const [companySituation, setCompanySituation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+  const [ragUsed, setRagUsed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [goingDesign, setGoingDesign] = useState(false);
   const [laudoOpen, setLaudoOpen] = useState(false);
@@ -118,11 +119,13 @@ export function SolutionPickPanel({
       companySummary?: string | null;
       companySituation?: string | null;
       demoMode?: boolean;
+      usedRag?: boolean;
     }) => {
       setSuggestions(result.suggestions);
       setCompanySummary(result.companySummary ?? null);
       setCompanySituation(result.companySituation ?? null);
       setDemoMode(Boolean(result.demoMode));
+      setRagUsed(Boolean(result.usedRag));
       setExpandedActionIds(new Set());
     },
     []
@@ -349,6 +352,12 @@ export function SolutionPickPanel({
         <p className="solution-pick-notice is-demo" role="status">
           Modo demonstração: resumo e sugestões de exemplo. Com IA configurada, tudo será personalizado ao
           diagnóstico real da empresa.
+        </p>
+      )}
+
+      {!demoMode && ragUsed && (
+        <p className="solution-pick-notice is-rag" role="status">
+          Sugestões enriquecidas com (RAG).
         </p>
       )}
 

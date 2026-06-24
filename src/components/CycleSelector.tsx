@@ -99,7 +99,7 @@ export function CycleSelector() {
               className="cycle-selector__hub"
               onClick={() => {
                 setOpen(false);
-                navigate('/escolher-projeto');
+                navigate('/escolher-projeto', { state: { fromDashboard: true } });
               }}
             >
               <FolderKanban size={14} />
