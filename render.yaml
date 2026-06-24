@@ -11,3 +11,5 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: CORS_ORIGIN
+        value: http://localhost:5173,https://395-flavio2.netlify.app,https://395-flavio.netlify.app

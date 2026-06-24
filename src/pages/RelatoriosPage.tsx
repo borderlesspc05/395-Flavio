@@ -14,7 +14,8 @@ import {
   Target,
   Users,
 } from 'lucide-react';
-import { reportsApi, aiApi } from '../services/api';
+import { reportsApi } from '../services/api';
+import { useAiStatus } from '../hooks/useAiStatus';
 import type { NormalizedReport } from '../services/apiNormalize';
 import { ActivityTimeline } from '../components/ActivityTimeline';
 import { DomainWaveWorkspace } from '../components/domain/DomainWaveWorkspace';
@@ -69,14 +70,7 @@ export function RelatoriosPage() {
   const [midNotice, setMidNotice] = useState<string | null>(null);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    aiApi
-      .status()
-      .then((s) => setAiConfigured(s.configured))
-      .catch(() => setAiConfigured(false));
-  }, []);
+  const { configured: aiConfigured, unreachable: apiUnreachable } = useAiStatus();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -97,6 +91,10 @@ export function RelatoriosPage() {
   }, [load]);
 
   const handleGenerate = useCallback(async () => {
+    if (apiUnreachable) {
+      setError('API inacessível. Verifique o servidor local ou CORS_ORIGIN no Render.');
+      return;
+    }
     if (!aiConfigured) {
       setError(
         'IA não configurada no servidor. Defina OPENROUTER_API_KEY ou OPENAI_API_KEY para gerar o dossiê.',
@@ -121,7 +119,7 @@ export function RelatoriosPage() {
     } finally {
       setGenerating(false);
     }
-  }, [aiConfigured]);
+  }, [aiConfigured, apiUnreachable]);
 
   useEffect(() => {
     const state = location.state as { autoGenerate?: boolean; midConcludeNotice?: string } | null;
@@ -319,9 +317,11 @@ export function RelatoriosPage() {
               type="button"
               className="generate-button"
               onClick={handleGenerate}
-              disabled={generating || aiConfigured === false}
+              disabled={generating || apiUnreachable || aiConfigured === false}
               title={
-                aiConfigured === false
+                apiUnreachable
+                  ? 'API inacessível — verifique servidor ou CORS'
+                  : aiConfigured === false
                   ? 'Configure OPENROUTER_API_KEY ou OPENAI_API_KEY no servidor'
                   : undefined
               }

@@ -37,6 +37,8 @@ import {
   planDeadlineLabel,
   planStatusLabel,
 } from '../../utils/domainWave';
+import { AiStatusAlert } from '../AiStatusAlert';
+import { useAiStatus } from '../../hooks/useAiStatus';
 import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../../utils/apiError';
 
 const AUTO_SAVE_MS = 2500;
@@ -86,19 +88,12 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
   const [canvases, setCanvases] = useState<ActionCanvas[]>([]);
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [domainData, setDomainData] = useState<DomainWaveData | null>(null);
-  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const { configured: aiConfigured, unreachable: apiUnreachable } = useAiStatus();
   const [hasEntered, setHasEntered] = useState(false);
   const skipAutoSaveRef = useRef(true);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formDataRef = useRef<InitialFormData | null>(null);
   const persistInFlightRef = useRef(false);
-
-  useEffect(() => {
-    aiApi
-      .status()
-      .then((s) => setAiConfigured(s.configured))
-      .catch(() => setAiConfigured(false));
-  }, []);
 
   const load = useCallback(async (uid: string) => {
     skipAutoSaveRef.current = true;
@@ -240,6 +235,10 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
 
   const handleGenerateLearnings = async () => {
     if (!domainData) return;
+    if (apiUnreachable) {
+      setNotice('API inacessível. Verifique o servidor local ou CORS_ORIGIN no Render.');
+      return;
+    }
     if (!aiConfigured) {
       setNotice(
         'IA indisponível. Configure OPENROUTER_API_KEY ou OPENAI_API_KEY no servidor para gerar aprendizados.',
@@ -332,19 +331,11 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
         </p>
       ) : null}
 
-      {aiConfigured === false ? (
-        <div className="domain-wave-alert domain-wave-alert--warning" role="status">
-          <CircleAlert size={18} aria-hidden />
-          <div>
-            <strong>IA não configurada no servidor</strong>
-            <p>
-              O Top 5 de aprendizados e o dossiê consolidado exigem{' '}
-              <code>OPENROUTER_API_KEY</code> ou <code>OPENAI_API_KEY</code> no backend. Os demais
-              blocos (planos, impacto, sustentação) funcionam normalmente e salvam no Firebase.
-            </p>
-          </div>
-        </div>
-      ) : null}
+      <AiStatusAlert
+        configured={aiConfigured}
+        unreachable={apiUnreachable}
+        notConfiguredDetail="O Top 5 de aprendizados e o dossiê consolidado exigem OPENROUTER_API_KEY ou OPENAI_API_KEY no backend. Os demais blocos (planos, impacto, sustentação) funcionam normalmente e salvam no Firebase."
+      />
 
       <section
         id="domain-plans"
@@ -550,9 +541,11 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
             type="button"
             className="domain-primary-button"
             onClick={() => void handleGenerateLearnings()}
-            disabled={generatingAi || aiConfigured === false}
+            disabled={generatingAi || apiUnreachable || aiConfigured === false}
             title={
-              aiConfigured === false
+              apiUnreachable
+                ? 'API inacessível — verifique servidor ou CORS'
+                : aiConfigured === false
                 ? 'Configure a IA no servidor para habilitar esta ação'
                 : undefined
             }

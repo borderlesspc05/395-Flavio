@@ -14,6 +14,7 @@ import {
 import { auth } from '../config/firebase';
 import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
+import { useAiStatus } from '../hooks/useAiStatus';
 import { aiApi } from '../services/api';
 import { buildEvolutionLoopContext } from '../services/evolutionLoopContext';
 import {
@@ -54,7 +55,7 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
   const navigate = useViewTransitionNavigate();
   const { activeCycle, refreshCycles } = useCycle();
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
-  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const { configured: aiConfigured, unreachable: apiUnreachable } = useAiStatus();
   const [loading, setLoading] = useState(false);
   const [creatingWave, setCreatingWave] = useState(false);
   const [result, setResult] = useState<EvolutionLoopResult | null>(null);
@@ -66,13 +67,6 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
   }, []);
 
   useEffect(() => {
-    aiApi
-      .status()
-      .then((s) => setAiConfigured(s.configured))
-      .catch(() => setAiConfigured(false));
-  }, []);
-
-  useEffect(() => {
     if (!activeCycle?.id) return;
     const cached = readCachedEvolution(activeCycle.id);
     if (cached) setResult(cached);
@@ -80,6 +74,10 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
 
   const handleAnalyze = useCallback(async () => {
     if (!userId) return;
+    if (apiUnreachable) {
+      setNotice('API inacessível. Verifique o servidor local ou CORS_ORIGIN no Render.');
+      return;
+    }
     if (!aiConfigured) {
       setNotice(
         'IA indisponível. Configure OPENROUTER_API_KEY ou OPENAI_API_KEY no servidor.'
@@ -104,7 +102,7 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [userId, aiConfigured, activeCycle?.id]);
+  }, [userId, aiConfigured, apiUnreachable, activeCycle?.id]);
 
   const handleCreateWave = async () => {
     if (!userId || !result) return;
