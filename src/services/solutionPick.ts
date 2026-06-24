@@ -89,6 +89,7 @@ export type CachedSolutionPickResult = {
   companySituation?: string | null;
   demoMode?: boolean;
   demoReason?: string;
+  usedRag?: boolean;
 };
 
 export function clearCachedSolutionPick(context?: string): void {

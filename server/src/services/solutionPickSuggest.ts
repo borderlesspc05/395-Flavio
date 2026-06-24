@@ -411,7 +411,7 @@ ${ragResult.context}`
 
   const attachRagMeta = (result: Omit<SolutionPickSuggestResult, 'usedRag' | 'ragChunkCount'>) => ({
     ...result,
-    usedRag: ragResult.usedVectorRag,
+    usedRag: ragResult.usedVectorRag || ragResult.usedFrameworkRag || Boolean(ragResult.context.trim()),
     ragChunkCount: ragResult.vectorChunkCount,
   });
 

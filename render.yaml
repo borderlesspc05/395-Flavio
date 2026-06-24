@@ -22,3 +22,12 @@ services:
         value: gpt-4o-mini
       - key: OPENAI_API_KEY
         sync: false
+      # RAG vetorial — cole SUPABASE_* no painel (mesmos valores do server/.env local)
+      - key: RAG_ENABLED
+        value: true
+      - key: RAG_TOP_K
+        value: 5
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
