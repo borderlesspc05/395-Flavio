@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
+import { createCorsOriginCallback } from './config/cors';
 import { resolveUserId } from './middleware/userId';
 import { errorHandler } from './middleware/errorHandler';
 import { initFirebase } from './services/firebase';
@@ -32,7 +33,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: env.corsOrigin,
+    origin: createCorsOriginCallback(env.corsOrigin),
     credentials: true,
   })
 );
