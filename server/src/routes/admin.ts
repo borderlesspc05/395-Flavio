@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { requireAdmin } from '../middleware/adminAuth';
 import { getAdminDashboardData } from '../services/adminDashboard';
+import { getAdminUserDetail } from '../services/adminUserDetail';
+import { getAdminRequestLogsPage } from '../services/adminRequestLogs';
 import {
   getPlanSettings,
   savePlanSettings,
@@ -63,6 +65,30 @@ router.get('/dashboard', async (_req: Request, res: Response, next: NextFunction
   try {
     const data = await getAdminDashboardData();
     res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/requests', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await getAdminRequestLogsPage({
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+      type: typeof req.query.type === 'string' ? req.query.type : undefined,
+      q: typeof req.query.q === 'string' ? req.query.q : undefined,
+      errorsOnly: req.query.errorsOnly === '1' || req.query.errorsOnly === 'true',
+    });
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/users/:userId/detail', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const detail = await getAdminUserDetail(String(req.params.userId));
+    res.json(detail);
   } catch (err) {
     next(err);
   }

@@ -8,10 +8,27 @@ interface AdminBarChartProps {
   subtitle?: string;
   items: BarItem[];
   accent?: 'bronze' | 'warm';
+  maxItems?: number;
 }
 
-export function AdminBarChart({ title, subtitle, items, accent = 'bronze' }: AdminBarChartProps) {
-  const max = Math.max(...items.map((i) => i.count), 1);
+function collapseItems(items: BarItem[], maxItems?: number): BarItem[] {
+  if (!maxItems || items.length <= maxItems) return items;
+  const head = items.slice(0, maxItems);
+  const rest = items.slice(maxItems);
+  const otherCount = rest.reduce((sum, i) => sum + i.count, 0);
+  if (otherCount <= 0) return head;
+  return [...head, { label: 'Outros', count: otherCount }];
+}
+
+export function AdminBarChart({
+  title,
+  subtitle,
+  items,
+  accent = 'bronze',
+  maxItems,
+}: AdminBarChartProps) {
+  const chartItems = collapseItems(items, maxItems);
+  const max = Math.max(...chartItems.map((i) => i.count), 1);
 
   return (
     <article className={`admin-chart-card admin-chart-card--${accent}`}>
@@ -19,11 +36,11 @@ export function AdminBarChart({ title, subtitle, items, accent = 'bronze' }: Adm
         <h3>{title}</h3>
         {subtitle && <p>{subtitle}</p>}
       </header>
-      {items.length === 0 ? (
+      {chartItems.length === 0 ? (
         <p className="admin-chart-empty">Sem dados ainda.</p>
       ) : (
         <ul className="admin-bar-chart" role="list">
-          {items.map((item, index) => {
+          {chartItems.map((item, index) => {
             const pct = Math.round((item.count / max) * 100);
             return (
               <li key={`${item.label}-${index}`} className="admin-bar-row">

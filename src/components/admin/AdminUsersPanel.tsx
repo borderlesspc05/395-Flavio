@@ -1,14 +1,17 @@
 import { FormEvent, useState } from 'react';
-import { Save, UserPlus } from 'lucide-react';
+import { Save, UserPlus, Eye } from 'lucide-react';
 import { adminApi, type AdminUserRow } from '../../services/adminApi';
 import type { PlanId } from '../../constants/plans';
 import { PLAN_LABELS } from '../../constants/plans';
+import { AdminTableToolbar } from './AdminTableToolbar';
+import { useAdminTable } from '../../hooks/useAdminTable';
 
 const PLAN_IDS: PlanId[] = ['starter', 'advanced', 'premium'];
 
 type Props = {
   users: AdminUserRow[];
   onRefresh: () => void;
+  onSelectUser?: (userId: string, userName?: string) => void;
 };
 
 function defaultConcurrencyForPlan(planId: PlanId): string {
@@ -17,7 +20,7 @@ function defaultConcurrencyForPlan(planId: PlanId): string {
   return '';
 }
 
-export function AdminUsersPanel({ users, onRefresh }: Props) {
+export function AdminUsersPanel({ users, onRefresh, onSelectUser }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -30,6 +33,15 @@ export function AdminUsersPanel({ users, onRefresh }: Props) {
   const [edits, setEdits] = useState<Record<string, { planId: PlanId; limit: string }>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [rowError, setRowError] = useState('');
+
+  const table = useAdminTable(users, {
+    pageSize: 15,
+    filterFn: (u, q) =>
+      u.email.toLowerCase().includes(q) ||
+      (u.displayName ?? '').toLowerCase().includes(q) ||
+      String(u.planId).toLowerCase().includes(q) ||
+      u.subscriptionStatus.toLowerCase().includes(q),
+  });
 
   const handleCreatePlanChange = (planId: PlanId) => {
     setCreatePlan(planId);
@@ -184,8 +196,21 @@ export function AdminUsersPanel({ users, onRefresh }: Props) {
             {rowError}
           </p>
         )}
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+
+        <AdminTableToolbar
+          query={table.query}
+          onQueryChange={table.setQuery}
+          queryPlaceholder="Email, nome ou plano…"
+          page={table.page}
+          totalPages={table.totalPages}
+          rangeStart={table.rangeStart}
+          rangeEnd={table.rangeEnd}
+          totalCount={table.filteredCount}
+          onPageChange={table.setPage}
+        />
+
+        <div className="admin-table-wrap admin-table-wrap--dense">
+          <table className="admin-table admin-table--dense">
             <thead>
               <tr>
                 <th>Email</th>
@@ -198,12 +223,12 @@ export function AdminUsersPanel({ users, onRefresh }: Props) {
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 ? (
+              {table.pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7}>Nenhum usuário registrado ainda.</td>
+                  <td colSpan={7}>Nenhum usuário encontrado.</td>
                 </tr>
               ) : (
-                users.map((u) => {
+                table.pageRows.map((u) => {
                   const edit = getEdit(u);
                   return (
                     <tr key={u.userId}>
@@ -245,15 +270,30 @@ export function AdminUsersPanel({ users, onRefresh }: Props) {
                       </td>
                       <td>{u.requestCount}</td>
                       <td>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--ghost admin-btn--compact"
-                          onClick={() => void handleSaveUser(u.userId)}
-                          disabled={savingId === u.userId}
-                        >
-                          <Save size={14} />
-                          {savingId === u.userId ? '…' : 'Salvar'}
-                        </button>
+                        <div className="admin-row-actions">
+                          {onSelectUser ? (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--ghost admin-btn--compact"
+                              onClick={() =>
+                                onSelectUser(u.userId, u.displayName || u.email || undefined)
+                              }
+                              title="Ver diagnóstico e uso"
+                            >
+                              <Eye size={14} />
+                              Detalhes
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--ghost admin-btn--compact"
+                            onClick={() => void handleSaveUser(u.userId)}
+                            disabled={savingId === u.userId}
+                          >
+                            <Save size={14} />
+                            {savingId === u.userId ? '…' : 'Salvar'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

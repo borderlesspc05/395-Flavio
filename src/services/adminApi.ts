@@ -17,11 +17,119 @@ export interface AdminUserRow {
   subscriptionStatus: string;
 }
 
+export interface AdminRequestLogRow {
+  id: string;
+  userId?: string;
+  createdAt: string;
+  userName: string;
+  type: string;
+  typeLabel: string;
+  statusCode: number;
+  durationMs: number;
+  path: string;
+  method: string;
+}
+
+export interface AdminRequestLogsPage {
+  items: AdminRequestLogRow[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  typeOptions: { type: string; label: string; count: number }[];
+}
+
 export interface AdminRecentRequest {
   id: string;
+  userId?: string;
   createdAt: string;
   userName: string;
   typeLabel: string;
+  statusCode: number;
+  durationMs: number;
+}
+
+export interface AdminCountRow {
+  label: string;
+  count: number;
+}
+
+export interface AdminClientAnalytics {
+  diagnostics: {
+    formsTotal: number;
+    formsCompleted: number;
+    formsWithChallenge: number;
+    cyclesTotal: number;
+    cyclesActive: number;
+    cyclesArchived: number;
+    gatePathA: number;
+    gatePathB: number;
+    gateSkipped: number;
+  };
+  businessStages: AdminCountRow[];
+  challengeCategories: AdminCountRow[];
+  problemNature: AdminCountRow[];
+  recentChallenges: Array<{
+    userId: string;
+    organization?: string;
+    stage?: string;
+    challenge: string;
+    categories: string[];
+    updatedAt?: string;
+  }>;
+}
+
+export interface AdminUserDetail {
+  profile: {
+    userId: string;
+    email: string;
+    displayName?: string;
+    requestCount: number;
+    firstSeenAt: string;
+    lastSeenAt: string;
+  } | null;
+  plan: {
+    planId: string;
+    planName: string;
+    concurrencyLimit: number | null;
+    hasActiveSubscription: boolean;
+  };
+  subscription: { status: string; planId: string; email: string } | null;
+  diagnostic: {
+    organization?: string;
+    product?: string;
+    stage?: string;
+    mainChallenge?: string;
+    challengeCategories?: string[];
+    completedAt?: string;
+    draftUpdatedAt?: string;
+  } | null;
+  cycles: Array<{
+    id: string;
+    label: string;
+    status: string;
+    cycleNumber?: number;
+    completedAt?: string;
+  }>;
+  gate: {
+    selectedPath?: string;
+    aiRecommendedPath?: string;
+    rationale?: string;
+    skipped?: boolean;
+  } | null;
+  recentRequests: Array<{
+    id: string;
+    createdAt: string;
+    typeLabel: string;
+    statusCode: number;
+    durationMs: number;
+  }>;
+  counts: {
+    objectives: number;
+    actionCanvases: number;
+    reports: number;
+    conversations: number;
+  };
 }
 
 export interface PlanSettingsEntry {
@@ -40,11 +148,17 @@ export interface AdminDashboard {
     activeSubscriptions: number;
     topRequestTypeLabel: string;
     topSubjectLabel: string;
+    diagnosticsCompleted: number;
+    topChallengeCategory: string;
+    errorRatePercent: number;
+    avgDurationMs: number;
   };
   users: AdminUserRow[];
   requestsByType: { type: string; label: string; count: number }[];
   requestsBySubject: { subject: string; count: number }[];
-  recentRequests: AdminRecentRequest[];
+  requestsByDay: { date: string; label: string; count: number }[];
+  requestHealth: { total: number; errors: number; errorRatePercent: number; avgDurationMs: number };
+  clientAnalytics: AdminClientAnalytics;
   planSettings: PlanSettingsMap;
 }
 
@@ -71,6 +185,34 @@ export const adminApi = {
   getDashboard: async () => {
     const headers = await adminHeaders();
     const res = await api.get<AdminDashboard>('/api/admin/dashboard', { headers });
+    return res.data;
+  },
+
+  getRequestLogs: async (params: {
+    page?: number;
+    limit?: number;
+    type?: string;
+    q?: string;
+    errorsOnly?: boolean;
+  }) => {
+    const headers = await adminHeaders();
+    const search = new URLSearchParams();
+    if (params.page) search.set('page', String(params.page));
+    if (params.limit) search.set('limit', String(params.limit));
+    if (params.type) search.set('type', params.type);
+    if (params.q) search.set('q', params.q);
+    if (params.errorsOnly) search.set('errorsOnly', '1');
+    const qs = search.toString();
+    const res = await api.get<AdminRequestLogsPage>(
+      `/api/admin/requests${qs ? `?${qs}` : ''}`,
+      { headers }
+    );
+    return res.data;
+  },
+
+  getUserDetail: async (userId: string) => {
+    const headers = await adminHeaders();
+    const res = await api.get<AdminUserDetail>(`/api/admin/users/${userId}/detail`, { headers });
     return res.data;
   },
 

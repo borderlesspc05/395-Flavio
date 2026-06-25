@@ -1,4 +1,11 @@
-import { getFirestore, isFirebaseEnabled, isFirestoreCredentialError, markFirestoreUnavailable } from './firebase';
+import {
+  getFirestore,
+  isFirebaseEnabled,
+  isFirestoreCredentialError,
+  isFirestoreQuotaError,
+  isFirestoreRecoverableError,
+  markFirestoreUnavailable,
+} from './firebase';
 import { COLLECTIONS } from '../config/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -6,6 +13,18 @@ type DocData = Record<string, any>;
 
 /** In-memory fallback when Firebase is unavailable */
 const memoryStore = new Map<string, Map<string, DocData>>();
+
+function handleFirestoreError(err: unknown, context: string): void {
+  if (isFirestoreCredentialError(err)) {
+    markFirestoreUnavailable(err);
+    return;
+  }
+  if (isFirestoreQuotaError(err)) {
+    console.warn(`[storage] ${context} — quota Firestore excedida, usando memória local`);
+    return;
+  }
+  markFirestoreUnavailable(err);
+}
 
 function memoryCollection(name: string): Map<string, DocData> {
   if (!memoryStore.has(name)) {
@@ -31,15 +50,15 @@ export async function listByUser<T>(
         .get();
       items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
     } catch (err) {
-      if (isFirestoreCredentialError(err)) {
-        markFirestoreUnavailable(err);
+      if (isFirestoreRecoverableError(err)) {
+        handleFirestoreError(err, `listByUser ${collection}`);
       } else {
         throw err;
       }
     }
   }
 
-  if (items.length === 0 && (!db || !isFirebaseEnabled())) {
+  if (items.length === 0) {
     const col = memoryCollection(collection);
     items = Array.from(col.values()).filter((d) => d.userId === userId) as unknown as T[];
   }
@@ -63,8 +82,8 @@ export async function getById<T>(
       if (!doc.exists) return null;
       return { id: doc.id, ...doc.data() } as unknown as T;
     } catch (err) {
-      if (!isFirestoreCredentialError(err)) throw err;
-      markFirestoreUnavailable(err);
+      if (!isFirestoreRecoverableError(err)) throw err;
+      handleFirestoreError(err, `getById ${collection}/${id}`);
     }
   }
 
@@ -86,8 +105,8 @@ export async function create<T extends DocData>(
       await db.collection(collection).doc(id).set(data);
       return doc as T;
     } catch (err) {
-      if (!isFirestoreCredentialError(err)) throw err;
-      markFirestoreUnavailable(err);
+      if (!isFirestoreRecoverableError(err)) throw err;
+      handleFirestoreError(err, `getById ${collection}/${id}`);
     }
   }
 
@@ -112,8 +131,8 @@ export async function update<T>(
       await db.collection(collection).doc(id).update(rest as DocData);
       return updated;
     } catch (err) {
-      if (!isFirestoreCredentialError(err)) throw err;
-      markFirestoreUnavailable(err);
+      if (!isFirestoreRecoverableError(err)) throw err;
+      handleFirestoreError(err, `getById ${collection}/${id}`);
     }
   }
 
@@ -158,11 +177,16 @@ export async function remove(collection: string, id: string): Promise<boolean> {
 export async function listAll<T>(collection: string, orderField = 'createdAt'): Promise<T[]> {
   const db = getFirestore();
   if (db && isFirebaseEnabled()) {
-    const snap = await db.collection(collection).get();
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
-    return items.sort((a, b) =>
-      String((b as DocData)[orderField] ?? '').localeCompare(String((a as DocData)[orderField] ?? ''))
-    );
+    try {
+      const snap = await db.collection(collection).get();
+      const items = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as T[];
+      return items.sort((a, b) =>
+        String((b as DocData)[orderField] ?? '').localeCompare(String((a as DocData)[orderField] ?? ''))
+      );
+    } catch (err) {
+      if (!isFirestoreRecoverableError(err)) throw err;
+      handleFirestoreError(err, `listAll ${collection}`);
+    }
   }
 
   const col = memoryCollection(collection);

@@ -19,6 +19,18 @@ export function isFirestoreCredentialError(err: unknown): boolean {
   );
 }
 
+export function isFirestoreQuotaError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { code?: number | string; details?: string; message?: string };
+  if (e.code === 8 || e.code === 'RESOURCE_EXHAUSTED') return true;
+  const text = `${e.details ?? ''} ${e.message ?? ''}`.toLowerCase();
+  return text.includes('quota exceeded') || text.includes('resource_exhausted');
+}
+
+export function isFirestoreRecoverableError(err: unknown): boolean {
+  return isFirestoreCredentialError(err) || isFirestoreQuotaError(err);
+}
+
 /** Desativa Firestore após erro de credencial e passa a usar memória local. */
 export function markFirestoreUnavailable(err: unknown): void {
   if (useMemoryFallback) return;
