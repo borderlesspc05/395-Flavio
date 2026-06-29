@@ -4,6 +4,13 @@ let concurrencyLimit: number | null = 1;
 let activeCount = 0;
 const waitQueue: Array<() => void> = [];
 
+import {
+  CONCURRENCY_LIMITED_PATHS,
+  isConcurrencyLimitedPath,
+} from '../constants/concurrencyPaths';
+
+export { CONCURRENCY_LIMITED_PATHS, isConcurrencyLimitedPath };
+
 export function setClientConcurrencyLimit(limit: number | null) {
   concurrencyLimit = limit;
 }
@@ -50,16 +57,7 @@ export async function runWithClientConcurrency<T>(fn: () => Promise<T>): Promise
   }
 }
 
-export const CONCURRENCY_LIMITED_PATHS = [
-  '/api/ai/chat',
-  '/api/ai/blueprint-gate',
-  '/api/ai/solution-pick-suggest',
-  '/api/objectives/suggest',
-  '/api/action-canvases/suggest',
-  '/api/reports/generate',
-] as const;
-
 export function isConcurrencyLimitedUrl(url?: string): boolean {
   if (!url) return false;
-  return CONCURRENCY_LIMITED_PATHS.some((path) => url.includes(path));
+  return isConcurrencyLimitedPath(url);
 }

@@ -137,4 +137,5 @@ export const COLLECTIONS = {
   apiRequestLogs: 'apiRequestLogs',
   adminSettings: 'adminSettings',
   supportTickets: 'supportTickets',
+  concurrencySlots: 'concurrencySlots',
 } as const;

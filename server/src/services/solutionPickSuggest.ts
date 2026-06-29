@@ -1,5 +1,10 @@
-import { chatCompletion, getDefaultModel, isLlmNotConfiguredError } from './llm';
-import { retrieveRelevantContextDetailed } from './rag';
+import { chatCompletion, getFastStructuredModel, isLlmNotConfiguredError } from './llm';
+import { searchUserRagContext } from './ragSearch';
+import { isRagVectorConfigured } from './ragConfig';
+
+const DIAGNOSTIC_INPUT_MAX = 10_000;
+const RAG_TIMEOUT_MS = 2_500;
+const RAG_TOP_K = 3;
 
 export interface SuggestedSolutionActionDraft {
   id: string;
@@ -383,85 +388,105 @@ function extractJsonPayload(text: string): unknown | null {
   }
 }
 
+function truncateDiagnosticContext(context: string, max = DIAGNOSTIC_INPUT_MAX): string {
+  const trimmed = context.trim();
+  if (trimmed.length <= max) return trimmed;
+  const headSize = Math.floor(max * 0.72);
+  const tailSize = Math.floor(max * 0.22);
+  return `${trimmed.slice(0, headSize)}\n\n[... trecho intermediário omitido para agilizar a análise ...]\n\n${trimmed.slice(-tailSize)}`;
+}
+
+async function fetchSolutionPickRag(
+  userId: string,
+  query: string
+): Promise<{ context: string; vectorChunkCount: number; usedRag: boolean }> {
+  if (!isRagVectorConfigured()) {
+    return { context: '', vectorChunkCount: 0, usedRag: false };
+  }
+
+  try {
+    const result = await Promise.race([
+      searchUserRagContext(userId, query, RAG_TOP_K),
+      new Promise<{ context: string; chunkCount: number }>((resolve) =>
+        setTimeout(() => resolve({ context: '', chunkCount: 0 }), RAG_TIMEOUT_MS)
+      ),
+    ]);
+    return {
+      context: result.context,
+      vectorChunkCount: result.chunkCount,
+      usedRag: result.chunkCount > 0,
+    };
+  } catch (err) {
+    console.warn('[solutionPickSuggest] RAG skipped:', err);
+    return { context: '', vectorChunkCount: 0, usedRag: false };
+  }
+}
+
 export async function suggestSolutionPickActions(
   diagnosticContext: string,
   userId: string
 ): Promise<SolutionPickSuggestResult> {
-  const ragQuery = `${diagnosticContext.slice(0, 600)} solution pick planos de acao diagnostico gaps pessoas processo sistema gestao organizational scan action canvas objetivos relatorios`;
-  let ragResult: Awaited<ReturnType<typeof retrieveRelevantContextDetailed>> = {
-    context: '',
-    vectorChunkCount: 0,
-    usedVectorRag: false,
-    usedFrameworkRag: false,
-  };
-  try {
-    ragResult = await retrieveRelevantContextDetailed(userId, ragQuery, 6);
-  } catch (err) {
-    console.warn('[solutionPickSuggest] RAG skipped:', err);
-  }
+  const compactContext = truncateDiagnosticContext(diagnosticContext);
+  const ragQuery = `${compactContext.slice(0, 500)} solution pick planos acao diagnostico gaps`;
+  const ragResult = await fetchSolutionPickRag(userId, ragQuery);
+
   const ragBlock = ragResult.context
     ? `
 
 ## Contexto RAG — evidencias do ciclo do cliente
-
-Use os trechos abaixo como fonte complementar ao diagnostico. Priorize evidencias especificas ao montar scores, rationale e detalhes de cada acao.
 
 ${ragResult.context}`
     : '';
 
   const attachRagMeta = (result: Omit<SolutionPickSuggestResult, 'usedRag' | 'ragChunkCount'>) => ({
     ...result,
-    usedRag: ragResult.usedVectorRag || ragResult.usedFrameworkRag || Boolean(ragResult.context.trim()),
+    usedRag: ragResult.usedRag,
     ragChunkCount: ragResult.vectorChunkCount,
   });
 
   const prompt = `Voce e o motor de Solution Pick do Magnus Mind (etapa 1.5).
 
-Leia o diagnostico completo da empresa abaixo — perfil, canvas Magnus Waves 1.1 a 1.5 e scans organizacionais quando houver.
-Quando houver contexto RAG, cruze com o diagnostico e cite evidencias concretas no rationale de cada acao.
+Leia o diagnostico da empresa abaixo. Quando houver contexto RAG, use como complemento.
 
 PRIMEIRO sintetize em portugues do Brasil:
-1) companySummary: resumo executivo em 3-5 frases sobre o que a empresa vive hoje (contexto, dor, estagio, pressoes).
-2) companySituation: paragrafo claro sobre a situacao organizacional atual — o que esta travando, o que ja funciona e o que esta em risco.
+1) companySummary: resumo executivo em 3-4 frases.
+2) companySituation: paragrafo sobre a situacao organizacional atual.
 
-DEPOIS proponha exatamente 10 acoes de plano de mudanca concretas e executaveis.
-Cada acao deve nascer das evidencias do diagnostico — cite o tipo de gap (pessoas, processo, sistema, gestao) no rationale.
-Atribua score de 0 a 100 = probabilidade de impacto real dado o que foi reportado.
-Ordene mentalmente do maior para o menor score.
+DEPOIS proponha exatamente 10 acoes de plano de mudanca concretas.
+Cada acao deve nascer das evidencias do diagnostico.
+Atribua score de 0 a 100 = probabilidade de impacto real.
+Ordene do maior para o menor score.
 
-Para cada acao em "suggestions", inclua também o objeto "draft" com:
-- nomeIniciativa (igual ou refinado do titulo)
-- objetivoEspecifico: 3 a 5 frases em portugues do Brasil com (1) resultado mensuravel e prazo, (2) contexto ligado ao diagnostico, (3) criterio de sucesso com metrica ou evidencia, (4) escopo resumido. NAO repita apenas a descricao curta.
-- owner, sponsor, prazoFinal (YYYY-MM-DD)
-- entregas: 2 a 3 itens com entrega, responsavel, prazo, status
-- riscos: 1 a 2 itens com risco e acaoTomar
-- insightOrigem (ligacao com o diagnostico)
-
-Campos de topo de cada sugestao:
+Para cada item em "suggestions" retorne APENAS:
 - titulo (curto)
-- descricao (1-2 frases resumo)
+- descricao (1-2 frases)
 - score (0-100)
 - categoria: pessoas|processo|tecnologia|estrutura|comunicacao|outro
-- rationale (por que este score, ligado ao diagnostico)
-- detalhes (2-3 frases narrativas: como executar, impacto esperado e o que observar)
+- rationale (ligado ao diagnostico)
+
+Nao inclua draft, entregas ou riscos — o servidor completa esses campos.
 
 Diagnostico da empresa:
-${diagnosticContext}${ragBlock}
+${compactContext}${ragBlock}
 
 Responda APENAS com JSON valido (sem markdown):
-{"companySummary":"...","companySituation":"...","suggestions":[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"...","detalhes":"...","draft":{"nomeIniciativa":"...","objetivoEspecifico":"...","owner":"...","sponsor":"...","prazoFinal":"2026-08-01","entregas":[{"entrega":"...","responsavel":"...","prazo":"2026-06-01","status":"amarelo"}],"riscos":[{"risco":"...","acaoTomar":"..."}],"insightOrigem":"..."}}]}`;
+{"companySummary":"...","companySituation":"...","suggestions":[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"..."}]}`;
 
   let demoReason = 'A IA não retornou JSON válido com sugestões suficientes.';
 
   try {
     const raw = await chatCompletion({
-      model: getDefaultModel(),
+      model: getFastStructuredModel(),
       messages: [
-        { role: 'system', content: 'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens).' },
+        {
+          role: 'system',
+          content:
+            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). Seja conciso.',
+        },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.4,
-      maxTokens: 8192,
+      temperature: 0.35,
+      maxTokens: 3200,
     });
 
     const parsed = extractJsonPayload(raw);

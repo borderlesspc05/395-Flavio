@@ -24,6 +24,7 @@ import workspaceRouter from './routes/workspace';
 import supportRouter from './routes/support';
 import meRouter from './routes/me';
 import ragRouter from './routes/rag';
+import cyclesRouter from './routes/cycles';
 import { requestLogger } from './middleware/requestLogger';
 import { getLlmStatus } from './services/llm';
 
@@ -95,6 +96,7 @@ app.use('/api/workspace', workspaceRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/me', meRouter);
 app.use('/api/rag', ragRouter);
+app.use('/api/cycles', cyclesRouter);
 
 app.use((_req, res) => {
   res.status(404).json({

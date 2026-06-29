@@ -78,6 +78,8 @@ router.post('/claim', async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const subscription = linked ?? (await getSubscriptionByEmail(email));
+    const { syncUserProfilePlan } = await import('../services/subscriptions');
+    const planId = await syncUserProfilePlan(userId);
     const summary = await getPlanSummaryForUser(userId);
 
     const { upsertUserProfile } = await import('../services/users');
@@ -85,7 +87,7 @@ router.post('/claim', async (req: Request, res: Response, next: NextFunction) =>
       userId,
       email,
       displayName: typeof req.body.displayName === 'string' ? req.body.displayName : undefined,
-      planId: summary.planId,
+      planId,
     });
 
     res.json({

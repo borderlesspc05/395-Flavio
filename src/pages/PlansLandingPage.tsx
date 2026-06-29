@@ -22,12 +22,14 @@ const PLANS = [
     id: 'starter',
     name: 'Starter',
     tagline: 'Foco total',
+    maxProjects: 1,
     concurrency: 1,
     price: 'Ideal para começar',
     description:
-      'Uma requisição por vez na IA e nas operações paralelas do fluxo Magnus Waves — perfeito para validar o método com clareza.',
+      'Um projeto ativo por vez para validar o método Magnus Waves com clareza — e uma operação de IA por vez no fluxo.',
     features: [
-      '1 requisição simultânea',
+      '1 projeto ativo',
+      '1 operação de IA por vez',
       'Consultoria IA + memória do diagnóstico',
       'Action Canvas manual e com IA',
       'Objetivos estratégicos',
@@ -39,12 +41,14 @@ const PLANS = [
     id: 'advanced',
     name: 'Advanced',
     tagline: 'Velocidade em equipe',
+    maxProjects: 3,
     concurrency: 3,
     price: 'Mais fluxo, menos espera',
     description:
-      'Até três requisições em paralelo: gere sugestões, converse com a IA e sincronize dados sem fila única.',
+      'Até três projetos ativos em paralelo e três operações de IA simultâneas — evolua frentes diferentes sem fila única.',
     features: [
-      '3 requisições simultâneas',
+      '3 projetos ativos',
+      '3 operações de IA em paralelo',
       'Tudo do Starter',
       'Importação paralela de objetivos',
       'Prioridade em picos de uso',
@@ -56,12 +60,14 @@ const PLANS = [
     id: 'premium',
     name: 'Premium',
     tagline: 'Sem teto operacional',
+    maxProjects: null,
     concurrency: null,
     price: 'Escala sem fricção',
     description:
-      'Concorrência ilimitada para organizações que executam Magnus Waves em múltiplas frentes ao mesmo tempo.',
+      'Projetos e operações de IA sem limite — para organizações que executam Magnus Waves em múltiplas frentes ao mesmo tempo.',
     features: [
-      'Requisições ilimitadas em paralelo',
+      'Projetos ilimitados',
+      'IA sem fila de espera',
       'Tudo do Advanced',
       'Suporte a squads e consultorias',
       'Memória Magnus Waves completa',
@@ -71,12 +77,12 @@ const PLANS = [
   },
 ] as const;
 
-function ConcurrencyVisual({ count }: { count: number | null }) {
+function ProjectsVisual({ count }: { count: number | null }) {
   if (count === null) {
     return (
       <div className="plan-concurrency plan-concurrency--unlimited" aria-hidden>
         <Infinity size={28} strokeWidth={1.75} />
-        <span>∞ paralelo</span>
+        <span>Projetos ilimitados</span>
       </div>
     );
   }
@@ -95,7 +101,37 @@ function ConcurrencyVisual({ count }: { count: number | null }) {
         )}
       </div>
       <span>
-        {count} {count === 1 ? 'requisição' : 'requisições'} por vez
+        {count === 1 ? '1 projeto ativo' : `${count} projetos ativos`}
+      </span>
+    </div>
+  );
+}
+
+function ConcurrencyVisual({ count }: { count: number | null }) {
+  if (count === null) {
+    return (
+      <div className="plan-concurrency plan-concurrency--unlimited" aria-hidden>
+        <Infinity size={28} strokeWidth={1.75} />
+        <span>IA sem fila</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="plan-concurrency" aria-hidden>
+      <div className="plan-concurrency-slots">
+        {Array.from({ length: count === 1 ? 1 : 3 }).map((_, i) => (
+          <span key={i} className="plan-slot plan-slot--active" style={{ animationDelay: `${i * 120}ms` }} />
+        ))}
+        {count === 1 && (
+          <>
+            <span className="plan-slot plan-slot--idle" />
+            <span className="plan-slot plan-slot--idle" />
+          </>
+        )}
+      </div>
+      <span>
+        {count === 1 ? '1 operação IA por vez' : `${count} operações IA em paralelo`}
       </span>
     </div>
   );
@@ -136,11 +172,11 @@ export function PlansLandingPage() {
           Magnus Waves™ · People Sprint 90+
         </ScrollReveal>
         <ScrollReveal as="h1" className="plans-hero-title" delay={80}>
-          Planos de <em>concorrência</em> para a sua consultoria com IA
+          Planos para seus <em>projetos</em> Magnus Waves
         </ScrollReveal>
         <ScrollReveal className="plans-hero-lead" delay={160}>
           O mesmo universo visual do app Magnus Mind — diagnóstico, Design, Difusão e MID — com
-          limites claros de <strong>requisições paralelas</strong> conforme o seu ritmo de execução.
+          limites claros de <strong>projetos ativos</strong> e <strong>operações de IA em paralelo</strong>.
         </ScrollReveal>
         <ScrollReveal className="plans-hero-actions" delay={240}>
           <a href="#planos" className="plans-btn plans-btn--primary plans-btn--lg">
@@ -170,10 +206,10 @@ export function PlansLandingPage() {
       <section id="planos" className="plans-section plans-pricing">
         <ScrollReveal className="plans-section-head">
           <span className="plans-eyebrow">Planos</span>
-          <h2>Escolha quantas requisições rodam ao mesmo tempo</h2>
+          <h2>Escolha quantos projetos e operações de IA rodam ao mesmo tempo</h2>
           <p>
-            Cada plano define quantas chamadas à API e à IA podem executar em paralelo — sem
-            travar o restante do fluxo Magnus Waves.
+            Cada plano define quantos projetos Magnus Waves você pode ter ativos e quantas
+            operações de IA podem executar em paralelo — sem travar o restante do fluxo.
           </p>
         </ScrollReveal>
 
@@ -191,6 +227,7 @@ export function PlansLandingPage() {
                 <h3>{plan.name}</h3>
                 <span className="plan-card-tagline">{plan.tagline}</span>
               </div>
+              <ProjectsVisual count={plan.maxProjects} />
               <ConcurrencyVisual count={plan.concurrency} />
               <p className="plan-card-price">{plan.price}</p>
               <p className="plan-card-desc">{plan.description}</p>

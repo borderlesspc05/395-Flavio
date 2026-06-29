@@ -172,8 +172,25 @@
   cursor: pointer;
 }
 
-.cycle-selector__new:hover {
+.cycle-selector__new:hover:not(:disabled) {
   background: rgba(175, 146, 112, 0.14);
+}
+
+.cycle-selector__new:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cycle-selector__limit-hint {
+  margin: 0.35rem 0 0;
+  padding: 0 0.25rem;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: rgba(242, 237, 230, 0.5);
+}
+
+.cycle-selector__limit-hint a {
+  color: #ffbc7d;
 }
 
 .diagnostic-cycle-notice {

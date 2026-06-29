@@ -19,18 +19,23 @@ export async function startDesignWaveFromEvolution(
   evolution: EvolutionLoopResult
 ): Promise<{ ok: boolean; message?: string; cycleId?: string }> {
   try {
-    if (activeCycle) {
+    let archiveCycleId: string | undefined;
+
+    if (activeCycle && activeCycle.status !== 'archived') {
       await snapshotFormIntoCycle(activeCycle.id, userId);
       const { data, completedAt } = await getInitialForm(userId);
       const diagnosticContext = buildDiagnosticContext(data);
+
+      await updateDiagnosticCycle(activeCycle.id, {
+        status: 'archived',
+        archivedAt: true,
+        diagnosticContext,
+        formData: data,
+        ...(completedAt ? { completedAt: completedAt.toISOString() } : {}),
+      });
+      archiveCycleId = activeCycle.id;
+
       if (diagnosticContext.trim()) {
-        await updateDiagnosticCycle(activeCycle.id, {
-          status: 'archived',
-          archivedAt: true,
-          diagnosticContext,
-          formData: data,
-          ...(completedAt ? { completedAt: completedAt.toISOString() } : {}),
-        });
         try {
           await workspaceApi.archiveCycle({
             cycleNumber: activeCycle.cycleNumber,
@@ -72,6 +77,7 @@ export async function startDesignWaveFromEvolution(
       status: 'active',
       diagnosticContext: buildDiagnosticContext(nextForm),
       formData: nextForm,
+      archiveCycleId,
     });
 
     await updateDiagnosticCycle(created.id, {

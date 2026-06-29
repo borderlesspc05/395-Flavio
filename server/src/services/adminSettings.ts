@@ -7,6 +7,7 @@ export interface PlanSettingsEntry {
   priceLabel: string;
   priceCents: number;
   concurrencyLimit: number | null;
+  maxOpenCycles: number | null;
 }
 
 export type PlanSettingsMap = Record<PlanId, PlanSettingsEntry>;
@@ -19,18 +20,21 @@ const DEFAULT_SETTINGS: PlanSettingsMap = {
     priceLabel: 'R$ 59,00 / mês',
     priceCents: 5900,
     concurrencyLimit: 1,
+    maxOpenCycles: 1,
   },
   advanced: {
     name: 'Advanced',
     priceLabel: 'R$ 149,00 / mês',
     priceCents: 14900,
     concurrencyLimit: 3,
+    maxOpenCycles: 3,
   },
   premium: {
     name: 'Premium',
     priceLabel: 'R$ 399,00 / mês',
     priceCents: 39900,
     concurrencyLimit: null,
+    maxOpenCycles: null,
   },
 };
 
@@ -78,6 +82,13 @@ export async function getConcurrencyLimitFromSettings(planId: PlanId): Promise<n
   return settings[planId]?.concurrencyLimit ?? PLANS[planId].concurrencyLimit;
 }
 
+export async function getMaxOpenCyclesFromSettings(planId: PlanId): Promise<number | null> {
+  const settings = await getPlanSettings();
+  const value = settings[planId]?.maxOpenCycles;
+  if (value !== undefined) return value;
+  return PLANS[planId].maxOpenCycles;
+}
+
 export function validatePlanSettingsInput(body: unknown): Partial<PlanSettingsMap> {
   if (!body || typeof body !== 'object' || !('plans' in body)) {
     return {};
@@ -98,6 +109,12 @@ export function validatePlanSettingsInput(body: unknown): Partial<PlanSettingsMa
           : typeof entry.concurrencyLimit === 'number'
             ? entry.concurrencyLimit
             : DEFAULT_SETTINGS[key].concurrencyLimit,
+      maxOpenCycles:
+        entry.maxOpenCycles === null
+          ? null
+          : typeof entry.maxOpenCycles === 'number'
+            ? entry.maxOpenCycles
+            : DEFAULT_SETTINGS[key].maxOpenCycles,
     };
   }
 

@@ -211,6 +211,17 @@
   margin-top: 0.15rem;
 }
 
+.project-select-limit-hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(255, 188, 125, 0.85);
+}
+
+.project-select-limit-hint a {
+  color: #ffbc7d;
+}
+
 .project-select-logout {
   display: inline-flex;
   align-items: center;

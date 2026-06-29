@@ -24,6 +24,8 @@ import { getInitialForm } from '../services/initialForm';
 import { getBlueprintGate } from '../services/blueprintGate';
 import { setActiveCycleId, resolveActiveCycleId } from '../services/cycleWorkspace';
 import { workspaceApi } from '../services/api';
+import { usePlan } from './PlanContext';
+import { canCreateOpenCycle, cycleLimitMessage } from '../utils/cycleLimits';
 
 interface CycleContextValue {
   userId: string | null;
@@ -91,6 +93,7 @@ async function ensureDefaultCycle(userId: string): Promise<DiagnosticCycle> {
 }
 
 export function CycleProvider({ children }: { children: ReactNode }) {
+  const { maxOpenCycles, plan } = usePlan();
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const [cycles, setCycles] = useState<DiagnosticCycle[]>([]);
   const [activeCycle, setActiveCycle] = useState<DiagnosticCycle | null>(null);
@@ -181,18 +184,23 @@ export function CycleProvider({ children }: { children: ReactNode }) {
     if (!userId) return { ok: false, message: 'Usuário não autenticado.' };
 
     try {
-      if (activeCycle) {
+      let archiveCycleId: string | undefined;
+
+      if (activeCycle && activeCycle.status !== 'archived') {
         await snapshotFormIntoCycle(activeCycle.id, userId);
         const { data, completedAt } = await getInitialForm(userId);
         const diagnosticContext = buildDiagnosticContext(data);
+
+        await updateDiagnosticCycle(activeCycle.id, {
+          status: 'archived',
+          archivedAt: true,
+          diagnosticContext,
+          formData: data,
+          ...(completedAt ? { completedAt: completedAt.toISOString() } : {}),
+        });
+        archiveCycleId = activeCycle.id;
+
         if (diagnosticContext.trim()) {
-          await updateDiagnosticCycle(activeCycle.id, {
-            status: 'archived',
-            archivedAt: true,
-            diagnosticContext,
-            formData: data,
-            ...(completedAt ? { completedAt: completedAt.toISOString() } : {}),
-          });
           try {
             await workspaceApi.archiveCycle({
               cycleNumber: activeCycle.cycleNumber,
@@ -205,10 +213,19 @@ export function CycleProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      if (!canCreateOpenCycle(cycles, maxOpenCycles, archiveCycleId)) {
+        const limit = maxOpenCycles ?? 1;
+        return {
+          ok: false,
+          message: cycleLimitMessage(plan?.planName ?? 'Starter', limit),
+        };
+      }
+
       const label = options?.label?.trim();
       const next = await createDiagnosticCycle(userId, {
         status: 'draft',
         diagnosticContext: '',
+        archiveCycleId,
         ...(label ? { label } : {}),
       });
       await setActiveCycleId(userId, next.id);
@@ -225,7 +242,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       const msg = err instanceof Error ? err.message : 'Erro ao criar ciclo';
       return { ok: false, message: msg };
     }
-  }, [userId, activeCycle, refreshCycles]);
+  }, [userId, activeCycle, refreshCycles, cycles, maxOpenCycles, plan?.planName]);
 
   const renameActiveCycle = useCallback(
     async (label: string) => {

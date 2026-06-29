@@ -1,14 +1,24 @@
 import { useState } from 'react';
 import { ChevronDown, FolderKanban, Layers, Loader2, Plus } from 'lucide-react';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
+import { ViewTransitionLink } from './navigation/ViewTransitionLink';
+import { usePlan } from '../context/PlanContext';
+import { canCreateOpenCycle } from '../utils/cycleLimits';
 import { useCycle } from '../context/CycleContext';
 
 export function CycleSelector() {
   const navigate = useViewTransitionNavigate();
   const { cycles, activeCycle, loading, switching, needsDiagnosis, switchCycle, startNewCycle } =
     useCycle();
+  const { maxOpenCycles, maxOpenCyclesLabel, plan } = usePlan();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  const canCreateMore = canCreateOpenCycle(
+    cycles,
+    maxOpenCycles,
+    activeCycle && activeCycle.status !== 'archived' ? activeCycle.id : undefined
+  );
 
   const handleSwitch = async (cycleId: string) => {
     setOpen(false);
@@ -105,10 +115,26 @@ export function CycleSelector() {
               <FolderKanban size={14} />
               Escolher projeto
             </button>
-            <button type="button" className="cycle-selector__new" onClick={handleNewCycle} disabled={busy}>
+            <button
+              type="button"
+              className="cycle-selector__new"
+              onClick={handleNewCycle}
+              disabled={busy || !canCreateMore}
+              title={
+                canCreateMore
+                  ? 'Criar novo ciclo'
+                  : `${maxOpenCyclesLabel} no plano ${plan?.planName ?? 'Starter'}`
+              }
+            >
               <Plus size={14} />
               Novo ciclo
             </button>
+            {!canCreateMore && (
+              <p className="cycle-selector__limit-hint">
+                Limite do plano: {maxOpenCyclesLabel}. Arquive um projeto ou{' '}
+                <ViewTransitionLink to="/planos">faça upgrade</ViewTransitionLink>.
+              </p>
+            )}
           </div>
         </>
       )}

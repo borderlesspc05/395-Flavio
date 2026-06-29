@@ -14,6 +14,14 @@ type DocData = Record<string, any>;
 /** In-memory fallback when Firebase is unavailable */
 const memoryStore = new Map<string, Map<string, DocData>>();
 
+function stripUndefined<T extends DocData>(data: T): T {
+  const out: DocData = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) out[key] = value;
+  }
+  return out as T;
+}
+
 function handleFirestoreError(err: unknown, context: string): void {
   if (isFirestoreCredentialError(err)) {
     markFirestoreUnavailable(err);
@@ -102,7 +110,7 @@ export async function create<T extends DocData>(
 
   if (db && isFirebaseEnabled()) {
     try {
-      await db.collection(collection).doc(id).set(data);
+      await db.collection(collection).doc(id).set(stripUndefined(data));
       return doc as T;
     } catch (err) {
       if (!isFirestoreRecoverableError(err)) throw err;
@@ -128,7 +136,7 @@ export async function update<T>(
   if (db && isFirebaseEnabled()) {
     try {
       const { id: _id, ...rest } = updated;
-      await db.collection(collection).doc(id).update(rest as DocData);
+      await db.collection(collection).doc(id).update(stripUndefined(rest as DocData));
       return updated;
     } catch (err) {
       if (!isFirestoreRecoverableError(err)) throw err;

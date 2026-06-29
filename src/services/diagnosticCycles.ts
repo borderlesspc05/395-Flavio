@@ -12,6 +12,7 @@ import {
 import { buildDiagnosticContext } from '../constants/diagnosticFlow';
 import { buildGateContextAppendix, type BlueprintPath } from '../constants/blueprintFlow';
 import { db } from '../config/firebase';
+import { api } from './api';
 import { getBlueprintGate, saveBlueprintGateSelection, clearBlueprintGate } from './blueprintGate';
 import { clearInitialForm, getInitialForm, saveInitialFormDraft } from './initialForm';
 import type { InitialFormData } from '../types';
@@ -77,27 +78,32 @@ export async function getDiagnosticCycle(cycleId: string): Promise<DiagnosticCyc
 
 export async function createDiagnosticCycle(
   userId: string,
-  payload: Partial<Pick<DiagnosticCycle, 'label' | 'status' | 'diagnosticContext' | 'gateSummary' | 'formData'>>
+  payload: Partial<Pick<DiagnosticCycle, 'label' | 'status' | 'diagnosticContext' | 'gateSummary' | 'formData'>> & {
+    archiveCycleId?: string;
+  }
 ): Promise<DiagnosticCycle> {
-  const existing = await listDiagnosticCycles(userId);
-  const cycleNumber =
-    existing.length > 0 ? Math.max(...existing.map((c) => c.cycleNumber)) + 1 : 1;
-  const label = payload.label ?? `Ciclo ${cycleNumber} · ${new Date().toLocaleDateString('pt-BR')}`;
-
-  const ref = await addDoc(collection(db, 'diagnosticCycles'), {
-    userId,
-    cycleNumber,
-    label,
-    status: payload.status ?? 'draft',
-    diagnosticContext: payload.diagnosticContext?.trim() ?? '',
-    gateSummary: payload.gateSummary?.trim() || null,
-    formData: payload.formData ?? null,
-    createdAt: serverTimestamp(),
-  });
-
-  const created = await getDiagnosticCycle(ref.id);
-  if (!created) throw new Error('Failed to create cycle');
-  return created;
+  try {
+    const res = await api.post<DiagnosticCycle>('/api/cycles', {
+      userId,
+      label: payload.label,
+      status: payload.status ?? 'draft',
+      diagnosticContext: payload.diagnosticContext ?? '',
+      gateSummary: payload.gateSummary,
+      formData: payload.formData,
+      archiveCycleId: payload.archiveCycleId,
+    });
+    return res.data;
+  } catch (err) {
+    const message =
+      err &&
+      typeof err === 'object' &&
+      'response' in err &&
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message;
+    if (typeof message === 'string' && message) {
+      throw new Error(message);
+    }
+    throw err;
+  }
 }
 
 function withoutUndefined(data: Record<string, unknown>): Record<string, unknown> {

@@ -5,6 +5,7 @@ export interface PlanSummary {
   planId: PlanId;
   planName: string;
   concurrencyLimit: number | null;
+  maxOpenCycles: number | null;
 }
 
 export interface ClaimResult extends PlanSummary {

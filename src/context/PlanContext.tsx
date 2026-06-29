@@ -12,7 +12,7 @@ import { auth } from '../config/firebase';
 import { billingApi, type PlanSummary } from '../services/billingApi';
 import { claimSubscriptionForUser } from '../services/claimSubscription';
 import { setClientConcurrencyLimit } from '../services/requestConcurrency';
-import { formatConcurrencyLimit } from '../constants/plans';
+import { formatConcurrencyLimit, formatMaxOpenCycles, formatPlanQuotaSummary } from '../constants/plans';
 import type { PlanId } from '../constants/plans';
 
 interface PlanContextValue {
@@ -20,6 +20,9 @@ interface PlanContextValue {
   loading: boolean;
   refreshPlan: () => Promise<void>;
   concurrencyLabel: string;
+  maxOpenCyclesLabel: string;
+  quotaSummaryLabel: string;
+  maxOpenCycles: number | null;
 }
 
 const PlanContext = createContext<PlanContextValue | null>(null);
@@ -30,7 +33,11 @@ export function PlanProvider({ children }: { children: ReactNode }) {
 
   const applyPlan = useCallback((summary: PlanSummary | null) => {
     setPlan(summary);
-    setClientConcurrencyLimit(summary?.concurrencyLimit ?? 1);
+    if (!summary) {
+      setClientConcurrencyLimit(1);
+      return;
+    }
+    setClientConcurrencyLimit(summary.concurrencyLimit);
   }, []);
 
   const refreshPlan = useCallback(async () => {
@@ -68,12 +75,19 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   }, [applyPlan, refreshPlan]);
 
   const value = useMemo<PlanContextValue>(
-    () => ({
-      plan,
-      loading,
-      refreshPlan,
-      concurrencyLabel: formatConcurrencyLimit(plan?.concurrencyLimit ?? 1),
-    }),
+    () => {
+      const concurrency = plan === null ? 1 : plan.concurrencyLimit;
+      const maxOpen = plan === null ? 1 : plan.maxOpenCycles;
+      return {
+        plan,
+        loading,
+        refreshPlan,
+        concurrencyLabel: formatConcurrencyLimit(concurrency),
+        maxOpenCycles: maxOpen,
+        maxOpenCyclesLabel: formatMaxOpenCycles(maxOpen),
+        quotaSummaryLabel: formatPlanQuotaSummary(maxOpen, concurrency),
+      };
+    },
     [plan, loading, refreshPlan]
   );
 

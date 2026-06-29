@@ -27,6 +27,13 @@ import type { SuggestedSolutionAction } from '../types/solutionPick';
 const MAX_SELECT = 5;
 const SUMMARY_COLLAPSED_LINES = 5;
 
+const LOADING_STEPS = [
+  'Lendo seu diagnóstico…',
+  'Identificando gaps e oportunidades…',
+  'Montando 10 planos de ação priorizados…',
+  'Quase pronto — finalizando scores e resumo…',
+] as const;
+
 const CATEGORY_LABELS: Record<string, string> = {
   pessoas: 'Pessoas',
   processo: 'Processo',
@@ -60,6 +67,7 @@ export function SolutionPickPanel({
   const [companySummary, setCompanySummary] = useState<string | null>(null);
   const [companySituation, setCompanySituation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [demoMode, setDemoMode] = useState(false);
   const [ragUsed, setRagUsed] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +93,17 @@ export function SolutionPickPanel({
   const selectedIds = useMemo(() => new Set(selected.map((s) => s.id)), [selected]);
   const phasesReady = isSolutionPickReady(data);
   const canExpandSummary = Boolean(companySituation) || summaryOverflows;
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStep(0);
+      return;
+    }
+    const interval = window.setInterval(() => {
+      setLoadingStep((prev) => (prev + 1) % LOADING_STEPS.length);
+    }, 2800);
+    return () => window.clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     setSummaryExpanded(false);
@@ -381,9 +400,12 @@ export function SolutionPickPanel({
       )}
 
       {loading && suggestions.length === 0 ? (
-        <div className="solution-pick-loading">
+        <div className="solution-pick-loading" role="status" aria-live="polite">
           <Loader2 size={28} className="spin" aria-hidden />
-          <span>Analisando diagnóstico e gerando 10 opções de plano de ação…</span>
+          <span className="solution-pick-loading-title">{LOADING_STEPS[loadingStep]}</span>
+          <span className="solution-pick-loading-sub">
+            Isso costuma levar de 15 a 40 segundos na primeira vez.
+          </span>
         </div>
       ) : (
         <ol className="solution-pick-list">

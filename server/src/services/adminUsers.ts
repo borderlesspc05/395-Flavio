@@ -1,26 +1,30 @@
 import { AppError } from '../utils/errors';
-import { isPlanId, type PlanId } from './plans';
+import {
+  isPlanId,
+  isDefaultConcurrencyForPlan,
+  parseConcurrencyInput,
+  type PlanId,
+} from './plans';
 import { getAuth } from './firebase';
-import { upsertUserProfile } from './users';
+import { applyUserPlanAccess, upsertUserProfile } from './users';
 import { linkSubscriptionToUser, setSubscriptionPlanForEmail } from './subscriptions';
 import { getConcurrencyLimitFromSettings } from './adminSettings';
-import { getById, update, COLLECTIONS } from './storage';
+import { getById, COLLECTIONS } from './storage';
 import type { UserProfile } from './users';
 
-async function resolveConcurrency(
+/** Só retorna override quando o admin definiu limite diferente do padrão do plano. */
+async function resolveAdminConcurrencyOverride(
   planId: PlanId,
   raw: unknown | undefined
 ): Promise<number | null | undefined> {
-  if (raw === undefined) return undefined;
-  if (raw === null || raw === 'unlimited' || raw === '') return null;
-  if (typeof raw === 'number' && raw > 0) return Math.floor(raw);
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim().toLowerCase();
-    if (trimmed === '' || trimmed === 'unlimited' || trimmed === 'ilimitado') return null;
-    const n = Number(trimmed);
-    if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  const parsed = parseConcurrencyInput(raw);
+  if (parsed === undefined) return undefined;
+
+  const planDefault = await getConcurrencyLimitFromSettings(planId);
+  if (isDefaultConcurrencyForPlan(planId, parsed) || parsed === planDefault) {
+    return undefined;
   }
-  return getConcurrencyLimitFromSettings(planId);
+  return parsed;
 }
 
 export async function adminCreateUser(input: {
@@ -45,9 +49,8 @@ export async function adminCreateUser(input: {
   }
 
   const planId = input.planId;
-  const concurrencyLimit = await resolveConcurrency(planId, input.concurrencyLimit);
-  const defaultLimit = await getConcurrencyLimitFromSettings(planId);
-  const effectiveLimit = concurrencyLimit !== undefined ? concurrencyLimit : defaultLimit;
+  const customOverride = await resolveAdminConcurrencyOverride(planId, input.concurrencyLimit);
+  const effectiveLimit = await getConcurrencyLimitFromSettings(planId);
 
   let userId: string;
   try {
@@ -66,16 +69,27 @@ export async function adminCreateUser(input: {
     throw new AppError(500, 'Não foi possível criar o usuário no Firebase.');
   }
 
-  await upsertUserProfile({
-    userId,
-    email,
-    displayName: input.displayName?.trim(),
-    planId,
-    concurrencyOverride: effectiveLimit,
-  });
   await setSubscriptionPlanForEmail(email, planId, userId);
 
-  return { userId, email, planId, concurrencyLimit: effectiveLimit };
+  if (customOverride !== undefined) {
+    await applyUserPlanAccess(userId, planId, {
+      email,
+      displayName: input.displayName?.trim(),
+      concurrencyOverride: customOverride,
+    });
+  } else {
+    await applyUserPlanAccess(userId, planId, {
+      email,
+      displayName: input.displayName?.trim(),
+    });
+  }
+
+  return {
+    userId,
+    email,
+    planId,
+    concurrencyLimit: customOverride !== undefined ? customOverride : effectiveLimit,
+  };
 }
 
 export async function adminUpdateUserAccess(
@@ -92,20 +106,20 @@ export async function adminUpdateUserAccess(
     throw new AppError(400, 'Plano inválido.');
   }
 
-  const concurrencyPatch = await resolveConcurrency(planId, input.concurrencyLimit);
-  const effectiveLimit =
-    concurrencyPatch !== undefined
-      ? concurrencyPatch
-      : profile.concurrencyOverride !== undefined
-        ? profile.concurrencyOverride
-        : await getConcurrencyLimitFromSettings(planId);
+  const customOverride = await resolveAdminConcurrencyOverride(planId, input.concurrencyLimit);
 
   await setSubscriptionPlanForEmail(profile.email, planId, userId);
-  await update(COLLECTIONS.userProfiles, userId, {
-    planId,
-    concurrencyOverride: effectiveLimit,
-    lastSeenAt: new Date().toISOString(),
-  });
+
+  if (customOverride !== undefined) {
+    await applyUserPlanAccess(userId, planId, { concurrencyOverride: customOverride });
+  } else {
+    await applyUserPlanAccess(userId, planId);
+  }
+
+  const effectiveLimit =
+    customOverride !== undefined
+      ? customOverride
+      : await getConcurrencyLimitFromSettings(planId);
 
   return { userId, planId, concurrencyLimit: effectiveLimit };
 }

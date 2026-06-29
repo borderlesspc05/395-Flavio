@@ -91,11 +91,21 @@ export function AdminUserDetailDrawer({ userId, userName, onClose }: Props) {
                   <dd>{detail.profile?.requestCount ?? 0}</dd>
                 </div>
                 <div>
-                  <dt>Concorrência</dt>
+                  <dt>Projetos ativos</dt>
+                  <dd>
+                    {detail.plan.maxOpenCycles == null
+                      ? 'Ilimitado'
+                      : detail.plan.maxOpenCycles === 1
+                        ? '1 projeto'
+                        : `${detail.plan.maxOpenCycles} projetos`}
+                  </dd>
+                </div>
+                <div>
+                  <dt>IA em paralelo</dt>
                   <dd>
                     {detail.plan.concurrencyLimit == null
                       ? 'Ilimitado'
-                      : `${detail.plan.concurrencyLimit} simultânea(s)`}
+                      : `${detail.plan.concurrencyLimit} operação(ões)`}
                   </dd>
                 </div>
                 <div>

@@ -156,6 +156,8 @@ export async function handleStripeWebhook(
           typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
         stripeCheckoutSessionId: session.id,
       });
+      const { syncProfileAfterSubscriptionEmail } = await import('./subscriptions');
+      await syncProfileAfterSubscriptionEmail(email);
       break;
     }
     case 'customer.subscription.updated': {
@@ -164,7 +166,9 @@ export async function handleStripeWebhook(
         status: string;
         metadata?: { planId?: string };
       };
-      const { updateSubscriptionByStripeId } = await import('./subscriptions');
+      const { updateSubscriptionByStripeId, syncProfileAfterSubscriptionChange } = await import(
+        './subscriptions'
+      );
       const status =
         sub.status === 'active'
           ? 'active'
@@ -177,6 +181,7 @@ export async function handleStripeWebhook(
         patch.planId = sub.metadata.planId;
       }
       await updateSubscriptionByStripeId(sub.id, patch);
+      await syncProfileAfterSubscriptionChange(sub.id);
       break;
     }
     case 'invoice.payment_failed': {

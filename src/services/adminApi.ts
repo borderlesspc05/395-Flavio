@@ -92,6 +92,7 @@ export interface AdminUserDetail {
     planId: string;
     planName: string;
     concurrencyLimit: number | null;
+    maxOpenCycles: number | null;
     hasActiveSubscription: boolean;
   };
   subscription: { status: string; planId: string; email: string } | null;
@@ -137,6 +138,7 @@ export interface PlanSettingsEntry {
   priceLabel: string;
   priceCents: number;
   concurrencyLimit: number | null;
+  maxOpenCycles: number | null;
 }
 
 export type PlanSettingsMap = Record<PlanId, PlanSettingsEntry>;

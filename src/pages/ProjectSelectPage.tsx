@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ArrowRight, FolderKanban, Loader2, LogOut, Plus } from 'lucide-react';
 import { signOut } from 'firebase/auth';
@@ -8,6 +9,8 @@ import { useCycle } from '../context/CycleContext';
 import type { DiagnosticCycle } from '../services/diagnosticCycles';
 import { getCycleWaveFromDoc, getRouteForCycleDoc, resolveCycleEntryRoute, WAVE_STEP_LABELS } from '../services/cycleRouting';
 import { clearWorkspaceEntered, hasEnteredWorkspace, markWorkspaceEntered } from '../services/projectWorkspace';
+import { usePlan } from '../context/PlanContext';
+import { canCreateOpenCycle } from '../utils/cycleLimits';
 
 const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
   draft: 'Rascunho',
@@ -18,11 +21,18 @@ const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
 export function ProjectSelectPage() {
   const navigate = useViewTransitionNavigate();
   const { cycles, activeCycle, loading, switching, switchCycle, startNewCycle, refreshCycles } = useCycle();
+  const { maxOpenCycles, maxOpenCyclesLabel, plan } = usePlan();
   const [enteringId, setEnteringId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
+
+  const canCreateMore = canCreateOpenCycle(
+    cycles,
+    maxOpenCycles,
+    activeCycle && activeCycle.status !== 'archived' ? activeCycle.id : undefined
+  );
 
   const enterCycle = async (cycle: DiagnosticCycle) => {
     if (enteringId || switching) return;
@@ -112,8 +122,8 @@ export function ProjectSelectPage() {
           <>
             <div className="project-select-existing">
               <p className="project-select-hint">
-                Escolha um projeto existente ou crie um novo no final. Ao concluir o diagnóstico você pode
-                confirmar ou ajustar o nome.
+                Escolha um projeto existente ou crie um novo no final. Seu plano{' '}
+                <strong>{plan?.planName ?? 'Starter'}</strong> permite {maxOpenCyclesLabel}.
               </p>
 
               <ul className="project-select-list" role="listbox" aria-label="Projetos disponíveis">
@@ -185,8 +195,13 @@ export function ProjectSelectPage() {
               <button
                 type="button"
                 className="auth-btn auth-btn--primary project-select-create-btn"
-                disabled={creating || Boolean(enteringId)}
+                disabled={creating || Boolean(enteringId) || !canCreateMore}
                 onClick={() => void handleCreateProject()}
+                title={
+                  canCreateMore
+                    ? undefined
+                    : `Limite atingido: ${maxOpenCyclesLabel}`
+                }
               >
                 {creating ? (
                   <>
@@ -203,6 +218,12 @@ export function ProjectSelectPage() {
                   </>
                 )}
               </button>
+              {!canCreateMore && (
+                <p className="project-select-limit-hint" role="status">
+                  Você atingiu o limite de {maxOpenCyclesLabel} no plano {plan?.planName ?? 'Starter'}.
+                  Arquive um projeto ativo ou <ViewTransitionLink to="/planos">faça upgrade</ViewTransitionLink>.
+                </p>
+              )}
             </section>
 
             {error && (
