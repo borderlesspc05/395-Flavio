@@ -77,6 +77,7 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
     planName: plan.planName,
     concurrencyLimit: plan.concurrencyLimit,
     maxOpenCycles: plan.maxOpenCycles,
+    isDemoPlan: plan.isDemoPlan,
     hasActiveSubscription: subscription?.status === 'active',
   };
 

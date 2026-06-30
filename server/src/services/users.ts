@@ -1,4 +1,4 @@
-import { create, getById, update, COLLECTIONS } from './storage';
+import { create, getById, update, stripUndefined, COLLECTIONS } from './storage';
 import { nowIso } from '../utils/id';
 import type { PlanId } from './plans';
 
@@ -35,13 +35,16 @@ export async function upsertUserProfile(data: {
   const record: Omit<UserProfile, 'id'> = {
     userId: data.userId,
     email: data.email?.trim().toLowerCase() ?? existing?.email ?? '',
-    displayName: data.displayName ?? existing?.displayName,
-    photoURL: data.photoURL ?? existing?.photoURL,
     planId: data.planId ?? existing?.planId,
     requestCount: existing?.requestCount ?? 0,
     firstSeenAt: existing?.firstSeenAt ?? now,
     lastSeenAt: now,
   };
+
+  const displayName = data.displayName ?? existing?.displayName;
+  const photoURL = data.photoURL ?? existing?.photoURL;
+  if (displayName !== undefined) record.displayName = displayName;
+  if (photoURL !== undefined) record.photoURL = photoURL;
 
   if (data.clearConcurrencyOverride) {
     // omit — field removed below when persisting
@@ -56,11 +59,15 @@ export async function upsertUserProfile(data: {
       await clearConcurrencyOverrideField(data.userId, record);
       return { id: data.userId, ...record };
     }
-    await update(COLLECTIONS.userProfiles, data.userId, record);
+    await update(COLLECTIONS.userProfiles, data.userId, stripUndefined({ ...record }));
     return { id: data.userId, ...record };
   }
 
-  await create(COLLECTIONS.userProfiles, data.userId, record as Record<string, unknown>);
+  await create(
+    COLLECTIONS.userProfiles,
+    data.userId,
+    stripUndefined({ ...record }) as Record<string, unknown>
+  );
   return { id: data.userId, ...record };
 }
 
@@ -78,11 +85,13 @@ export async function applyUserPlanAccess(
   const existing = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
   const patch: Parameters<typeof upsertUserProfile>[0] = {
     userId,
-    email: options?.email ?? existing?.email,
-    displayName: options?.displayName ?? existing?.displayName,
-    photoURL: existing?.photoURL,
     planId,
   };
+  const email = options?.email ?? existing?.email;
+  const displayName = options?.displayName ?? existing?.displayName;
+  if (email) patch.email = email;
+  if (displayName !== undefined) patch.displayName = displayName;
+  if (existing?.photoURL !== undefined) patch.photoURL = existing.photoURL;
 
   if (options?.concurrencyOverride !== undefined) {
     patch.concurrencyOverride = options.concurrencyOverride;
@@ -104,16 +113,16 @@ async function clearConcurrencyOverrideField(
   if (db && isFirebaseEnabled()) {
     const admin = await import('firebase-admin');
     await db.collection(COLLECTIONS.userProfiles).doc(userId).set(
-      {
+      stripUndefined({
         ...withoutOverride,
         concurrencyOverride: admin.firestore.FieldValue.delete(),
-      },
+      }),
       { merge: true }
     );
     return;
   }
 
-  await update(COLLECTIONS.userProfiles, userId, withoutOverride as Partial<UserProfile>);
+  await update(COLLECTIONS.userProfiles, userId, stripUndefined({ ...withoutOverride }));
 }
 
 export async function incrementUserRequestCount(userId: string): Promise<void> {

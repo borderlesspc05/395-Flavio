@@ -26,10 +26,9 @@ const PLANS = [
     concurrency: 1,
     price: 'Ideal para começar',
     description:
-      'Um projeto ativo por vez para validar o método Magnus Waves com clareza — e uma operação de IA por vez no fluxo.',
+      'Um processo de pré-diagnóstico ativo por vez — ideal para validar o método Magnus Waves com foco.',
     features: [
-      '1 projeto ativo',
-      '1 operação de IA por vez',
+      '1 processo de pré-diagnóstico ativo',
       'Consultoria IA + memória do diagnóstico',
       'Action Canvas manual e com IA',
       'Objetivos estratégicos',
@@ -45,10 +44,9 @@ const PLANS = [
     concurrency: 3,
     price: 'Mais fluxo, menos espera',
     description:
-      'Até três projetos ativos em paralelo e três operações de IA simultâneas — evolua frentes diferentes sem fila única.',
+      'Até três processos de pré-diagnóstico ativos em paralelo — evolua frentes diferentes no mesmo plano.',
     features: [
-      '3 projetos ativos',
-      '3 operações de IA em paralelo',
+      '3 processos de pré-diagnóstico ativos',
       'Tudo do Starter',
       'Importação paralela de objetivos',
       'Prioridade em picos de uso',
@@ -64,10 +62,9 @@ const PLANS = [
     concurrency: null,
     price: 'Escala sem fricção',
     description:
-      'Projetos e operações de IA sem limite — para organizações que executam Magnus Waves em múltiplas frentes ao mesmo tempo.',
+      'Processos de pré-diagnóstico sem limite — para organizações que executam Magnus Waves em múltiplas frentes.',
     features: [
-      'Projetos ilimitados',
-      'IA sem fila de espera',
+      'Processos de pré-diagnóstico ilimitados',
       'Tudo do Advanced',
       'Suporte a squads e consultorias',
       'Memória Magnus Waves completa',
@@ -82,7 +79,7 @@ function ProjectsVisual({ count }: { count: number | null }) {
     return (
       <div className="plan-concurrency plan-concurrency--unlimited" aria-hidden>
         <Infinity size={28} strokeWidth={1.75} />
-        <span>Projetos ilimitados</span>
+        <span>Processos ilimitados</span>
       </div>
     );
   }
@@ -101,37 +98,7 @@ function ProjectsVisual({ count }: { count: number | null }) {
         )}
       </div>
       <span>
-        {count === 1 ? '1 projeto ativo' : `${count} projetos ativos`}
-      </span>
-    </div>
-  );
-}
-
-function ConcurrencyVisual({ count }: { count: number | null }) {
-  if (count === null) {
-    return (
-      <div className="plan-concurrency plan-concurrency--unlimited" aria-hidden>
-        <Infinity size={28} strokeWidth={1.75} />
-        <span>IA sem fila</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="plan-concurrency" aria-hidden>
-      <div className="plan-concurrency-slots">
-        {Array.from({ length: count === 1 ? 1 : 3 }).map((_, i) => (
-          <span key={i} className="plan-slot plan-slot--active" style={{ animationDelay: `${i * 120}ms` }} />
-        ))}
-        {count === 1 && (
-          <>
-            <span className="plan-slot plan-slot--idle" />
-            <span className="plan-slot plan-slot--idle" />
-          </>
-        )}
-      </div>
-      <span>
-        {count === 1 ? '1 operação IA por vez' : `${count} operações IA em paralelo`}
+        {count === 1 ? '1 processo ativo' : `${count} processos ativos`}
       </span>
     </div>
   );
@@ -176,7 +143,7 @@ export function PlansLandingPage() {
         </ScrollReveal>
         <ScrollReveal className="plans-hero-lead" delay={160}>
           O mesmo universo visual do app Magnus Mind — diagnóstico, Design, Difusão e MID — com
-          limites claros de <strong>projetos ativos</strong> e <strong>operações de IA em paralelo</strong>.
+          limites claros de <strong>processos de pré-diagnóstico ativos</strong> conforme o seu plano.
         </ScrollReveal>
         <ScrollReveal className="plans-hero-actions" delay={240}>
           <a href="#planos" className="plans-btn plans-btn--primary plans-btn--lg">
@@ -206,10 +173,10 @@ export function PlansLandingPage() {
       <section id="planos" className="plans-section plans-pricing">
         <ScrollReveal className="plans-section-head">
           <span className="plans-eyebrow">Planos</span>
-          <h2>Escolha quantos projetos e operações de IA rodam ao mesmo tempo</h2>
+          <h2>Escolha quantos processos de pré-diagnóstico rodam ao mesmo tempo</h2>
           <p>
-            Cada plano define quantos projetos Magnus Waves você pode ter ativos e quantas
-            operações de IA podem executar em paralelo — sem travar o restante do fluxo.
+            Cada plano define quantos processos Magnus Waves você pode ter ativos — o limite de uso
+            de IA por domínio será definido em uma etapa posterior do contrato.
           </p>
         </ScrollReveal>
 
@@ -228,7 +195,6 @@ export function PlansLandingPage() {
                 <span className="plan-card-tagline">{plan.tagline}</span>
               </div>
               <ProjectsVisual count={plan.maxProjects} />
-              <ConcurrencyVisual count={plan.concurrency} />
               <p className="plan-card-price">{plan.price}</p>
               <p className="plan-card-desc">{plan.description}</p>
               <ul className="plan-card-features">

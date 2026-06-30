@@ -16,17 +16,10 @@ export function formatConcurrencyLimit(limit: number | null): string {
   return `${limit} operações de IA em paralelo`;
 }
 
-export { formatMaxOpenCycles } from '../utils/cycleLimits';
+import { formatMaxOpenCycles } from '../utils/cycleLimits';
 
-export function formatPlanQuotaSummary(
-  maxOpenCycles: number | null,
-  concurrencyLimit: number | null
-): string {
-  const projects =
-    maxOpenCycles === null
-      ? 'Projetos ilimitados'
-      : maxOpenCycles === 1
-        ? '1 projeto ativo'
-        : `${maxOpenCycles} projetos ativos`;
-  return `${projects} · ${formatConcurrencyLimit(concurrencyLimit)}`;
+export { formatMaxOpenCycles };
+
+export function formatPlanQuotaSummary(maxOpenCycles: number | null): string {
+  return formatMaxOpenCycles(maxOpenCycles);
 }

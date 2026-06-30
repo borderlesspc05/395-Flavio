@@ -165,6 +165,48 @@
   margin-top: 0.15rem;
 }
 
+.auth-forgot-link,
+.auth-forgot-back {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  color: rgba(255, 188, 125, 0.9);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-forgot-link {
+  display: block;
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.auth-forgot-link:hover,
+.auth-forgot-back:hover {
+  color: #ffbc7d;
+}
+
+.auth-forgot-back {
+  display: block;
+  width: 100%;
+  margin-top: 0.85rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.auth-success-banner {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(196, 232, 196, 0.95);
+  background: rgba(72, 140, 88, 0.18);
+  border: 1px solid rgba(120, 200, 130, 0.25);
+}
+
 .auth-page--refined .auth-card .auth-btn {
   min-height: 44px;
   font-size: 0.9rem;

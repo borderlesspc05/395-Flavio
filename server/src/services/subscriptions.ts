@@ -83,6 +83,28 @@ export async function linkSubscriptionToUser(
   return updated;
 }
 
+function isDemoSubscriptionRecord(sub: SubscriptionRecord | null | undefined): boolean {
+  return Boolean(sub?.stripeCheckoutSessionId?.startsWith('demo_'));
+}
+
+/** Checkout simulado (mock): limites liberados para testar o fluxo completo. */
+export async function isDemoSubscriptionUser(userId: string): Promise<boolean> {
+  const profile = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
+  const { listByUser } = await import('./storage');
+  const byUser = await listByUser<SubscriptionRecord>(COLLECTIONS.subscriptions, userId);
+  const activeByUser = byUser.find(
+    (s) => s.status === 'active' || s.status === 'past_due'
+  );
+  if (isDemoSubscriptionRecord(activeByUser)) return true;
+
+  const email = profile?.email?.trim();
+  if (email) {
+    const byEmail = await getSubscriptionByEmail(email);
+    if (isDemoSubscriptionRecord(byEmail)) return true;
+  }
+  return false;
+}
+
 export async function getPlanIdForUser(userId: string): Promise<PlanId> {
   const profile = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
 
@@ -201,15 +223,17 @@ async function upsertUserProfileEmail(userId: string, email: string): Promise<vo
 
 export async function getPlanSummaryForUser(userId: string) {
   const planId = await syncUserProfilePlan(userId);
-  const concurrencyLimit = await getConcurrencyLimitForUser(userId);
+  const demoUnlimited = await isDemoSubscriptionUser(userId);
+  const concurrencyLimit = demoUnlimited ? null : await getConcurrencyLimitForUser(userId);
   const plan = (await import('./plans')).PLANS[planId];
   const { getMaxOpenCyclesFromSettings } = await import('./adminSettings');
-  const maxOpenCycles = await getMaxOpenCyclesFromSettings(planId);
+  const maxOpenCycles = demoUnlimited ? null : await getMaxOpenCyclesFromSettings(planId);
   return {
     planId,
     planName: plan.name,
     concurrencyLimit,
     maxOpenCycles,
+    isDemoPlan: demoUnlimited,
   };
 }
 

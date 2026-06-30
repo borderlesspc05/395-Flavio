@@ -25,14 +25,14 @@ export function canCreateOpenCycle(
 }
 
 export function formatMaxOpenCycles(limit: number | null): string {
-  if (limit === null) return 'Projetos ilimitados';
-  if (limit === 1) return '1 projeto ativo';
-  return `${limit} projetos ativos`;
+  if (limit === null) return 'Processos de pré-diagnóstico ilimitados';
+  if (limit === 1) return '1 processo de pré-diagnóstico ativo';
+  return `${limit} processos de pré-diagnóstico ativos`;
 }
 
 export function cycleLimitMessage(planName: string, maxOpen: number): string {
   if (maxOpen === 1) {
-    return `Seu plano ${planName} permite apenas 1 projeto ativo. Arquive o projeto atual ou faça upgrade.`;
+    return `Seu plano ${planName} permite apenas 1 processo de pré-diagnóstico ativo. Arquive o atual ou faça upgrade.`;
   }
-  return `Seu plano ${planName} permite até ${maxOpen} projetos ativos. Arquive um projeto ou faça upgrade.`;
+  return `Seu plano ${planName} permite até ${maxOpen} processos de pré-diagnóstico ativos. Arquive um processo ou faça upgrade.`;
 }

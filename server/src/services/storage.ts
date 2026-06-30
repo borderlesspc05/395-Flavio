@@ -14,7 +14,7 @@ type DocData = Record<string, any>;
 /** In-memory fallback when Firebase is unavailable */
 const memoryStore = new Map<string, Map<string, DocData>>();
 
-function stripUndefined<T extends DocData>(data: T): T {
+export function stripUndefined<T extends DocData>(data: T): T {
   const out: DocData = {};
   for (const [key, value] of Object.entries(data)) {
     if (value !== undefined) out[key] = value;

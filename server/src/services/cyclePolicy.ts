@@ -26,6 +26,8 @@ export async function getMaxOpenCyclesFromSettings(planId: PlanId): Promise<numb
 }
 
 export async function getMaxOpenCyclesForUser(userId: string): Promise<number | null> {
+  const { isDemoSubscriptionUser } = await import('./subscriptions');
+  if (await isDemoSubscriptionUser(userId)) return null;
   const planId = await getPlanIdForUser(userId);
   return getMaxOpenCyclesFromSettings(planId);
 }
@@ -40,7 +42,7 @@ export function assertCanAddOpenCycle(
   throw new AppError(
     403,
     maxOpen === 1
-      ? `Seu plano ${planName} permite apenas 1 projeto ativo por vez. Arquive o projeto atual ou faça upgrade para criar outro.`
-      : `Seu plano ${planName} permite até ${maxOpen} projetos ativos. Arquive um projeto ou faça upgrade para criar outro.`
+      ? `Seu plano ${planName} permite apenas 1 processo de pré-diagnóstico ativo. Arquive o atual ou faça upgrade para criar outro.`
+      : `Seu plano ${planName} permite até ${maxOpen} processos de pré-diagnóstico ativos. Arquive um processo ou faça upgrade para criar outro.`
   );
 }

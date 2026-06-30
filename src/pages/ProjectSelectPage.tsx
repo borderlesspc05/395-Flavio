@@ -122,7 +122,7 @@ export function ProjectSelectPage() {
           <>
             <div className="project-select-existing">
               <p className="project-select-hint">
-                Escolha um projeto existente ou crie um novo no final. Seu plano{' '}
+                Escolha um processo existente ou crie um novo no final. Seu plano{' '}
                 <strong>{plan?.planName ?? 'Starter'}</strong> permite {maxOpenCyclesLabel}.
               </p>
 
@@ -221,7 +221,7 @@ export function ProjectSelectPage() {
               {!canCreateMore && (
                 <p className="project-select-limit-hint" role="status">
                   Você atingiu o limite de {maxOpenCyclesLabel} no plano {plan?.planName ?? 'Starter'}.
-                  Arquive um projeto ativo ou <ViewTransitionLink to="/planos">faça upgrade</ViewTransitionLink>.
+                  Arquive um processo ativo ou <ViewTransitionLink to="/planos">faça upgrade</ViewTransitionLink>.
                 </p>
               )}
             </section>

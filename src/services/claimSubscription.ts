@@ -28,7 +28,6 @@ export async function claimSubscriptionForUser(
     clearPendingCheckout();
     return result;
   } catch {
-    clearPendingCheckout();
     const plan = await billingApi.getPlan(userId).catch(() => null);
     if (plan) setClientConcurrencyLimit(plan.concurrencyLimit);
     return plan;

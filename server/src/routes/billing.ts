@@ -12,7 +12,6 @@ import {
   linkSubscriptionToUser,
 } from '../services/subscriptions';
 import { isPlanId } from '../services/plans';
-import { env } from '../config/env';
 
 const router = Router();
 
@@ -48,32 +47,54 @@ router.post('/claim', async (req: Request, res: Response, next: NextFunction) =>
 
     let linked = await linkSubscriptionToUser(email, userId);
 
-    if (!linked && checkoutSessionId && typeof checkoutSessionId === 'string') {
-      const fulfilled = await fulfillCheckoutSession(checkoutSessionId);
-      if (fulfilled) {
-        if (
-          fulfilled.email &&
-          fulfilled.email.toLowerCase() !== email.trim().toLowerCase()
-        ) {
-          throw new AppError(
-            400,
-            'O email da conta deve ser o mesmo usado no pagamento Stripe.'
-          );
-        }
-        linked = await linkSubscriptionToUser(email, userId);
-      } else if (
-        env.nodeEnv === 'development' &&
-        req.body.demo === true &&
-        demoPlanId &&
-        isPlanId(demoPlanId)
+    if (!linked) {
+      const existingSub = await getSubscriptionByEmail(email);
+      if (
+        existingSub &&
+        (existingSub.status === 'active' || existingSub.status === 'past_due')
       ) {
+        linked = await linkSubscriptionToUser(email, userId);
+      }
+    }
+
+    if (!linked && checkoutSessionId && typeof checkoutSessionId === 'string') {
+      const isDemoSession =
+        checkoutSessionId.startsWith('demo_') || req.body.demo === true;
+
+      if (isDemoSession) {
+        const fromSession = checkoutSessionId.match(/^demo_(starter|advanced|premium)_/)?.[1];
+        const planId =
+          demoPlanId && isPlanId(demoPlanId)
+            ? demoPlanId
+            : fromSession && isPlanId(fromSession)
+              ? fromSession
+              : null;
+
+        if (!planId) {
+          throw new AppError(400, 'Plano da simulação não identificado.');
+        }
+
         const { upsertSubscriptionFromCheckout } = await import('../services/subscriptions');
         await upsertSubscriptionFromCheckout({
           email,
-          planId: demoPlanId,
+          planId,
           stripeCheckoutSessionId: checkoutSessionId,
         });
         linked = await linkSubscriptionToUser(email, userId);
+      } else {
+        const fulfilled = await fulfillCheckoutSession(checkoutSessionId);
+        if (fulfilled) {
+          if (
+            fulfilled.email &&
+            fulfilled.email.toLowerCase() !== email.trim().toLowerCase()
+          ) {
+            throw new AppError(
+              400,
+              'O email da conta deve ser o mesmo usado no pagamento Stripe.'
+            );
+          }
+          linked = await linkSubscriptionToUser(email, userId);
+        }
       }
     }
 

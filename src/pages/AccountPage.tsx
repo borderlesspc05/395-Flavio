@@ -73,7 +73,7 @@ function StatusBanner({
 
 export function AccountPage() {
   const { locale, setLocale, t } = useLocale();
-  const { plan, loading: planLoading, quotaSummaryLabel, refreshPlan } = usePlan();
+  const { plan, loading: planLoading, maxOpenCyclesLabel, refreshPlan } = usePlan();
   const { loading: authLoading, displayName: authDisplayName, email: authEmail, photoURL, initials, memberSince, refreshProfile, setProfilePhotoURL } =
     useAuthProfile();
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -279,7 +279,7 @@ export function AccountPage() {
                     </span>
                   </div>
                   {!planLoading && (
-                    <p className="account-plan-meta">{quotaSummaryLabel}</p>
+                    <p className="account-plan-meta">{maxOpenCyclesLabel}</p>
                   )}
                   {!planLoading && planId !== 'premium' && (
                     <ViewTransitionLink to="/planos" className="account-plan-upgrade">

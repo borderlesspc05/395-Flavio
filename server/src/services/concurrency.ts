@@ -12,6 +12,9 @@ const activeByUser = new Map<string, number>();
 
 export async function getConcurrencyLimitForUser(userId: string): Promise<number | null> {
   try {
+    const { isDemoSubscriptionUser } = await import('./subscriptions');
+    if (await isDemoSubscriptionUser(userId)) return null;
+
     const profile = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
     if (profile && profile.concurrencyOverride !== undefined) {
       return profile.concurrencyOverride;

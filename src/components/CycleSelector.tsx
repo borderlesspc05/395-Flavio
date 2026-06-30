@@ -131,7 +131,7 @@ export function CycleSelector() {
             </button>
             {!canCreateMore && (
               <p className="cycle-selector__limit-hint">
-                Limite do plano: {maxOpenCyclesLabel}. Arquive um projeto ou{' '}
+                Limite do plano: {maxOpenCyclesLabel}. Arquive um processo ou{' '}
                 <ViewTransitionLink to="/planos">faça upgrade</ViewTransitionLink>.
               </p>
             )}

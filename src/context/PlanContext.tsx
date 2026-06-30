@@ -85,7 +85,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
         concurrencyLabel: formatConcurrencyLimit(concurrency),
         maxOpenCycles: maxOpen,
         maxOpenCyclesLabel: formatMaxOpenCycles(maxOpen),
-        quotaSummaryLabel: formatPlanQuotaSummary(maxOpen, concurrency),
+        quotaSummaryLabel: formatPlanQuotaSummary(maxOpen),
       };
     },
     [plan, loading, refreshPlan]
