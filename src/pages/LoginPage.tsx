@@ -114,7 +114,11 @@ export function LoginPage() {
               {forgotMessage}
             </p>
           )}
-          {error && <span className="error-message">{error}</span>}
+          {error && (
+            <p className="error-message" role="alert">
+              {error}
+            </p>
+          )}
           <div className="auth-form-actions">
             <button type="submit" className="auth-btn auth-btn--primary" disabled={forgotLoading}>
               <span className="auth-btn-label">
@@ -173,7 +177,11 @@ export function LoginPage() {
               Esqueci minha senha
             </button>
           </div>
-          {error && <span className="error-message">{error}</span>}
+          {error && (
+            <p className="error-message" role="alert">
+              {error}
+            </p>
+          )}
           <div className="auth-form-actions">
             <button type="submit" className="auth-btn auth-btn--primary" disabled={loading}>
               <span className="auth-btn-label">{loading ? 'Entrando...' : 'Entrar'}</span>

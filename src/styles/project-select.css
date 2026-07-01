@@ -22,7 +22,7 @@
 }
 
 .auth-card.auth-card--projects {
-  max-width: 26rem !important;
+  max-width: 28rem !important;
   width: 100%;
   overflow: visible !important;
   display: flex;
@@ -62,34 +62,138 @@
   font-size: 0.78rem;
   line-height: 1.45;
   color: rgba(242, 237, 230, 0.55);
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
 }
 
-.project-select-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.15rem 0.1rem 0.15rem 0;
+.project-select-meta {
   display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  min-height: 10.5rem;
-  height: clamp(10.5rem, 34vh, 18.5rem);
-  overflow-x: hidden;
-  overflow-y: auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
   flex-shrink: 0;
-  scrollbar-gutter: stable;
 }
 
-.project-select-empty {
-  padding: 0.85rem;
-  text-align: center;
-  font-size: 0.82rem;
-  color: rgba(242, 237, 230, 0.55);
-  border: 1px dashed rgba(175, 146, 112, 0.28);
-  border-radius: 10px;
+.project-select-usage {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 188, 125, 0.88);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(8, 12, 18, 0.5);
+}
+
+.project-select-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.project-select-row.is-active .project-select-item {
+  border-color: rgba(255, 188, 125, 0.45);
+  background: rgba(175, 146, 112, 0.12);
+}
+
+.project-select-delete {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  align-self: stretch;
+  border: 1px solid rgba(175, 146, 112, 0.18);
+  border-radius: 11px;
+  background: rgba(8, 12, 18, 0.4);
+  color: rgba(242, 237, 230, 0.4);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.project-select-delete:hover:not(:disabled) {
+  color: #f08a7a;
+  border-color: rgba(240, 138, 122, 0.35);
+  background: rgba(240, 138, 122, 0.1);
+}
+
+.project-select-delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.project-select-confirm {
+  padding: 0.75rem 0.8rem;
+  border-radius: 11px;
+  border: 1px solid rgba(240, 138, 122, 0.3);
+  background: rgba(240, 138, 122, 0.08);
+}
+
+.project-select-confirm p {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(242, 237, 230, 0.78);
+}
+
+.project-select-confirm strong {
+  color: #f2ede6;
+}
+
+.project-select-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.project-select-confirm-cancel,
+.project-select-confirm-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 9px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.project-select-confirm-cancel {
+  background: transparent;
+  border-color: rgba(175, 146, 112, 0.28);
+  color: rgba(242, 237, 230, 0.72);
+}
+
+.project-select-confirm-cancel:hover:not(:disabled) {
+  background: rgba(175, 146, 112, 0.1);
+}
+
+.project-select-confirm-delete {
+  background: rgba(220, 90, 72, 0.24);
+  border-color: rgba(240, 138, 122, 0.38);
+  color: #ffc4b8;
+  font-weight: 600;
+}
+
+.project-select-confirm-delete:hover:not(:disabled) {
+  background: rgba(220, 90, 72, 0.34);
+}
+
+.project-select-confirm-delete:disabled,
+.project-select-confirm-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .project-select-item {
+  flex: 1;
+  min-width: 0;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -115,9 +219,37 @@
   transform: translateY(-1px);
 }
 
+.project-select-item:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
 .project-select-item:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.project-select-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.15rem 0.1rem 0.15rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 10.5rem;
+  height: clamp(10.5rem, 34vh, 18.5rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-shrink: 0;
+  scrollbar-gutter: stable;
+}
+
+.project-select-empty {
+  padding: 0.85rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(242, 237, 230, 0.55);
+  border: 1px dashed rgba(175, 146, 112, 0.28);
+  border-radius: 10px;
 }
 
 .project-select-item-icon {

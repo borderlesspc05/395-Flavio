@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -74,6 +75,14 @@ export async function getDiagnosticCycle(cycleId: string): Promise<DiagnosticCyc
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   return mapCycleDoc(snap.id, snap.data() as Record<string, unknown>);
+}
+
+export async function deleteDiagnosticCycle(cycleId: string, userId: string): Promise<void> {
+  const cycle = await getDiagnosticCycle(cycleId);
+  if (!cycle || cycle.userId !== userId) {
+    throw new Error('Processo não encontrado ou sem permissão para excluir.');
+  }
+  await deleteDoc(doc(db, 'diagnosticCycles', cycleId));
 }
 
 export async function createDiagnosticCycle(

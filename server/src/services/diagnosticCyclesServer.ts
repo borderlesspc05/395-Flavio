@@ -76,16 +76,7 @@ export async function createDiagnosticCycleForUser(
   const planId = await getPlanIdForUser(userId);
   const planName = PLANS[planId].name;
 
-  let openCount = countOpenCycles(existing);
-
-  if (payload.archiveCycleId) {
-    const target = existing.find((c) => c.id === payload.archiveCycleId);
-    if (target && target.userId === userId && target.status !== 'archived') {
-      openCount = Math.max(0, openCount - 1);
-    }
-  }
-
-  assertCanAddOpenCycle(openCount, maxOpen, planName);
+  assertCanAddOpenCycle(existing.length, maxOpen, planName);
 
   const cycleNumber =
     existing.length > 0 ? Math.max(...existing.map((c) => c.cycleNumber)) + 1 : 1;
@@ -118,6 +109,6 @@ export async function getCycleQuotaForUser(userId: string): Promise<{
   const existing = await listDiagnosticCyclesForUser(userId).catch(() => []);
   const openCount = countOpenCycles(existing);
   const maxOpenCycles = await getMaxOpenCyclesForUser(userId);
-  const canCreate = maxOpenCycles === null || openCount < maxOpenCycles;
+  const canCreate = maxOpenCycles === null || existing.length < maxOpenCycles;
   return { openCount, maxOpenCycles, canCreate };
 }

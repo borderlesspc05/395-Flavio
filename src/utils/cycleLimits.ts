@@ -8,31 +8,38 @@ export function countOpenCycles(cycles: Pick<DiagnosticCycle, 'id' | 'status'>[]
   return cycles.filter((c) => isOpenCycleStatus(c.status)).length;
 }
 
+/** Pode criar mais um ciclo? Limite = total de processos no plano (não só abertos). */
+export function canCreateMoreCycles(
+  cycles: Pick<DiagnosticCycle, 'id' | 'status'>[],
+  maxCycles: number | null
+): boolean {
+  if (maxCycles === null) return true;
+  return cycles.length < maxCycles;
+}
+
+/** @deprecated use canCreateMoreCycles — mantido para compatibilidade interna */
 export function canCreateOpenCycle(
   cycles: Pick<DiagnosticCycle, 'id' | 'status'>[],
   maxOpenCycles: number | null,
-  archiveCycleId?: string
+  _archiveCycleId?: string
 ): boolean {
-  if (maxOpenCycles === null) return true;
-  let open = countOpenCycles(cycles);
-  if (archiveCycleId) {
-    const target = cycles.find((c) => c.id === archiveCycleId);
-    if (target && isOpenCycleStatus(target.status)) {
-      open = Math.max(0, open - 1);
-    }
-  }
-  return open < maxOpenCycles;
+  return canCreateMoreCycles(cycles, maxOpenCycles);
 }
 
 export function formatMaxOpenCycles(limit: number | null): string {
   if (limit === null) return 'Processos de pré-diagnóstico ilimitados';
-  if (limit === 1) return '1 processo de pré-diagnóstico ativo';
-  return `${limit} processos de pré-diagnóstico ativos`;
+  if (limit === 1) return '1 processo de pré-diagnóstico';
+  return `Até ${limit} processos de pré-diagnóstico`;
 }
 
-export function cycleLimitMessage(planName: string, maxOpen: number): string {
-  if (maxOpen === 1) {
-    return `Seu plano ${planName} permite apenas 1 processo de pré-diagnóstico ativo. Arquive o atual ou faça upgrade.`;
+export function formatCycleUsage(count: number, max: number | null): string {
+  if (max === null) return `${count} ${count === 1 ? 'processo' : 'processos'}`;
+  return `${count} de ${max}`;
+}
+
+export function cycleLimitMessage(planName: string, maxCycles: number): string {
+  if (maxCycles === 1) {
+    return `Seu plano ${planName} permite apenas 1 processo de pré-diagnóstico. Faça upgrade para criar outro.`;
   }
-  return `Seu plano ${planName} permite até ${maxOpen} processos de pré-diagnóstico ativos. Arquive um processo ou faça upgrade.`;
+  return `Seu plano ${planName} permite até ${maxCycles} processos de pré-diagnóstico. Faça upgrade para criar mais.`;
 }

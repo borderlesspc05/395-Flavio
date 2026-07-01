@@ -13,6 +13,7 @@ import { buildDiagnosticContext } from '../constants/diagnosticFlow';
 import { buildGateContextAppendix } from '../constants/blueprintFlow';
 import {
   createDiagnosticCycle,
+  deleteDiagnosticCycle,
   getDiagnosticCycle,
   listDiagnosticCycles,
   loadCycleIntoWorkspace,
@@ -22,10 +23,10 @@ import {
 } from '../services/diagnosticCycles';
 import { getInitialForm } from '../services/initialForm';
 import { getBlueprintGate } from '../services/blueprintGate';
-import { setActiveCycleId, resolveActiveCycleId } from '../services/cycleWorkspace';
+import { clearActiveCycleId, resolveActiveCycleId, setActiveCycleId } from '../services/cycleWorkspace';
 import { workspaceApi } from '../services/api';
 import { usePlan } from './PlanContext';
-import { canCreateOpenCycle, cycleLimitMessage } from '../utils/cycleLimits';
+import { canCreateMoreCycles, cycleLimitMessage } from '../utils/cycleLimits';
 
 interface CycleContextValue {
   userId: string | null;
@@ -37,6 +38,7 @@ interface CycleContextValue {
   refreshCycles: () => Promise<void>;
   switchCycle: (cycleId: string) => Promise<void>;
   startNewCycle: (options?: { label?: string }) => Promise<{ ok: boolean; message?: string }>;
+  deleteCycle: (cycleId: string) => Promise<{ ok: boolean; message?: string }>;
   clearNeedsDiagnosis: () => void;
   persistActiveCycleSnapshot: () => Promise<void>;
   renameActiveCycle: (label: string) => Promise<{ ok: boolean; message?: string }>;
@@ -184,6 +186,14 @@ export function CycleProvider({ children }: { children: ReactNode }) {
     if (!userId) return { ok: false, message: 'Usuário não autenticado.' };
 
     try {
+      if (!canCreateMoreCycles(cycles, maxOpenCycles)) {
+        const limit = maxOpenCycles ?? 1;
+        return {
+          ok: false,
+          message: cycleLimitMessage(plan?.planName ?? 'Starter', limit),
+        };
+      }
+
       let archiveCycleId: string | undefined;
 
       if (activeCycle && activeCycle.status !== 'archived') {
@@ -213,14 +223,6 @@ export function CycleProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (!canCreateOpenCycle(cycles, maxOpenCycles, archiveCycleId)) {
-        const limit = maxOpenCycles ?? 1;
-        return {
-          ok: false,
-          message: cycleLimitMessage(plan?.planName ?? 'Starter', limit),
-        };
-      }
-
       const label = options?.label?.trim();
       const next = await createDiagnosticCycle(userId, {
         status: 'draft',
@@ -243,6 +245,47 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       return { ok: false, message: msg };
     }
   }, [userId, activeCycle, refreshCycles, cycles, maxOpenCycles, plan?.planName]);
+
+  const deleteCycle = useCallback(
+    async (cycleId: string) => {
+      if (!userId) return { ok: false, message: 'Usuário não autenticado.' };
+
+      const target = cycles.find((c) => c.id === cycleId);
+      if (!target) return { ok: false, message: 'Processo não encontrado.' };
+
+      try {
+        if (activeCycle?.id === cycleId) {
+          await snapshotFormIntoCycle(cycleId, userId).catch(() => undefined);
+        }
+
+        await deleteDiagnosticCycle(cycleId, userId);
+
+        const remaining = cycles.filter((c) => c.id !== cycleId);
+        if (activeCycle?.id === cycleId) {
+          const next =
+            remaining.find((c) => c.status === 'draft' || c.status === 'active') ?? remaining[0];
+          if (next) {
+            await loadCycleIntoWorkspace(next, userId);
+            await setActiveCycleId(userId, next.id);
+            setActiveCycle(next);
+            setNeedsDiagnosis(next.status === 'draft' && !next.completedAt);
+          } else {
+            await clearActiveCycleId(userId);
+            setActiveCycle(null);
+            setNeedsDiagnosis(false);
+          }
+        }
+
+        setCycles(remaining);
+        await refreshCycles();
+        return { ok: true, message: 'Processo excluído.' };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Erro ao excluir processo';
+        return { ok: false, message: msg };
+      }
+    },
+    [userId, cycles, activeCycle, refreshCycles]
+  );
 
   const renameActiveCycle = useCallback(
     async (label: string) => {
@@ -285,6 +328,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       refreshCycles,
       switchCycle,
       startNewCycle,
+      deleteCycle,
       clearNeedsDiagnosis: () => setNeedsDiagnosis(false),
       persistActiveCycleSnapshot,
       renameActiveCycle,
@@ -299,6 +343,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       refreshCycles,
       switchCycle,
       startNewCycle,
+      deleteCycle,
       persistActiveCycleSnapshot,
       renameActiveCycle,
     ]

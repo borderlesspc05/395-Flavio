@@ -99,7 +99,11 @@ export function RegisterPage() {
           <label htmlFor="confirm">Confirmar Senha</label>
           <input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </div>
-        {error && <span className="error-message">{error}</span>}
+        {error && (
+          <p className="error-message" role="alert">
+            {error}
+          </p>
+        )}
         <div className="auth-form-actions">
           <button type="submit" className="auth-btn auth-btn--primary" disabled={loading}>
             <span className="auth-btn-label">{loading ? 'Criando...' : 'Criar conta'}</span>

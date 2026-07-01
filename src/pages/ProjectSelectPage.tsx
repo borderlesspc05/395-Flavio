@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
-import { ArrowRight, FolderKanban, Loader2, LogOut, Plus } from 'lucide-react';
+import { ArrowRight, FolderKanban, Loader2, LogOut, Plus, Trash2 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { AuthLayout } from '../components/AuthLayout';
@@ -10,7 +10,7 @@ import type { DiagnosticCycle } from '../services/diagnosticCycles';
 import { getCycleWaveFromDoc, getRouteForCycleDoc, resolveCycleEntryRoute, WAVE_STEP_LABELS } from '../services/cycleRouting';
 import { clearWorkspaceEntered, hasEnteredWorkspace, markWorkspaceEntered } from '../services/projectWorkspace';
 import { usePlan } from '../context/PlanContext';
-import { canCreateOpenCycle } from '../utils/cycleLimits';
+import { canCreateMoreCycles, formatCycleUsage } from '../utils/cycleLimits';
 
 const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
   draft: 'Rascunho',
@@ -20,22 +20,31 @@ const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
 
 export function ProjectSelectPage() {
   const navigate = useViewTransitionNavigate();
-  const { cycles, activeCycle, loading, switching, switchCycle, startNewCycle, refreshCycles } = useCycle();
+  const {
+    cycles,
+    activeCycle,
+    loading,
+    switching,
+    switchCycle,
+    startNewCycle,
+    deleteCycle,
+    refreshCycles,
+  } = useCycle();
   const { maxOpenCycles, maxOpenCyclesLabel, plan } = usePlan();
   const [enteringId, setEnteringId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [newProjectName, setNewProjectName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
 
-  const canCreateMore = canCreateOpenCycle(
-    cycles,
-    maxOpenCycles,
-    activeCycle && activeCycle.status !== 'archived' ? activeCycle.id : undefined
-  );
+  const canCreateMore = canCreateMoreCycles(cycles, maxOpenCycles);
+  const usageLabel = formatCycleUsage(cycles.length, maxOpenCycles);
+  const isBusy = Boolean(enteringId) || switching || creating || Boolean(deletingId);
 
   const enterCycle = async (cycle: DiagnosticCycle) => {
-    if (enteringId || switching) return;
+    if (isBusy || confirmDeleteId) return;
     setEnteringId(cycle.id);
     setError(null);
     try {
@@ -62,6 +71,22 @@ export function ProjectSelectPage() {
       setError('Não foi possível abrir este projeto. Tente novamente.');
     } finally {
       setEnteringId(null);
+    }
+  };
+
+  const handleDelete = async (cycleId: string) => {
+    setDeletingId(cycleId);
+    setError(null);
+    try {
+      const result = await deleteCycle(cycleId);
+      if (!result.ok && result.message) {
+        setError(result.message);
+      }
+    } catch {
+      setError('Não foi possível excluir este projeto.');
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -104,7 +129,7 @@ export function ProjectSelectPage() {
   return (
     <AuthLayout
       title="Escolha o projeto"
-      subtitle="Selecione um ciclo Magnus Waves para continuar"
+      subtitle="Selecione um processo de pré-diagnóstico ou crie um novo"
       cardClassName="auth-card--projects"
       backTo={
         hasEnteredWorkspace()
@@ -121,10 +146,14 @@ export function ProjectSelectPage() {
         ) : (
           <>
             <div className="project-select-existing">
-              <p className="project-select-hint">
-                Escolha um processo existente ou crie um novo no final. Seu plano{' '}
-                <strong>{plan?.planName ?? 'Starter'}</strong> permite {maxOpenCyclesLabel}.
-              </p>
+              <div className="project-select-meta">
+                <p className="project-select-hint">
+                  Plano <strong>{plan?.planName ?? 'Starter'}</strong>: {maxOpenCyclesLabel}.
+                </p>
+                <span className="project-select-usage" aria-label={`Uso: ${usageLabel}`}>
+                  {usageLabel}
+                </span>
+              </div>
 
               <ul className="project-select-list" role="listbox" aria-label="Projetos disponíveis">
                 {cycles.length === 0 ? (
@@ -133,13 +162,53 @@ export function ProjectSelectPage() {
                   cycles.map((cycle) => {
                     const step = getCycleWaveFromDoc(cycle);
                     const busy = enteringId === cycle.id;
+                    const isDeleting = deletingId === cycle.id;
+                    const isConfirming = confirmDeleteId === cycle.id;
+                    const isActive = activeCycle?.id === cycle.id;
+
+                    if (isConfirming) {
+                      return (
+                        <li key={cycle.id} className="project-select-confirm" role="alertdialog">
+                          <p>
+                            Excluir <strong>{cycle.label}</strong>? Esta ação não pode ser desfeita.
+                          </p>
+                          <div className="project-select-confirm-actions">
+                            <button
+                              type="button"
+                              className="project-select-confirm-cancel"
+                              disabled={isDeleting}
+                              onClick={() => setConfirmDeleteId(null)}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              className="project-select-confirm-delete"
+                              disabled={isDeleting}
+                              onClick={() => void handleDelete(cycle.id)}
+                            >
+                              {isDeleting ? (
+                                <>
+                                  <Loader2 size={14} className="spin" aria-hidden />
+                                  Excluindo…
+                                </>
+                              ) : (
+                                'Excluir'
+                              )}
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    }
+
                     return (
-                      <li key={cycle.id}>
+                      <li key={cycle.id} className={`project-select-row ${isActive ? 'is-active' : ''}`}>
                         <button
                           type="button"
                           role="option"
+                          aria-selected={isActive}
                           className="project-select-item"
-                          disabled={Boolean(enteringId) || switching || creating}
+                          disabled={isBusy}
                           onClick={() => void enterCycle(cycle)}
                         >
                           <span className="project-select-item-icon" aria-hidden>
@@ -154,6 +223,15 @@ export function ProjectSelectPage() {
                           <span className="project-select-item-action" aria-hidden>
                             {busy ? <Loader2 size={16} className="spin" /> : <ArrowRight size={16} />}
                           </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="project-select-delete"
+                          aria-label={`Excluir ${cycle.label}`}
+                          disabled={isBusy}
+                          onClick={() => setConfirmDeleteId(cycle.id)}
+                        >
+                          <Trash2 size={15} aria-hidden />
                         </button>
                       </li>
                     );
@@ -178,7 +256,7 @@ export function ProjectSelectPage() {
                   }}
                   placeholder="Ex: Transformação Comercial 2026"
                   maxLength={80}
-                  disabled={creating || Boolean(enteringId)}
+                  disabled={isBusy}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -195,7 +273,7 @@ export function ProjectSelectPage() {
               <button
                 type="button"
                 className="auth-btn auth-btn--primary project-select-create-btn"
-                disabled={creating || Boolean(enteringId) || !canCreateMore}
+                disabled={isBusy || !canCreateMore}
                 onClick={() => void handleCreateProject()}
                 title={
                   canCreateMore
@@ -220,8 +298,8 @@ export function ProjectSelectPage() {
               </button>
               {!canCreateMore && (
                 <p className="project-select-limit-hint" role="status">
-                  Você atingiu o limite de {maxOpenCyclesLabel} no plano {plan?.planName ?? 'Starter'}.
-                  Arquive um processo ativo ou <ViewTransitionLink to="/planos">faça upgrade</ViewTransitionLink>.
+                  Você atingiu o limite de {maxOpenCyclesLabel} no plano {plan?.planName ?? 'Starter'}.{' '}
+                  <ViewTransitionLink to="/planos">Faça upgrade</ViewTransitionLink> para criar mais.
                 </p>
               )}
             </section>

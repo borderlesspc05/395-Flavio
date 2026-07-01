@@ -33,16 +33,16 @@ export async function getMaxOpenCyclesForUser(userId: string): Promise<number | 
 }
 
 export function assertCanAddOpenCycle(
-  openCount: number,
-  maxOpen: number | null,
+  totalCount: number,
+  maxCycles: number | null,
   planName: string
 ): void {
-  if (maxOpen === null) return;
-  if (openCount < maxOpen) return;
+  if (maxCycles === null) return;
+  if (totalCount < maxCycles) return;
   throw new AppError(
     403,
-    maxOpen === 1
-      ? `Seu plano ${planName} permite apenas 1 processo de pré-diagnóstico ativo. Arquive o atual ou faça upgrade para criar outro.`
-      : `Seu plano ${planName} permite até ${maxOpen} processos de pré-diagnóstico ativos. Arquive um processo ou faça upgrade para criar outro.`
+    maxCycles === 1
+      ? `Seu plano ${planName} permite apenas 1 processo de pré-diagnóstico. Faça upgrade para criar outro.`
+      : `Seu plano ${planName} permite até ${maxCycles} processos de pré-diagnóstico. Faça upgrade para criar mais.`
   );
 }
