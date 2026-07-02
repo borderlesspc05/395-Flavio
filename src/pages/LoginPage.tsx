@@ -2,8 +2,9 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ArrowRight } from 'lucide-react';
-import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { requestPasswordReset } from '../services/authApi';
 import { AuthLayout } from '../components/AuthLayout';
 import { storePendingCheckout } from '../services/billingApi';
 import { isPlanId } from '../constants/plans';
@@ -64,15 +65,10 @@ export function LoginPage() {
     }
     setForgotLoading(true);
     try {
-      await sendPasswordResetEmail(auth, trimmed, {
-        url: `${window.location.origin}/login`,
-        handleCodeInApp: false,
-      });
-      setForgotMessage(
-        'Enviamos um link para redefinir sua senha. Confira sua caixa de entrada e o spam.'
-      );
-    } catch {
-      setError('Não foi possível enviar o email de recuperação. Verifique o endereço e tente novamente.');
+      const result = await requestPasswordReset(trimmed);
+      setForgotMessage(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível enviar o email de recuperação.');
     } finally {
       setForgotLoading(false);
     }

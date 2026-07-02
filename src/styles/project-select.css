@@ -1,6 +1,5 @@
-/* Escolha de projeto — card no estilo login */
+/* Escolha de projeto — card centrado, lista rolável, CTA fixo no card */
 
-/* Preenche a viewport sem faixa preta embaixo */
 .auth-page--projects {
   flex: 1;
   width: 100%;
@@ -14,37 +13,58 @@
 .auth-page--projects .auth-container {
   flex: 1;
   min-height: 0 !important;
-  height: auto !important;
-  overflow-y: auto;
+  height: 100% !important;
+  overflow: hidden;
+  display: flex !important;
   align-items: center !important;
-  justify-content: flex-start !important;
-  padding: clamp(1.5rem, 4vh, 2.75rem) 1.15rem 1.25rem !important;
+  justify-content: center !important;
+  padding: max(1rem, env(safe-area-inset-top)) 1.25rem max(1rem, env(safe-area-inset-bottom)) !important;
+  box-sizing: border-box;
 }
 
 .auth-card.auth-card--projects {
-  max-width: 28rem !important;
+  max-width: min(34rem, calc(100vw - 2rem)) !important;
   width: 100%;
-  overflow: visible !important;
+  max-height: calc(100dvh - 2rem);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  overflow: hidden !important;
+  padding: 1.25rem 1.35rem 1.2rem !important;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
-.auth-card.auth-card--projects.auth-card-vivid {
-  overflow: visible !important;
+.auth-card.auth-card--projects .auth-card-head {
+  flex-shrink: 0;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.8rem;
+}
+
+.auth-card.auth-card--projects .auth-form-heading {
+  font-size: 1.35rem !important;
+}
+
+.auth-card.auth-card--projects .auth-card-sub {
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 .project-select {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.7rem;
+  overflow: hidden;
 }
 
 .project-select-existing {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  min-height: 0;
+  gap: 0.5rem;
+  overflow: hidden;
 }
 
 .project-select-loading {
@@ -57,21 +77,26 @@
   font-size: 0.86rem;
 }
 
+.project-select-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
 .project-select-hint {
   margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.76rem;
+  line-height: 1.4;
   color: rgba(242, 237, 230, 0.55);
   flex: 1;
   min-width: 0;
 }
 
-.project-select-meta {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.65rem;
-  flex-shrink: 0;
+.project-select-hint strong {
+  color: rgba(255, 188, 125, 0.9);
+  font-weight: 600;
 }
 
 .project-select-usage {
@@ -81,16 +106,51 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   color: rgba(255, 188, 125, 0.88);
-  padding: 0.2rem 0.5rem;
+  padding: 0.22rem 0.55rem;
   border-radius: 999px;
   border: 1px solid rgba(175, 146, 112, 0.28);
   background: rgba(8, 12, 18, 0.5);
+  white-space: nowrap;
+}
+
+.project-select-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.1rem 0.35rem 0.1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(175, 146, 112, 0.4) transparent;
+}
+
+.project-select-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.project-select-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.project-select-list::-webkit-scrollbar-thumb {
+  background: rgba(175, 146, 112, 0.38);
+  border-radius: 999px;
+}
+
+.project-select-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 188, 125, 0.45);
 }
 
 .project-select-row {
   display: flex;
   align-items: stretch;
   gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .project-select-row.is-active .project-select-item {
@@ -103,7 +163,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
+  width: 40px;
   align-self: stretch;
   border: 1px solid rgba(175, 146, 112, 0.18);
   border-radius: 11px;
@@ -132,6 +192,7 @@
   border-radius: 11px;
   border: 1px solid rgba(240, 138, 122, 0.3);
   background: rgba(240, 138, 122, 0.08);
+  flex-shrink: 0;
 }
 
 .project-select-confirm p {
@@ -197,9 +258,9 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.6rem;
   width: 100%;
-  padding: 0.65rem 0.7rem;
+  padding: 0.58rem 0.65rem;
   border: 1px solid rgba(175, 146, 112, 0.22);
   border-radius: 11px;
   background: rgba(8, 12, 18, 0.55);
@@ -216,7 +277,6 @@
 .project-select-item:hover:not(:disabled) {
   border-color: rgba(255, 188, 125, 0.4);
   background: rgba(175, 146, 112, 0.1);
-  transform: translateY(-1px);
 }
 
 .project-select-item:active:not(:disabled) {
@@ -228,21 +288,6 @@
   cursor: not-allowed;
 }
 
-.project-select-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.15rem 0.1rem 0.15rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  min-height: 10.5rem;
-  height: clamp(10.5rem, 34vh, 18.5rem);
-  overflow-x: hidden;
-  overflow-y: auto;
-  flex-shrink: 0;
-  scrollbar-gutter: stable;
-}
-
 .project-select-empty {
   padding: 0.85rem;
   text-align: center;
@@ -250,14 +295,15 @@
   color: rgba(242, 237, 230, 0.55);
   border: 1px dashed rgba(175, 146, 112, 0.28);
   border-radius: 10px;
+  flex-shrink: 0;
 }
 
 .project-select-item-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 9px;
   background: rgba(175, 146, 112, 0.14);
   color: #ffbc7d;
@@ -267,11 +313,11 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.12rem;
 }
 
 .project-select-item-copy strong {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 650;
   white-space: nowrap;
   overflow: hidden;
@@ -279,7 +325,7 @@
 }
 
 .project-select-item-copy span {
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   color: rgba(242, 237, 230, 0.52);
 }
 
@@ -287,22 +333,22 @@
   color: rgba(255, 188, 125, 0.85);
 }
 
-.project-select-divider {
-  height: 1px;
-  background: rgba(175, 146, 112, 0.14);
-  margin-bottom: 0.85rem;
-}
-
 .project-select-create {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  flex-shrink: 0;
+  gap: 0.55rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(175, 146, 112, 0.14);
+}
+
+.project-select-divider {
+  display: none;
 }
 
 .project-select-create-title {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -312,19 +358,19 @@
 .project-select-name-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .project-select-name-field span {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 500;
   color: rgba(242, 237, 230, 0.62);
 }
 
 .project-select-name-field input {
-  min-height: 42px;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.9rem;
+  min-height: 40px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.88rem;
   border-radius: 10px;
   border: 1px solid rgba(175, 146, 112, 0.28);
   background: rgba(8, 12, 18, 0.55);
@@ -340,13 +386,13 @@
 
 .project-select-create-btn {
   width: 100%;
-  margin-top: 0.15rem;
+  margin-top: 0.1rem;
 }
 
 .project-select-limit-hint {
-  margin: 0.65rem 0 0;
-  font-size: 0.8rem;
-  line-height: 1.5;
+  margin: 0.35rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
   color: rgba(255, 188, 125, 0.85);
 }
 
@@ -359,12 +405,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  margin-top: 0.15rem;
-  padding: 0.35rem;
+  margin-top: 0;
+  padding: 0.3rem;
   border: none;
   background: none;
   color: rgba(242, 237, 230, 0.45);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   cursor: pointer;
   font-family: inherit;
   flex-shrink: 0;
@@ -372,6 +418,12 @@
 
 .project-select-logout:hover {
   color: rgba(242, 237, 230, 0.75);
+}
+
+.project-select .error-message {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 0.8rem;
 }
 
 .project-select .spin {
@@ -384,13 +436,39 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .auth-page--projects .auth-container {
-    padding: 1.25rem 1rem 1rem !important;
+    padding: max(0.75rem, env(safe-area-inset-top)) 0.85rem max(0.75rem, env(safe-area-inset-bottom)) !important;
   }
 
-  .project-select-list {
-    min-height: 9rem;
-    height: clamp(9rem, 30vh, 14rem);
+  .auth-card.auth-card--projects {
+    max-width: 100% !important;
+    max-height: calc(100dvh - 1.25rem);
+    padding: 1.1rem 1rem 1rem !important;
+  }
+
+  .project-select-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .project-select-usage {
+    align-self: flex-start;
+  }
+}
+
+@media (max-height: 640px) {
+  .auth-card.auth-card--projects .auth-card-head {
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .auth-card.auth-card--projects .auth-form-heading {
+    font-size: 1.2rem !important;
+  }
+
+  .project-select-item {
+    padding: 0.5rem 0.6rem;
   }
 }

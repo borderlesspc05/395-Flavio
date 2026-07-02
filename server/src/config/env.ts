@@ -65,11 +65,24 @@ export const env = {
     projectId: process.env.FIREBASE_PROJECT_ID,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY),
+    /** Chave pública do Firebase (Identity Toolkit — recuperação de senha). */
+    webApiKey:
+      process.env.FIREBASE_WEB_API_KEY?.trim() ||
+      process.env.VITE_FIREBASE_API_KEY?.trim() ||
+      undefined,
     storageBucket:
       process.env.FIREBASE_STORAGE_BUCKET?.trim() ||
       (process.env.FIREBASE_PROJECT_ID
         ? `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`
         : undefined),
+  },
+  passwordReset: {
+    ipMax: parseInt(process.env.PASSWORD_RESET_IP_MAX ?? '8', 10),
+    ipWindowMs:
+      parseInt(process.env.PASSWORD_RESET_IP_WINDOW_MIN ?? '15', 10) * 60 * 1000,
+    emailMax: parseInt(process.env.PASSWORD_RESET_EMAIL_MAX ?? '3', 10),
+    emailWindowMs:
+      parseInt(process.env.PASSWORD_RESET_EMAIL_WINDOW_MIN ?? '60', 10) * 60 * 1000,
   },
   openai: {
     apiKey: normalizeApiKey(process.env.OPENAI_API_KEY),

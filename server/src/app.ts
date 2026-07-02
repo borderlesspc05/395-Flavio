@@ -25,6 +25,7 @@ import supportRouter from './routes/support';
 import meRouter from './routes/me';
 import ragRouter from './routes/rag';
 import cyclesRouter from './routes/cycles';
+import authRouter from './routes/auth';
 import { requestLogger } from './middleware/requestLogger';
 import { getLlmStatus } from './services/llm';
 
@@ -81,6 +82,7 @@ app.use(resolveUserId);
 app.use(requestLogger);
 
 app.use('/api/plans', publicPlansRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/objectives', objectivesRouter);

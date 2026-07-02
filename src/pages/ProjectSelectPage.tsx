@@ -148,7 +148,12 @@ export function ProjectSelectPage() {
             <div className="project-select-existing">
               <div className="project-select-meta">
                 <p className="project-select-hint">
-                  Plano <strong>{plan?.planName ?? 'Starter'}</strong>: {maxOpenCyclesLabel}.
+                  Plano <strong>{plan?.planName ?? 'Starter'}</strong>
+                  {maxOpenCycles === null ? (
+                    <>: processos ilimitados</>
+                  ) : (
+                    <>: até {maxOpenCycles} processos</>
+                  )}
                 </p>
                 <span className="project-select-usage" aria-label={`Uso: ${usageLabel}`}>
                   {usageLabel}
@@ -241,7 +246,6 @@ export function ProjectSelectPage() {
             </div>
 
             <section className="project-select-create" aria-labelledby="project-select-create-title">
-              <div className="project-select-divider" aria-hidden />
               <h2 id="project-select-create-title" className="project-select-create-title">
                 Novo projeto
               </h2>
