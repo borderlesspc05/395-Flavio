@@ -32,9 +32,20 @@ function normalizePrivateKey(raw: string | undefined): string | undefined {
 }
 
 function parseCorsOrigins(): string | string[] {
-  const raw = process.env.CORS_ORIGIN ?? '*';
-  if (raw === '*') return '*';
-  return raw.split(',').map((o) => o.trim()).filter(Boolean);
+  const raw = process.env.CORS_ORIGIN?.trim();
+  if (raw === '*') {
+    return process.env.NODE_ENV === 'development'
+      ? ['http://localhost:5173', 'http://localhost:3000']
+      : [];
+  }
+  if (raw) {
+    return raw.split(',').map((o) => o.trim()).filter(Boolean);
+  }
+
+  const defaults = ['http://localhost:5173', 'http://localhost:3000'];
+  const frontendUrl = process.env.FRONTEND_URL?.trim();
+  if (frontendUrl) defaults.push(frontendUrl);
+  return Array.from(new Set(defaults));
 }
 
 /** Ignora placeholders comuns colados no painel do Render sem substituir a chave real. */
@@ -106,6 +117,8 @@ export const env = {
   whatsapp: {
     token: process.env.WHATSAPP_TOKEN,
     phoneId: process.env.WHATSAPP_PHONE_ID,
+    verifyToken: process.env.WHATSAPP_VERIFY_TOKEN?.trim() || undefined,
+    appSecret: process.env.WHATSAPP_APP_SECRET?.trim() || undefined,
   },
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY?.trim() || undefined,

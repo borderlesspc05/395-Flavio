@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import axios from 'axios';
 import { env } from '../config/env';
 import { AppError } from '../utils/errors';
@@ -53,6 +54,25 @@ export function verifyWebhook(
     return challenge ?? null;
   }
   return null;
+}
+
+export function verifyWebhookSignature(
+  rawBody: Buffer,
+  signatureHeader: string | undefined,
+  appSecret: string | undefined
+): boolean {
+  if (!appSecret) return true;
+  if (!signatureHeader?.startsWith('sha256=')) return false;
+
+  const expected = `sha256=${crypto
+    .createHmac('sha256', appSecret)
+    .update(rawBody)
+    .digest('hex')}`;
+
+  const expectedBuffer = Buffer.from(expected);
+  const providedBuffer = Buffer.from(signatureHeader);
+  if (expectedBuffer.length !== providedBuffer.length) return false;
+  return crypto.timingSafeEqual(expectedBuffer, providedBuffer);
 }
 
 /** Parse incoming webhook payload (stub structure) */

@@ -1,13 +1,9 @@
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
   query,
-  serverTimestamp,
-  updateDoc,
   where,
 } from 'firebase/firestore';
 import { buildDiagnosticContext } from '../constants/diagnosticFlow';
@@ -82,18 +78,17 @@ export async function deleteDiagnosticCycle(cycleId: string, userId: string): Pr
   if (!cycle || cycle.userId !== userId) {
     throw new Error('Processo não encontrado ou sem permissão para excluir.');
   }
-  await deleteDoc(doc(db, 'diagnosticCycles', cycleId));
+  await api.delete(`/api/cycles/${cycleId}`);
 }
 
 export async function createDiagnosticCycle(
-  userId: string,
+  _userId: string,
   payload: Partial<Pick<DiagnosticCycle, 'label' | 'status' | 'diagnosticContext' | 'gateSummary' | 'formData'>> & {
     archiveCycleId?: string;
   }
 ): Promise<DiagnosticCycle> {
   try {
     const res = await api.post<DiagnosticCycle>('/api/cycles', {
-      userId,
       label: payload.label,
       status: payload.status ?? 'draft',
       diagnosticContext: payload.diagnosticContext ?? '',
@@ -135,12 +130,10 @@ export async function updateDiagnosticCycle(
     >
   > & { archivedAt?: string | true }
 ): Promise<void> {
-  const ref = doc(db, 'diagnosticCycles', cycleId);
   const { archivedAt, ...rest } = patch;
-  const data = withoutUndefined({ ...rest });
-  if (archivedAt) data.archivedAt = serverTimestamp();
+  const data = withoutUndefined({ ...rest, ...(archivedAt ? { archivedAt: true } : {}) });
   if (Object.keys(data).length === 0) return;
-  await updateDoc(ref, data as Record<string, import('firebase/firestore').FieldValue | Partial<unknown>>);
+  await api.patch(`/api/cycles/${cycleId}`, data);
 }
 
 export async function snapshotFormIntoCycle(cycleId: string, userId: string): Promise<void> {
@@ -186,25 +179,14 @@ export async function loadCycleIntoWorkspace(cycle: DiagnosticCycle, userId: str
 }
 
 export async function archiveDiagnosticCycle(
-  userId: string,
+  _userId: string,
   payload: { diagnosticContext: string; gateSummary?: string; formData?: InitialFormData }
 ): Promise<{ cycleNumber: number; label: string; id: string }> {
-  const existing = await listDiagnosticCycles(userId);
-  const cycleNumber =
-    existing.length > 0 ? Math.max(...existing.map((c) => c.cycleNumber)) + 1 : 1;
-  const label = `Ciclo ${cycleNumber} · ${new Date().toLocaleDateString('pt-BR')}`;
-
-  const ref = await addDoc(collection(db, 'diagnosticCycles'), {
-    userId,
-    cycleNumber,
-    label,
+  const created = await createDiagnosticCycle(_userId, {
     status: 'archived',
     diagnosticContext: payload.diagnosticContext.trim(),
-    gateSummary: payload.gateSummary?.trim() || null,
-    formData: payload.formData ?? null,
-    archivedAt: serverTimestamp(),
-    createdAt: serverTimestamp(),
+    gateSummary: payload.gateSummary?.trim() || undefined,
+    formData: payload.formData ?? undefined,
   });
-
-  return { cycleNumber, label, id: ref.id };
+  return { cycleNumber: created.cycleNumber, label: created.label, id: created.id };
 }

@@ -46,7 +46,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       applyPlan(null);
       return;
     }
-    const summary = await billingApi.getPlan(user.uid);
+    const summary = await billingApi.getPlan();
     applyPlan(summary);
   }, [applyPlan]);
 
