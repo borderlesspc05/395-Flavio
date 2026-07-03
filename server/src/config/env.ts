@@ -80,7 +80,7 @@ export const env = {
     webApiKey:
       process.env.FIREBASE_WEB_API_KEY?.trim() ||
       process.env.VITE_FIREBASE_API_KEY?.trim() ||
-      undefined,
+      'AIzaSyCTEZOOpmmtrKXSJ3A5cAD49xD9Fa0OD9A',
     storageBucket:
       process.env.FIREBASE_STORAGE_BUCKET?.trim() ||
       (process.env.FIREBASE_PROJECT_ID
