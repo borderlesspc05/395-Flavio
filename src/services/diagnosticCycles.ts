@@ -59,11 +59,21 @@ function mapCycleDoc(id: string, raw: Record<string, unknown>): DiagnosticCycle 
   };
 }
 
-export async function listDiagnosticCycles(userId: string): Promise<DiagnosticCycle[]> {
+async function listDiagnosticCyclesFromFirestore(userId: string): Promise<DiagnosticCycle[]> {
   const q = query(collection(db, 'diagnosticCycles'), where('userId', '==', userId));
   const snap = await getDocs(q);
   const items = snap.docs.map((d) => mapCycleDoc(d.id, d.data() as Record<string, unknown>));
   return items.sort((a, b) => b.cycleNumber - a.cycleNumber);
+}
+
+export async function listDiagnosticCycles(userId: string): Promise<DiagnosticCycle[]> {
+  try {
+    const res = await api.get<DiagnosticCycle[]>('/api/cycles');
+    const items = Array.isArray(res.data) ? res.data : [];
+    return items.sort((a, b) => b.cycleNumber - a.cycleNumber);
+  } catch {
+    return listDiagnosticCyclesFromFirestore(userId);
+  }
 }
 
 export async function getDiagnosticCycle(cycleId: string): Promise<DiagnosticCycle | null> {

@@ -10,6 +10,7 @@ import { claimSubscriptionForUser } from '../services/claimSubscription';
 import { readPendingCheckout, storePendingCheckout } from '../services/billingApi';
 import { isPlanId } from '../constants/plans';
 import { clearWorkspaceEntered } from '../services/projectWorkspace';
+import { waitForAuthenticatedUser } from '../utils/authReady';
 
 export function RegisterPage() {
   const navigate = useViewTransitionNavigate();
@@ -55,9 +56,10 @@ export function RegisterPage() {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
-      await claimSubscriptionForUser(cred.user.uid, cred.user.email ?? email);
+      const user = await waitForAuthenticatedUser();
+      await claimSubscriptionForUser(user.uid, user.email ?? email);
       clearWorkspaceEntered();
-      navigate('/escolher-projeto');
+      navigate('/escolher-projeto', { replace: true, state: { justRegistered: true } });
     } catch {
       setError('Não foi possível criar a conta. Verifique os dados.');
     } finally {

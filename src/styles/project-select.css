@@ -1,43 +1,73 @@
-/* Escolha de projeto — card centrado, lista rolável, CTA fixo no card */
+/* Escolha de projeto — sem centralização vertical (zoom cortava a lista no topo) */
 
-.auth-page--projects {
-  flex: 1;
+.public-page-shell:has(.auth-page--projects),
+.public-page-shell:has(.auth-page--projects) .vt-outlet-host {
+  flex: none;
+  min-height: 100dvh;
+  height: auto;
+  overflow: visible;
+}
+
+.auth-page--refined.auth-page--projects,
+.auth-page.auth-page--projects {
   width: 100%;
   min-height: 100dvh;
-  max-height: 100dvh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: block;
 }
 
 .auth-page--projects .auth-container {
-  flex: 1;
-  min-height: 0 !important;
-  height: 100% !important;
-  overflow: hidden;
+  width: 100%;
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   justify-content: center !important;
-  padding: max(1rem, env(safe-area-inset-top)) 1.25rem max(1rem, env(safe-area-inset-bottom)) !important;
+  padding: max(3.25rem, calc(env(safe-area-inset-top) + 1rem)) 1.25rem max(2rem, env(safe-area-inset-bottom)) !important;
   box-sizing: border-box;
 }
 
 .auth-card.auth-card--projects {
   max-width: min(34rem, calc(100vw - 2rem)) !important;
   width: 100%;
-  max-height: calc(100dvh - 2rem);
+  max-height: none !important;
   display: flex;
   flex-direction: column;
-  overflow: hidden !important;
+  overflow: visible !important;
   padding: 1.25rem 1.35rem 1.2rem !important;
-  flex-shrink: 1;
-  min-height: 0;
+  flex-shrink: 0;
+  margin: 0 auto;
+}
+
+.auth-card.auth-card--projects.auth-card-vivid {
+  overflow: visible !important;
 }
 
 .auth-card.auth-card--projects .auth-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
   margin-bottom: 0.85rem;
   padding-bottom: 0.8rem;
+}
+
+.auth-card.auth-card--projects .auth-card-mark {
+  display: block;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  background: rgba(8, 12, 18, 0.35);
 }
 
 .auth-card.auth-card--projects .auth-form-heading {
@@ -50,21 +80,18 @@
 }
 
 .project-select {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .project-select-existing {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  overflow: hidden;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .project-select-loading {
@@ -83,6 +110,16 @@
   justify-content: space-between;
   gap: 0.75rem;
   flex-shrink: 0;
+  margin-bottom: 0.15rem;
+}
+
+.project-select-list-heading {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 188, 125, 0.88);
 }
 
 .project-select-hint {
@@ -116,34 +153,12 @@
 .project-select-list {
   list-style: none;
   margin: 0;
-  padding: 0.1rem 0.35rem 0.1rem 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  flex: 1;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(175, 146, 112, 0.4) transparent;
-}
-
-.project-select-list::-webkit-scrollbar {
-  width: 5px;
-}
-
-.project-select-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.project-select-list::-webkit-scrollbar-thumb {
-  background: rgba(175, 146, 112, 0.38);
-  border-radius: 999px;
-}
-
-.project-select-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 188, 125, 0.45);
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .project-select-row {
@@ -438,12 +453,11 @@
 
 @media (max-width: 520px) {
   .auth-page--projects .auth-container {
-    padding: max(0.75rem, env(safe-area-inset-top)) 0.85rem max(0.75rem, env(safe-area-inset-bottom)) !important;
+    padding: max(2.75rem, calc(env(safe-area-inset-top) + 0.75rem)) 0.85rem max(1.5rem, env(safe-area-inset-bottom)) !important;
   }
 
   .auth-card.auth-card--projects {
     max-width: 100% !important;
-    max-height: calc(100dvh - 1.25rem);
     padding: 1.1rem 1rem 1rem !important;
   }
 
@@ -471,4 +485,9 @@
   .project-select-item {
     padding: 0.5rem 0.6rem;
   }
+}
+
+/* Sobrescreve overflow:hidden global do auth-card (brand-overrides) */
+.auth-page--projects .auth-card.auth-card--projects {
+  overflow: visible !important;
 }

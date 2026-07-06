@@ -1,9 +1,10 @@
 /* MID — Magnus Intelligence Dashboard (Domínio · editorial estratégico) */
 
 .dashboard-home--mid {
-  max-width: 1280px;
+  max-width: var(--page-max, 1280px);
   margin: 0 auto;
-  padding-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  width: 100%;
 }
 
 .mid-dashboard {
@@ -20,7 +21,7 @@
 
   position: relative;
   display: grid;
-  gap: 1.25rem;
+  gap: var(--section-gap, 1rem);
   font-family: var(--mid-sans);
   color: var(--mid-text);
 }
@@ -91,7 +92,7 @@
 
 /* Blocks */
 .mid-block {
-  padding: 1.35rem 1.4rem;
+  padding: var(--card-pad, 1.35rem);
   border-radius: 18px;
   border: 1px solid var(--mid-border);
   background: var(--mid-bg);
@@ -120,9 +121,17 @@
   align-items: start;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 767px) {
   .mid-overview-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mid-overview-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 1.25rem;
   }
 }
 
@@ -171,28 +180,29 @@
   background: rgba(14, 18, 24, 0.55);
 }
 
-/* Executive KPI grid */
+/* Executive KPI grid — 2 colunas no mobile (iPhone ~375px), não só a partir de 480px */
 .mid-exec-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
 }
 
-@media (max-width: 1280px) {
+@media (min-width: 768px) {
+  .mid-exec-kpi-grid {
+    gap: 0.85rem;
+  }
+}
+
+@media (min-width: 1024px) {
   .mid-exec-kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
   }
 }
 
-@media (max-width: 1100px) {
+@media (min-width: 1280px) {
   .mid-exec-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .mid-exec-kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -206,7 +216,7 @@
   gap: 1rem;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 768px) {
   .mid-rhythm-grid {
     grid-template-columns: 1.1fr 1.4fr;
     align-items: start;
@@ -389,10 +399,10 @@
 }
 
 .mid-exec-kpi-score-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 0.5rem;
 }
 
 .mid-exec-kpi-score {
@@ -421,9 +431,8 @@
   border: 1px solid rgba(175, 146, 112, 0.22);
   background: rgba(8, 12, 18, 0.55);
   color: var(--mid-muted);
-  max-width: 48%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 100%;
+  justify-self: end;
   white-space: nowrap;
 }
 
@@ -456,6 +465,78 @@
   font-size: 0.72rem;
   color: var(--mid-muted);
   line-height: 1.35;
+}
+
+@media (max-width: 767px) {
+  .mid-exec-kpi {
+    padding: 0.75rem 0.7rem;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .mid-exec-kpi-head {
+    gap: 0.45rem;
+  }
+
+  .mid-exec-kpi-icon {
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 8px;
+  }
+
+  .mid-exec-kpi-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .mid-exec-kpi-question {
+    font-size: 0.56rem;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .mid-exec-kpi-title {
+    font-size: 0.86rem;
+  }
+
+  .mid-exec-kpi-score {
+    font-size: 1.45rem;
+  }
+
+  .mid-exec-kpi-score span {
+    font-size: 0.78rem;
+  }
+
+  .mid-exec-kpi-score-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 0.2rem;
+  }
+
+  .mid-exec-kpi-trend {
+    justify-self: start;
+    font-size: 0.6rem;
+    padding: 0.18rem 0.38rem;
+    max-width: 100%;
+  }
+
+  .mid-exec-kpi-status {
+    font-size: 0.74rem;
+  }
+
+  .mid-exec-kpi-meta {
+    font-size: 0.66rem;
+    gap: 0.15rem;
+  }
+
+  .mid-exec-kpi-meta li {
+    font-size: 0.66rem;
+    line-height: 1.3;
+  }
 }
 
 .mid-overview-meta {
@@ -686,19 +767,28 @@
 /* KPI strip */
 .mid-kpi-strip {
   display: grid;
-  grid-template-columns: 1.4fr repeat(3, 1fr);
-  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 767px) {
   .mid-kpi-strip {
-    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+  }
+
+  .mid-kpi-card--primary {
+    grid-column: 1 / -1;
   }
 }
 
-@media (max-width: 640px) {
+@media (min-width: 1024px) {
   .mid-kpi-strip {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1.4fr repeat(3, 1fr);
+    gap: 0.85rem;
+  }
+
+  .mid-kpi-card--primary {
+    grid-column: auto;
   }
 }
 
@@ -784,9 +874,17 @@
   gap: 1rem;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 767px) {
   .mid-dual-row {
     grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .mid-dual-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
   }
 }
 

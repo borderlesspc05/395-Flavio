@@ -101,6 +101,16 @@ export function DashboardLayout() {
     location.pathname.startsWith('/dashboard/scans') ||
     location.pathname === '/dashboard/solution-pick';
 
+  const pageTitle =
+    navItems.find(
+      (item) =>
+        location.pathname === item.path ||
+        (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
+        (item.id === 'formulario' && isDiagnosticRoute) ||
+        (item.id === 'checklist' && location.pathname === '/dashboard/checklist-diario') ||
+        (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe')
+    )?.label ?? 'Magnus Mind';
+
   const handleNav = (_id: string, path: string) => {
     navigate(path);
     setSidebarOpen(false);
@@ -213,19 +223,24 @@ export function DashboardLayout() {
           className={`dashboard-main-wrapper ${isConsultoriaChat ? 'consultoria-ia-active' : ''} ${isDesignPage ? 'design-page-active' : ''}`}
         >
           <header className="dashboard-header">
-            <button
-              type="button"
-              className="menu-toggle"
-              onClick={() => {
-                setSidebarOpen(true);
-                setSidebarCollapsed(false);
-              }}
-              aria-label={t.nav.openMenu}
-              aria-expanded={sidebarOpen}
-            >
-              <Menu size={40} aria-hidden />
-            </button>
-            <CycleSelector />
+            <div className="dashboard-header__row dashboard-header__row--primary">
+              <button
+                type="button"
+                className="menu-toggle"
+                onClick={() => {
+                  setSidebarOpen(true);
+                  setSidebarCollapsed(false);
+                }}
+                aria-label={t.nav.openMenu}
+                aria-expanded={sidebarOpen}
+              >
+                <Menu size={22} aria-hidden />
+              </button>
+              <p className="dashboard-header__title">{pageTitle}</p>
+            </div>
+            <div className="dashboard-header__row dashboard-header__row--secondary">
+              <CycleSelector />
+            </div>
           </header>
           <main
             ref={mainRef}

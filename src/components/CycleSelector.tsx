@@ -92,15 +92,17 @@ export function CycleSelector() {
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        <Layers size={16} aria-hidden />
-        <span className="cycle-selector__label">
-          {activeCycle?.label ?? 'Ciclo'}
-          {needsDiagnosis && <em className="cycle-selector__badge">diagnóstico pendente</em>}
+        <Layers size={16} aria-hidden className="cycle-selector__trigger-icon" />
+        <span className="cycle-selector__trigger-copy">
+          <span className="cycle-selector__label">{activeCycle?.label ?? 'Ciclo'}</span>
+          {needsDiagnosis && (
+            <span className="cycle-selector__badge">Diagnóstico pendente</span>
+          )}
         </span>
         {switching || busy ? (
           <Loader2 size={14} className="spinning" aria-hidden />
         ) : (
-          <ChevronDown size={14} aria-hidden />
+          <ChevronDown size={14} aria-hidden className="cycle-selector__chevron" />
         )}
       </button>
 

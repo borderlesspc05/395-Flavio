@@ -4,10 +4,20 @@ import {
   createDiagnosticCycleForUser,
   deleteDiagnosticCycleForUser,
   getCycleQuotaForUser,
+  listDiagnosticCyclesForUser,
   updateDiagnosticCycleForUser,
 } from '../services/diagnosticCyclesServer';
 
 const router = Router();
+
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const cycles = await listDiagnosticCyclesForUser(req.userId);
+    res.json(cycles);
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/quota', async (req: Request, res: Response, next: NextFunction) => {
   try {

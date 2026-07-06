@@ -48,8 +48,8 @@
 }
 
 .auth-card--compact {
-  width: 100%;
-  max-width: 21.5rem !important;
+  width: min(34rem, calc(100% - 2rem));
+  max-width: min(34rem, calc(100% - 2rem)) !important;
   margin: 0 auto;
   padding: 1.2rem 1.15rem 1.35rem !important;
   border-radius: 18px !important;
@@ -89,10 +89,18 @@
   margin-bottom: 1.1rem;
   padding-bottom: 0.95rem;
   border-bottom: 1px solid rgba(175, 146, 112, 0.14);
+  position: relative;
+  z-index: 2;
 }
 
 .auth-card-mark {
   flex-shrink: 0;
+  display: block;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  object-fit: contain;
   border-radius: 11px;
   filter: drop-shadow(0 4px 10px rgba(176, 141, 87, 0.28));
 }

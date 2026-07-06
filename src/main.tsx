@@ -13,6 +13,7 @@ import './styles/consultoria-responsive.css';
 import './styles/consultoria-refined.css';
 import './styles/gate-zero-design.css';
 import './styles/brand-overrides.css';
+import './styles/layout-system.css';
 import './styles/magnus-waves.css';
 import './styles/action-canvas.css';
 import './styles/plans-landing.css';

@@ -8,8 +8,17 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, setUser);
-    return unsub;
+    let active = true;
+    void auth.authStateReady().then(() => {
+      if (active) setUser(auth.currentUser);
+    });
+    const unsub = onAuthStateChanged(auth, (next) => {
+      if (active) setUser(next);
+    });
+    return () => {
+      active = false;
+      unsub();
+    };
   }, []);
 
   if (user === undefined) {

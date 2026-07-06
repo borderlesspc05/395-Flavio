@@ -171,7 +171,7 @@ export function OrganizationalScansHubPage() {
         </div>
       </section>
 
-      <div className="organizational-scan-actions">
+      <div className="organizational-scan-actions mm-sticky-actions">
         <button
           type="button"
           className="diagnostic-secondary-button"

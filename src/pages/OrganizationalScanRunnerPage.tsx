@@ -265,7 +265,7 @@ export function OrganizationalScanRunnerPage() {
           </section>
         ))}
 
-        <div className="organizational-scan-actions">
+        <div className="organizational-scan-actions mm-sticky-actions">
           <button type="button" className="diagnostic-secondary-button" onClick={() => navigate('/dashboard/scans')}>
             Voltar
           </button>

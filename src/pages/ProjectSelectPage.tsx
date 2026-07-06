@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ArrowRight, FolderKanban, Loader2, LogOut, Plus, Trash2 } from 'lucide-react';
@@ -20,6 +21,8 @@ const STATUS_LABELS: Record<DiagnosticCycle['status'], string> = {
 
 export function ProjectSelectPage() {
   const navigate = useViewTransitionNavigate();
+  const location = useLocation();
+  const autoEnterAttempted = useRef(false);
   const {
     cycles,
     activeCycle,
@@ -43,36 +46,54 @@ export function ProjectSelectPage() {
   const usageLabel = formatCycleUsage(cycles.length, maxOpenCycles);
   const isBusy = Boolean(enteringId) || switching || creating || Boolean(deletingId);
 
-  const enterCycle = async (cycle: DiagnosticCycle) => {
-    if (isBusy || confirmDeleteId) return;
-    setEnteringId(cycle.id);
-    setError(null);
-    try {
-      if (activeCycle?.id !== cycle.id) {
-        await switchCycle(cycle.id);
-      }
-      markWorkspaceEntered();
-      const fallbackRoute = getRouteForCycleDoc(cycle);
-      navigate(fallbackRoute, {
-        replace: true,
-        state: {
-          cycleEntry: {
-            cycleId: cycle.id,
-            label: cycle.label,
-          },
-        },
-      });
-      void resolveCycleEntryRoute(cycle).then((route) => {
-        if (route !== fallbackRoute) {
-          navigate(route, { replace: true });
+  const enterCycle = useCallback(
+    async (cycle: DiagnosticCycle) => {
+      if (isBusy || confirmDeleteId) return;
+      setEnteringId(cycle.id);
+      setError(null);
+      try {
+        if (activeCycle?.id !== cycle.id) {
+          await switchCycle(cycle.id);
         }
-      });
-    } catch {
-      setError('Não foi possível abrir este projeto. Tente novamente.');
-    } finally {
-      setEnteringId(null);
-    }
-  };
+        markWorkspaceEntered();
+        const fallbackRoute = getRouteForCycleDoc(cycle);
+        navigate(fallbackRoute, {
+          replace: true,
+          state: {
+            cycleEntry: {
+              cycleId: cycle.id,
+              label: cycle.label,
+            },
+          },
+        });
+        void resolveCycleEntryRoute(cycle).then((route) => {
+          if (route !== fallbackRoute) {
+            navigate(route, { replace: true });
+          }
+        });
+      } catch {
+        setError('Não foi possível abrir este projeto. Tente novamente.');
+      } finally {
+        setEnteringId(null);
+      }
+    },
+    [activeCycle?.id, confirmDeleteId, isBusy, navigate, switchCycle]
+  );
+
+  useEffect(() => {
+    if (loading || isBusy || cycles.length === 0 || autoEnterAttempted.current) return;
+
+    const justRegistered =
+      location.state != null &&
+      typeof location.state === 'object' &&
+      'justRegistered' in location.state &&
+      (location.state as { justRegistered?: boolean }).justRegistered === true;
+
+    if (!justRegistered && (hasEnteredWorkspace() || cycles.length !== 1)) return;
+
+    autoEnterAttempted.current = true;
+    void enterCycle(cycles[0]);
+  }, [loading, isBusy, cycles, location.state, enterCycle]);
 
   const handleDelete = async (cycleId: string) => {
     setDeletingId(cycleId);
@@ -160,7 +181,14 @@ export function ProjectSelectPage() {
                 </span>
               </div>
 
-              <ul className="project-select-list" role="listbox" aria-label="Projetos disponíveis">
+              <h2 id="project-select-list-title" className="project-select-list-heading">
+                Seus projetos
+              </h2>
+              <ul
+                className="project-select-list"
+                role="listbox"
+                aria-labelledby="project-select-list-title"
+              >
                 {cycles.length === 0 ? (
                   <li className="project-select-empty">Nenhum projeto ainda. Defina o nome abaixo e comece.</li>
                 ) : (

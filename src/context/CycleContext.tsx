@@ -46,11 +46,15 @@ interface CycleContextValue {
 
 const CycleContext = createContext<CycleContextValue | null>(null);
 
+function pickPreferredCycle(cycles: DiagnosticCycle[]): DiagnosticCycle {
+  const active = cycles.find((c) => c.status === 'draft' || c.status === 'active');
+  return active ?? cycles[0];
+}
+
 async function ensureDefaultCycle(userId: string): Promise<DiagnosticCycle> {
-  const cycles = await listDiagnosticCycles(userId);
+  let cycles = await listDiagnosticCycles(userId);
   if (cycles.length > 0) {
-    const active = cycles.find((c) => c.status === 'draft' || c.status === 'active');
-    return active ?? cycles[0];
+    return pickPreferredCycle(cycles);
   }
 
   const [{ data, completedAt }, gate] = await Promise.all([
@@ -66,32 +70,40 @@ async function ensureDefaultCycle(userId: string): Promise<DiagnosticCycle> {
         })
       : undefined;
 
-  const created = await createDiagnosticCycle(userId, {
-    label: 'Ciclo 1 · Base',
-    status: completedAt ? 'active' : diagnosticContext.trim() ? 'draft' : 'draft',
-    diagnosticContext,
-    gateSummary,
-    formData: data,
-  });
-
-  if (completedAt) {
-    await updateDiagnosticCycle(created.id, {
-      completedAt: completedAt.toISOString(),
-      status: 'active',
-      ...(gate?.selectedPath ? { gatePath: gate.selectedPath } : {}),
-      ...(gate?.rationale ? { gateRationale: gate.rationale } : {}),
-      ...(gate?.selectedPath
-        ? {
-            gateSummary: buildGateContextAppendix(gate.selectedPath, {
-              aiRecommendedPath: gate.aiRecommendedPath,
-              rationale: gate.rationale,
-            }),
-          }
-        : {}),
+  try {
+    const created = await createDiagnosticCycle(userId, {
+      label: 'Ciclo 1 · Base',
+      status: completedAt ? 'active' : diagnosticContext.trim() ? 'draft' : 'draft',
+      diagnosticContext,
+      gateSummary,
+      formData: data,
     });
-  }
 
-  return (await getDiagnosticCycle(created.id)) ?? created;
+    if (completedAt) {
+      await updateDiagnosticCycle(created.id, {
+        completedAt: completedAt.toISOString(),
+        status: 'active',
+        ...(gate?.selectedPath ? { gatePath: gate.selectedPath } : {}),
+        ...(gate?.rationale ? { gateRationale: gate.rationale } : {}),
+        ...(gate?.selectedPath
+          ? {
+              gateSummary: buildGateContextAppendix(gate.selectedPath, {
+                aiRecommendedPath: gate.aiRecommendedPath,
+                rationale: gate.rationale,
+              }),
+            }
+          : {}),
+      });
+    }
+
+    return (await getDiagnosticCycle(created.id)) ?? created;
+  } catch {
+    cycles = await listDiagnosticCycles(userId);
+    if (cycles.length > 0) {
+      return pickPreferredCycle(cycles);
+    }
+    throw new Error('Não foi possível preparar o primeiro projeto.');
+  }
 }
 
 export function CycleProvider({ children }: { children: ReactNode }) {

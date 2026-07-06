@@ -658,8 +658,7 @@ body {
 /* Viewport fallbacks (mobile menu, full-width main) */
 @media (max-width: 768px) {
   .dashboard-main {
-    padding: var(--spacing-md) !important;
-    padding-top: calc(56px + var(--spacing-md)) !important;
+    padding: var(--page-pad-x, var(--spacing-md)) !important;
   }
 
   .dashboard-home-header {
