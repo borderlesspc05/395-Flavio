@@ -15,7 +15,7 @@ type AnimatedOutletProps = {
   className?: string;
 };
 
-const EXIT_EASE = [0.4, 0, 0.2, 1] as const;
+const EXIT_EASE = [0.32, 0, 0.67, 0] as const;
 
 export function AnimatedOutlet({
   scope = 'full',
@@ -49,50 +49,44 @@ export function AnimatedOutlet({
   const pageVariants = {
     initial: (dir: number) => ({
       opacity: 0,
-      y: dir > 0 ? 14 : -8,
-      filter: 'blur(6px)',
-      scale: dir > 0 ? 0.992 : 1,
+      y: dir > 0 ? 8 : -6,
+      scale: 0.996,
     }),
     animate: {
       opacity: 1,
       y: 0,
-      filter: 'blur(0px)',
       scale: 1,
       transition: { duration: motionTokens.duration, ease: motionTokens.ease },
     },
     exit: (dir: number) => ({
       opacity: 0,
-      y: dir > 0 ? -8 : 14,
-      filter: 'blur(4px)',
-      scale: 0.996,
-      transition: { duration: motionTokens.duration * 0.65, ease: EXIT_EASE },
+      y: dir > 0 ? -5 : 7,
+      scale: 0.998,
+      transition: { duration: motionTokens.duration * 0.5, ease: EXIT_EASE },
     }),
   };
 
   const tabVariants = {
     initial: (dir: number) => ({
       opacity: 0,
-      x: dir > 0 ? 12 : -10,
-      filter: 'blur(2px)',
+      x: dir > 0 ? 8 : -8,
     }),
     animate: {
       opacity: 1,
       x: 0,
-      filter: 'blur(0px)',
       transition: { duration: motionTokens.duration, ease: motionTokens.ease },
     },
     exit: (dir: number) => ({
       opacity: 0,
-      x: dir > 0 ? -10 : 12,
-      filter: 'blur(2px)',
-      transition: { duration: motionTokens.duration * 0.65, ease: EXIT_EASE },
+      x: dir > 0 ? -6 : 6,
+      transition: { duration: motionTokens.duration * 0.5, ease: EXIT_EASE },
     }),
   };
 
   const variants = useTab ? tabVariants : pageVariants;
 
   return (
-    <AnimatePresence mode="wait" initial={false} custom={direction}>
+    <AnimatePresence mode="popLayout" initial={false} custom={direction}>
       <motion.div
         key={transitionKey}
         className={['vt-outlet-host', vtClass, className].filter(Boolean).join(' ')}
@@ -101,6 +95,7 @@ export function AnimatedOutlet({
         initial="initial"
         animate="animate"
         exit="exit"
+        style={{ backfaceVisibility: 'hidden', willChange: 'transform, opacity' }}
       >
         {outlet}
       </motion.div>

@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowLeft, CircleAlert, ClipboardCheck, Save } from 'lucide-react';
@@ -178,7 +178,7 @@ export function OrganizationalScanRunnerPage() {
           postDiagnosticNotice: {
             title: `Projeto "${trimmedName}" iniciado`,
             message: `Diagnóstico focado (${scan.title}) salvo. Revise o resumo da empresa e escolha os planos no Solution Pick.`,
-            nextStepLabel: 'Próximo passo: Solution Pick → Design',
+            nextStepLabel: 'Próximo passo: Solution Pick â†’ Design',
             completedAt: at.toISOString(),
           },
         },
@@ -305,7 +305,7 @@ export function OrganizationalScanRunnerPage() {
             <h2 id="scan-cycle-name-title">Nome do seu projeto</h2>
             <p>
               Você está concluindo com o scan <strong>{scan.title}</strong>. Este nome identifica o ciclo em
-              todo o Magnus Waves.
+              todo o Sprint Waves.
             </p>
             <label className="cycle-name-modal__field">
               <span>Nome do projeto</span>

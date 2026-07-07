@@ -63,7 +63,7 @@ export function EmployeeProfilePage() {
         <header className="ep-topbar">
           <Link to="/" className="ep-brand">
             <span className="ep-brand-mark">M</span>
-            <span className="ep-brand-text">Magnus Mind · Desenvolvimento</span>
+            <span className="ep-brand-text">Sprint · Desenvolvimento</span>
           </Link>
           <span className="ep-demo-badge">Visualização mockada</span>
         </header>
@@ -214,7 +214,7 @@ export function EmployeeProfilePage() {
 
         <footer className="ep-footer">
           <p>
-            Este é um perfil de desenvolvimento personalizado. Em breve os dados virão do seu ciclo real no Magnus Mind.
+            Este é um perfil de desenvolvimento personalizado. Em breve os dados virão do seu ciclo real no Sprint.
           </p>
           {acknowledged ? (
             <span className="ep-acknowledged">
@@ -228,7 +228,7 @@ export function EmployeeProfilePage() {
             </button>
           )}
           <Link to="/login" className="ep-btn ep-btn--ghost">
-            Acessar Magnus Mind
+            Acessar Sprint
           </Link>
         </footer>
       </div>

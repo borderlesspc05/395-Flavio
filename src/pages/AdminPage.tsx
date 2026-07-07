@@ -170,7 +170,7 @@ export function AdminPage() {
         <div className="admin-brand">
           <span className="admin-brand-mark">MM</span>
           <div>
-            <strong>Magnus Mind</strong>
+            <strong>Sprint</strong>
             <span>Console admin</span>
           </div>
         </div>

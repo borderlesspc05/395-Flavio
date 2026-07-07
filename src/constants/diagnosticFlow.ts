@@ -1,4 +1,4 @@
-import type { DiagnosticFieldValue, InitialFormData } from '../types';
+﻿import type { DiagnosticFieldValue, InitialFormData } from '../types';
 import { ORGANIZATIONAL_SCANS } from './organizationalScans';
 import { parseOrganizationalScanData } from '../services/organizationalScanStorage';
 import { buildOrganizationalScanContext, getScanStatus } from '../utils/organizationalScans';
@@ -118,7 +118,7 @@ export const DIAGNOSTIC_PHASES: DiagnosticPhase[] = [
         fields: [
           {
             id: 'desafioPrincipal',
-            prompt: 'Qual é o principal problema ou desafio que motivou você a buscar a Magnus Mind?',
+            prompt: 'Qual é o principal problema ou desafio que motivou você a buscar a Sprint?',
             required: true,
           },
           {
@@ -1257,7 +1257,7 @@ export const DIAGNOSTIC_PHASES: DiagnosticPhase[] = [
           },
           {
             id: 'solucaoSelecionadaDesign',
-            prompt: 'Ação: solução selecionada para a próxima fase Design do MM People Sprint 90+',
+            prompt: 'Ação: solução selecionada para a próxima fase Design do People Sprint 90+',
             required: true,
           },
         ],
@@ -1350,7 +1350,7 @@ export function getRequiredDiagnosticFieldKeysExcludingSolutionPick(): string[] 
 }
 
 export function buildDiagnosticContextThroughTeamScan(data: InitialFormData): string {
-  const lines: string[] = ['# Magnus Waves - Diagnóstico 1.1 a 1.4'];
+  const lines: string[] = ['# Sprint Waves - Diagnóstico 1.1 a 1.4'];
 
   for (const phase of DIAGNOSTIC_PHASES) {
     if (phase.id === SOLUTION_PICK_PHASE_ID) break;
@@ -1445,7 +1445,7 @@ function fieldLabel(field: DiagnosticField, key: string): string {
 }
 
 export function buildDiagnosticContext(data: InitialFormData): string {
-  const lines: string[] = ['# Magnus Waves - Diagnóstico 1.1 a 1.5'];
+  const lines: string[] = ['# Sprint Waves - Diagnóstico 1.1 a 1.5'];
 
   for (const phase of DIAGNOSTIC_PHASES) {
     const phaseLines: string[] = [];

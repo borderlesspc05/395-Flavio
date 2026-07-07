@@ -34,7 +34,7 @@ export function AdminLoginPage() {
 
   return (
     <AuthLayout
-      title="Admin Magnus Mind"
+      title="Admin Sprint"
       backTo={{ href: '/', label: 'Voltar para a landing' }}
       footer={
         <>

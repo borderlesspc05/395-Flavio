@@ -181,15 +181,15 @@
 .dashboard-sidebar .logo-text {
   margin: 0.55rem 0 0 !important;
   font-family: 'Newsreader', Georgia, serif !important;
-  font-style: italic !important;
-  font-weight: 600 !important;
-  font-size: 1.14rem !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
   letter-spacing: 0.02em !important;
-  text-transform: lowercase !important;
-  color: #ffbc7d !important;
+  text-transform: none !important;
+  color: #af9270 !important;
   line-height: 1.2 !important;
   text-align: center;
-  text-shadow: 0 0 18px rgba(255, 188, 125, 0.18);
+  text-shadow: 0 0 16px rgba(175, 146, 112, 0.2);
 }
 
 .dashboard-sidebar .sidebar-nav {

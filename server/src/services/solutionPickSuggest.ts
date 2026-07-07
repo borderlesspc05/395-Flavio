@@ -1,4 +1,4 @@
-import { chatCompletion, getFastStructuredModel, isLlmNotConfiguredError } from './llm';
+﻿import { chatCompletion, getFastStructuredModel, isLlmNotConfiguredError } from './llm';
 import { searchUserRagContext } from './ragSearch';
 import { isRagVectorConfigured } from './ragConfig';
 
@@ -46,6 +46,35 @@ function defaultPrazo(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0];
+}
+
+function desiredDeliveryCount(index: number): number {
+  return (index % 3) + 1;
+}
+
+function buildVariableEntregas(titulo: string, index: number) {
+  const templates = [
+    {
+      entrega: `Planejar escopo: ${titulo}`,
+      responsavel: 'Owner',
+      prazo: defaultPrazo(14),
+      status: 'amarelo',
+      evidencia: 'Documento de alinhamento',
+    },
+    {
+      entrega: 'Executar piloto e medir resultado',
+      responsavel: 'Equipe núcleo',
+      prazo: defaultPrazo(35),
+      status: 'amarelo',
+    },
+    {
+      entrega: 'Consolidar aprendizados e padronizar rotina',
+      responsavel: 'Sponsor executivo',
+      prazo: defaultPrazo(55),
+      status: 'amarelo',
+    },
+  ];
+  return templates.slice(0, desiredDeliveryCount(index));
 }
 
 const CATEGORY_FOCUS: Record<string, string> = {
@@ -126,9 +155,9 @@ function buildDetalhes(ctx: {
 function defaultCompanySummary(): { companySummary: string; companySituation: string } {
   return {
     companySummary:
-      'Resumo executivo indisponível no modo demonstração. Com IA configurada, a síntese será gerada a partir do diagnóstico completo da empresa.',
+      'Resumo executivo indisponível no modo demonstração. Com a IA configurada, a síntese será gerada a partir do diagnóstico completo da empresa, conectando dores, prioridades e implicações para o negócio. Este espaço foi preparado para trazer uma leitura mais robusta, com dois parágrafos executivos em vez de uma resposta curta.\n\nEnquanto a configuração não estiver ativa, as sugestões abaixo funcionam como exemplo de navegação e validação do fluxo. Assim que a chave de IA estiver disponível no servidor, o Sprint substituirá este texto por uma análise contextualizada, considerando os sinais do Decoding, Gap Scan, System Scan, Team Scan e Solution Pick.',
     companySituation:
-      'Situação organizacional não sintetizada — complete o diagnóstico ou configure a chave de IA no servidor.',
+      'A situação organizacional não pôde ser sintetizada automaticamente neste momento. Quando a IA estiver ativa, este bloco vai explicar o que a empresa está vivendo agora, quais tensões aparecem no dia a dia e onde a performance está sendo mais pressionada.\n\nComplete o diagnóstico ou configure a chave de IA no servidor para liberar a leitura consultiva. O objetivo é que este trecho ajude a liderança a enxergar sintomas, causas prováveis e riscos de continuidade antes de escolher os planos de ação.',
   };
 }
 
@@ -208,21 +237,7 @@ function defaultSuggestions(): SuggestedSolutionActionDraft[] {
 
   return samples.map((s, i) => {
     const prazoFinal = defaultPrazo(60 + i * 7);
-    const entregas = [
-      {
-        entrega: `Planejar escopo: ${s.titulo}`,
-        responsavel: 'Owner',
-        prazo: defaultPrazo(14),
-        status: 'amarelo',
-        evidencia: 'Documento de alinhamento',
-      },
-      {
-        entrega: 'Executar piloto e medir resultado',
-        responsavel: 'Equipe núcleo',
-        prazo: defaultPrazo(45),
-        status: 'amarelo',
-      },
-    ];
+    const entregas = buildVariableEntregas(s.titulo, i);
 
     const riscos = [
       {
@@ -284,7 +299,7 @@ function normalizeAction(raw: unknown, index: number): SuggestedSolutionActionDr
   const entregasRaw = Array.isArray(draftRaw.entregas) ? draftRaw.entregas : [];
   const riscosRaw = Array.isArray(draftRaw.riscos) ? draftRaw.riscos : [];
 
-  const entregas = entregasRaw.slice(0, 5).map((e) => {
+  const entregas = entregasRaw.slice(0, 3).map((e) => {
     const row = (e && typeof e === 'object' ? e : {}) as Record<string, unknown>;
     return {
       entrega: String(row.entrega ?? '').trim(),
@@ -322,15 +337,8 @@ function normalizeAction(raw: unknown, index: number): SuggestedSolutionActionDr
     }
   );
   const finalEntregas = entregas.length
-    ? entregas
-    : [
-        {
-          entrega: `Primeira entrega: ${titulo}`,
-          responsavel: 'Owner',
-          prazo: defaultPrazo(21),
-          status: 'amarelo',
-        },
-      ];
+    ? entregas.slice(0, Math.min(3, Math.max(1, entregas.length)))
+    : buildVariableEntregas(titulo, index);
   const finalRiscos = riscos.length
     ? riscos
     : [{ risco: 'Desalinhamento de prioridades', acaoTomar: 'Checkpoint com sponsor' }];
@@ -448,9 +456,9 @@ ${ragResult.context}`
 
 Leia o diagnostico da empresa abaixo. Quando houver contexto RAG, use como complemento.
 
-PRIMEIRO sintetize em portugues do Brasil:
-1) companySummary: resumo executivo em 3-4 frases.
-2) companySituation: paragrafo sobre a situacao organizacional atual.
+PRIMEIRO sintetize em portugues do Brasil, com profundidade consultiva e sem frases genericas:
+1) companySummary: exatamente 2 paragrafos. Cada paragrafo deve ter 3 a 4 frases, trazendo leitura executiva, dores reais, prioridades e implicacoes para o negocio. Separe os dois paragrafos com "\\n\\n".
+2) companySituation: exatamente 2 paragrafos. Cada paragrafo deve ter 3 a 4 frases, descrevendo o que a empresa esta vivendo agora, tensoes organizacionais, sintomas do dia a dia e riscos se nada mudar. Separe os dois paragrafos com "\\n\\n".
 
 DEPOIS proponha exatamente 10 acoes de plano de mudanca concretas.
 Cada acao deve nascer das evidencias do diagnostico.
@@ -470,7 +478,7 @@ Diagnostico da empresa:
 ${compactContext}${ragBlock}
 
 Responda APENAS com JSON valido (sem markdown):
-{"companySummary":"...","companySituation":"...","suggestions":[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"..."}]}`;
+{"companySummary":"Paragrafo 1...\\n\\nParagrafo 2...","companySituation":"Paragrafo 1...\\n\\nParagrafo 2...","suggestions":[{"titulo":"...","descricao":"...","score":85,"categoria":"pessoas","rationale":"..."}]}`;
 
   let demoReason = 'A IA não retornou JSON válido com sugestões suficientes.';
 
@@ -481,12 +489,12 @@ Responda APENAS com JSON valido (sem markdown):
         {
           role: 'system',
           content:
-            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). Seja conciso.',
+            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). companySummary e companySituation devem ter exatamente 2 paragrafos cada, separados por duas quebras de linha.',
         },
         { role: 'user', content: prompt },
       ],
       temperature: 0.35,
-      maxTokens: 3200,
+      maxTokens: 4200,
     });
 
     const parsed = extractJsonPayload(raw);

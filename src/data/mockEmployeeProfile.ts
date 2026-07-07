@@ -1,4 +1,4 @@
-import type { EmployeeProfile } from '../types/employeeProfile';
+﻿import type { EmployeeProfile } from '../types/employeeProfile';
 
 const MOCK_BY_ID: Record<string, EmployeeProfile> = {
   demo: {

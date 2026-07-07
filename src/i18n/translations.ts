@@ -3,7 +3,6 @@ import type { Locale } from '../constants/locales';
 export type TranslationTree = {
   nav: {
     hub: string;
-    checklist: string;
     diagnostic: string;
     design: string;
     diffusion: string;
@@ -72,7 +71,6 @@ export const translations: Record<Locale, TranslationTree> = {
   pt: {
     nav: {
       hub: 'MID',
-      checklist: 'Checklist diário',
       diagnostic: '1 · Diagnóstico',
       design: '2 · Design',
       diffusion: '3 · Difusão',
@@ -139,7 +137,6 @@ export const translations: Record<Locale, TranslationTree> = {
   en: {
     nav: {
       hub: 'MID',
-      checklist: 'Daily checklist',
       diagnostic: '1 · Diagnostic',
       design: '2 · Design',
       diffusion: '3 · Diffusion',
@@ -206,7 +203,6 @@ export const translations: Record<Locale, TranslationTree> = {
   es: {
     nav: {
       hub: 'MID',
-      checklist: 'Checklist diário',
       diagnostic: '1 · Diagnóstico',
       design: '2 · Diseño',
       diffusion: '3 · Difusión',

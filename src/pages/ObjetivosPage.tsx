@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { ActionCanvasPanel } from '../components/ActionCanvasPanel';
-import { MagnusMemoryBanner } from '../components/MagnusMemoryBanner';
 import { objectivesApi } from '../services/api';
 import { loadDesignDiffusionContext, type DesignDiffusionContext } from '../services/designDiffusionContext';
 import {
@@ -461,26 +460,20 @@ export function ObjetivosPage() {
 
   return (
     <div className="objetivos-page">
-      <header className="objetivos-header difusao-wave-header">
-        <div className="objetivos-title-group">
-          <div className="objetivos-icon-wrapper" aria-hidden>
+      <header className="objetivos-header difusao-wave-header sprint-wave-header">
+        <div className="objetivos-title-group sprint-wave-title-group">
+          <div className="objetivos-icon-wrapper sprint-wave-icon-wrapper" aria-hidden>
             <Target size={26} />
           </div>
-          <div className="objetivos-title-copy">
-            <span className="difusao-header-eyebrow">MAGNUS WAVES™ · Onda 3</span>
-            <h1 className="objetivos-title">Difusão</h1>
-            <p className="objetivos-subtitle">
+          <div className="objetivos-title-copy sprint-wave-title-copy">
+            <span className="difusao-header-eyebrow sprint-wave-eyebrow">SPRINT WAVES™ · Onda 3</span>
+            <h1 className="objetivos-title sprint-wave-title">Difusão</h1>
+            <p className="objetivos-subtitle sprint-wave-subtitle">
               Execute planos, monitore riscos e acompanhe o progresso até a entrega final.
             </p>
           </div>
         </div>
       </header>
-
-      <MagnusMemoryBanner
-        meta={designContext?.meta ?? null}
-        statusLabel={designContext?.statusLabel}
-        loading={designContextLoading}
-      />
 
       <ActionCanvasPanel
         canUseAi={Boolean(designContext?.diagnosticComplete)}
@@ -495,7 +488,7 @@ export function ObjetivosPage() {
           <span className="summary-value">{total}</span>
         </div>
         <div className="objetivo-summary-card">
-          <span className="summary-label">Gerados por IA</span>
+          <span className="summary-label">Sugeridos</span>
           <span className="summary-value">{iaCount}</span>
         </div>
         <div className="objetivo-summary-card">
@@ -524,7 +517,7 @@ export function ObjetivosPage() {
               {designContextLoading
                 ? 'Lendo diagnóstico e MM Blueprint...'
                 : designContext?.statusLabel ||
-                  'Complete o diagnóstico para a IA transformar a leitura em objetivos.'}
+                  'Complete o diagnóstico para transformar a leitura em objetivos.'}
             </p>
           </div>
         </div>
@@ -636,7 +629,7 @@ export function ObjetivosPage() {
         </button>
         <button type="button" className="objetivos-secondary-button" onClick={loadSuggestions}>
           <Lightbulb size={18} />
-          Sugerir com IA
+          Sugerir objetivos
         </button>
       </div>
 
@@ -647,7 +640,7 @@ export function ObjetivosPage() {
           <div className="objetivos-empty-state">
             <h3 className="objetivos-empty-title">Nenhum objetivo encontrado</h3>
             <p className="objetivos-empty-description">
-              Crie um objetivo manualmente ou use a Consultoria IA para gerar sugestões.
+              Crie um objetivo manualmente ou use a Chat de IA para gerar sugestões.
             </p>
             <button type="button" className="objetivos-primary-button" onClick={openCreate}>
               Criar objetivo
@@ -706,7 +699,7 @@ export function ObjetivosPage() {
                   <div className="objetivo-origin">
                     <span className="objetivo-origin-label">
                       <Bot size={14} />
-                      Gerado por IA
+                      Sugerido
                     </span>
                     {obj.insightOrigem && <p className="objetivo-origin-text">{obj.insightOrigem}</p>}
                   </div>
@@ -850,7 +843,7 @@ export function ObjetivosPage() {
                   <Sparkles size={20} />
                   Sugestões de objetivos
                 </h2>
-                <p className="suggestions-modal-subtitle">Selecione os objetivos sugeridos pela IA para adicionar</p>
+                <p className="suggestions-modal-subtitle">Selecione os objetivos sugeridos para adicionar</p>
               </div>
               <button type="button" className="suggestions-modal-close" onClick={() => setSuggestionsOpen(false)}>
                 <X size={20} />
@@ -943,7 +936,7 @@ export function ObjetivosPage() {
             navigate('/dashboard/relatorios', {
               state: {
                 autoGenerate: true,
-                midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio…',
+                midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio...',
               },
             })
           }

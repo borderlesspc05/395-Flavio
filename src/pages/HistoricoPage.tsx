@@ -19,7 +19,7 @@ export function HistoricoPage() {
           <div>
             <h1 className="historico-title">Loop contínuo · Evolution Loop</h1>
             <p className="historico-subtitle">
-              Magnus Mind fecha o ciclo com recomendações da IA. Ciclo ativo:{' '}
+              Sprint fecha o ciclo com recomendações da IA. Ciclo ativo:{' '}
               <strong>{activeCycle?.label ?? '—'}</strong> — use o painel abaixo para evoluir ou
               gerencie ciclos na coluna lateral.
             </p>

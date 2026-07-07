@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -292,19 +292,23 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
         <div className="domain-wave-grain" />
       </div>
 
-      <header className="domain-wave-hero domain-reveal">
-        <div className="domain-wave-hero-copy">
-          <p className="domain-wave-eyebrow">
-            <Brain size={12} aria-hidden />
-            Onda 4 · Domínio
-          </p>
-          <h1 className="domain-wave-question">O que aprendemos com o que fizemos?</h1>
-          <p className="domain-wave-lead">
-            Transforme execução em inteligência organizacional. Registre impacto, aprendizados e
-            sustentação para alimentar o MID e o próximo ciclo.
-          </p>
+      <header className="domain-wave-hero domain-reveal sprint-wave-header">
+        <div className="domain-wave-hero-copy sprint-wave-title-group">
+          <div className="sprint-wave-icon-wrapper" aria-hidden>
+            <Brain size={26} />
+          </div>
+          <div className="sprint-wave-title-copy">
+            <p className="domain-wave-eyebrow sprint-wave-eyebrow">
+              SPRINT WAVES™ · Onda 4
+            </p>
+            <h1 className="domain-wave-question sprint-wave-title">Domínio</h1>
+            <p className="domain-wave-lead sprint-wave-subtitle">
+              Transforme execução em inteligência organizacional. Registre impacto, aprendizados e
+              sustentação para alimentar o MID e o próximo ciclo.
+            </p>
+          </div>
         </div>
-        <aside className="domain-wave-hero-aside" aria-label="Resumo do ciclo">
+        <aside className="domain-wave-hero-aside sprint-wave-side" aria-label="Resumo do ciclo">
           <dl>
             <dt>Planos mapeados</dt>
             <dd>
@@ -551,7 +555,7 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
             }
           >
             {generatingAi ? <Loader2 size={16} className="spinning" /> : <Sparkles size={16} />}
-            {generatingAi ? 'Gerando…' : 'Gerar Top 5 com IA'}
+            {generatingAi ? 'Gerando…' : 'Gerar Top 5'}
           </button>
 
           {domainData.learning.aiTopLearnings.length > 0 ? (
@@ -564,7 +568,7 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
             </ol>
           ) : (
             <p className="domain-empty-text" style={{ marginTop: '0.85rem' }}>
-              Preencha os campos acima e gere o Top 5 com IA.
+              Preencha os campos acima e gere o Top 5.
             </p>
           )}
         </div>

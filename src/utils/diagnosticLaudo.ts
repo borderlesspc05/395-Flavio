@@ -1,20 +1,20 @@
-import { buildDiagnosticContext } from '../constants/diagnosticFlow';
+﻿import { buildDiagnosticContext } from '../constants/diagnosticFlow';
 import { computeEvolutionIndex } from './evolutionIndex';
 import type { InitialFormData } from '../types';
 
-/** Laudo dissertativo em formato legível (≈ A4) a partir do diagnóstico preenchido. */
+/** Laudo dissertativo em formato legível (â‰ˆ A4) a partir do diagnóstico preenchido. */
 export function buildDiagnosticLaudo(data: InitialFormData, projectLabel?: string): string {
   const evolution = computeEvolutionIndex(data);
   const context = buildDiagnosticContext(data);
 
   const lines: string[] = [
     'LAUDO DE DIAGNÓSTICO ORGANIZACIONAL',
-    'Magnus Waves · Human-to-Business Canvas',
+    'Sprint Waves · Human-to-Business Canvas',
     '',
     `Projeto: ${projectLabel?.trim() || 'Ciclo ativo'}`,
     `Data de referência: ${new Date().toLocaleDateString('pt-BR', { dateStyle: 'long' })}`,
     '',
-    '1. SÍNTESE EXECUTIVA',
+    '1. SÃNTESE EXECUTIVA',
     '',
   ];
 
@@ -36,7 +36,7 @@ export function buildDiagnosticLaudo(data: InitialFormData, projectLabel?: strin
 
   lines.push(
     '',
-    '2. RELATÓRIO DETALHADO DO QUESTIONÁRIO',
+    '2. RELATÓRIO DETALHADO DO QUESTIONÃRIO',
     '',
     context || '(Nenhuma resposta estruturada registrada ainda.)',
     '',

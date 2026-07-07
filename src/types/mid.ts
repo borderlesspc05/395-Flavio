@@ -74,21 +74,9 @@ export interface MidEvolutionItem {
   route?: string;
 }
 
-export interface MidDailyRhythm {
-  todayPercent: number;
-  todayDone: number;
-  todayTotal: number;
-  streakDays: number;
-  weekAvgPercent: number;
-  lastSevenDays: Array<{ date: string; percent: number }>;
-  pendingLabels: string[];
-  route: string;
-}
-
 export interface MidDashboardData {
   overview: MidOverview;
   executiveKpis: MidExecutiveKpi[];
-  dailyRhythm: MidDailyRhythm;
   execution: MidExecutionRow[];
   hasData: boolean;
 }

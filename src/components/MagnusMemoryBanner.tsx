@@ -1,4 +1,4 @@
-import { Brain, CheckCircle2, Circle, ClipboardList } from 'lucide-react';
+﻿import { Brain, CheckCircle2, Circle, ClipboardList } from 'lucide-react';
 import type { MagnusWavesMemoryMeta } from '../services/magnusWavesMemory';
 
 interface MagnusMemoryBannerProps {
@@ -15,7 +15,7 @@ export function MagnusMemoryBanner({ meta, statusLabel, loading, compact, minima
     return (
       <div className="magnus-memory-banner magnus-memory-banner--loading" aria-busy="true">
         <Brain size={18} />
-        <span>Carregando memória da IA…</span>
+        <span>Carregando memória do projeto...</span>
       </div>
     );
   }
@@ -71,7 +71,7 @@ export function MagnusMemoryBanner({ meta, statusLabel, loading, compact, minima
       <div className="magnus-memory-banner-head">
         <Brain size={18} aria-hidden />
         <div>
-          <strong>Memória Magnus Waves</strong>
+          <strong>Memória Sprint Waves</strong>
           {!compact && statusLabel && <p>{statusLabel}</p>}
         </div>
       </div>
@@ -92,7 +92,7 @@ export function MagnusMemoryBanner({ meta, statusLabel, loading, compact, minima
       </div>
       {!compact && (
         <p className="magnus-memory-hint">
-          A Consultoria IA e as sugestões usam diagnóstico, escolha de caminho e Action Canvas como contexto contínuo.
+          A Chat de IA e as sugestões usam diagnóstico, escolha de caminho e Action Canvas como contexto contínuo.
         </p>
       )}
     </div>

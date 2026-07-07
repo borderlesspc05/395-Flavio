@@ -23,7 +23,6 @@ import { EmployeeProfilePage } from './pages/EmployeeProfilePage';
 import { OrganizationalScansHubPage } from './pages/OrganizationalScansHubPage';
 import { OrganizationalScanRunnerPage } from './pages/OrganizationalScanRunnerPage';
 import { SolutionPickPage } from './pages/SolutionPickPage';
-import { DailyChecklistPage } from './pages/DailyChecklistPage';
 
 export default function App() {
   return (
@@ -71,12 +70,8 @@ export default function App() {
         <Route path="scans" element={<OrganizationalScansHubPage />} />
         <Route path="scans/:scanId" element={<OrganizationalScanRunnerPage />} />
         <Route path="solution-pick" element={<SolutionPickPage />} />
-        <Route path="checklist-diario" element={<DailyChecklistPage />} />
         <Route path="design" element={<DesignPlansPage />} />
-        <Route
-          path="consultoria-ia"
-          element={<Navigate to="/dashboard/minha-equipe?tab=consultoria" replace />}
-        />
+        <Route path="consultoria-ia" element={<Navigate to="/dashboard/inicio" replace />} />
         <Route path="objetivos" element={<ObjetivosPage />} />
         <Route path="minha-equipe" element={<MinhaEquipePage />} />
         <Route path="relatorios" element={<RelatoriosPage />} />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
+﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, Check, ChevronDown, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { buildDiagnosticLaudo } from '../utils/diagnosticLaudo';
@@ -12,7 +12,6 @@ import { aiApi } from '../services/api';
 import {
   parseSelectedSolutionActions,
   readCachedSolutionPick,
-  reconcileSelectedWithSuggestions,
   stashSelectedSolutionActions,
   clearCachedSolutionPick,
   withSelectedSolutionActions,
@@ -21,17 +20,18 @@ import {
 import { isApiUnreachableError, localSolutionPickFallback } from '../services/solutionPickLocal';
 import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../utils/apiError';
 import { getSolutionActionDetails } from '../utils/solutionActionDetails';
+import { fixMojibakeText } from '../utils/textEncoding';
 import type { InitialFormData } from '../types';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 
 const MAX_SELECT = 5;
-const SUMMARY_COLLAPSED_LINES = 5;
+const SUMMARY_COLLAPSED_LINES = 4;
 
 const LOADING_STEPS = [
-  'Lendo seu diagnóstico…',
-  'Identificando gaps e oportunidades…',
-  'Montando 10 planos de ação priorizados…',
-  'Quase pronto — finalizando scores e resumo…',
+  'Lendo seu diagnóstico...',
+  'Identificando gaps e oportunidades...',
+  'Montando 10 planos de ação priorizados...',
+  'Quase pronto — finalizando scores e resumo...',
 ] as const;
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -49,12 +49,78 @@ function scoreClass(score: number) {
   return 'low';
 }
 
+function splitSummaryParagraphs(value?: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(/\n{2,}|\r\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function hasRobustSummary(result: { companySummary?: string | null; companySituation?: string | null }) {
+  return splitSummaryParagraphs(result.companySummary).length >= 2 &&
+    splitSummaryParagraphs(result.companySituation).length >= 2;
+}
+
 type Props = {
   data: InitialFormData;
   userId: string | null;
   onDataChange: Dispatch<SetStateAction<InitialFormData>>;
   onSaveDraft: (payload: InitialFormData) => Promise<void>;
 };
+
+function deliverySelectionId(action: SuggestedSolutionAction, entregaIndex: number) {
+  return `${action.id}::delivery-${entregaIndex}`;
+}
+
+function buildDeliverySelection(action: SuggestedSolutionAction, entregaIndex: number): SuggestedSolutionAction {
+  const cleanAction = normalizeSuggestionText(action);
+  const entrega = cleanAction.draft.entregas[entregaIndex];
+  if (!entrega) return action;
+
+  return {
+    ...cleanAction,
+    id: deliverySelectionId(cleanAction, entregaIndex),
+    titulo: entrega.entrega || cleanAction.titulo,
+    descricao: `${cleanAction.titulo}: ${cleanAction.descricao}`,
+    detalhes: undefined,
+    draft: {
+      ...cleanAction.draft,
+      nomeIniciativa: entrega.entrega || cleanAction.draft.nomeIniciativa,
+      objetivoEspecifico: cleanAction.draft.objetivoEspecifico,
+      entregas: [entrega],
+      insightOrigem: `${cleanAction.rationale} Sugestão personalizada escolhida: ${entrega.entrega}.`,
+    },
+  };
+}
+
+function normalizeSuggestionText(action: SuggestedSolutionAction): SuggestedSolutionAction {
+  return {
+    ...action,
+    titulo: fixMojibakeText(action.titulo),
+    descricao: fixMojibakeText(action.descricao),
+    rationale: fixMojibakeText(action.rationale),
+    detalhes: action.detalhes ? fixMojibakeText(action.detalhes) : undefined,
+    draft: {
+      ...action.draft,
+      nomeIniciativa: fixMojibakeText(action.draft.nomeIniciativa),
+      objetivoEspecifico: fixMojibakeText(action.draft.objetivoEspecifico),
+      owner: fixMojibakeText(action.draft.owner),
+      sponsor: fixMojibakeText(action.draft.sponsor),
+      entregas: action.draft.entregas.map((entrega) => ({
+        ...entrega,
+        entrega: fixMojibakeText(entrega.entrega),
+        responsavel: fixMojibakeText(entrega.responsavel),
+        evidencia: entrega.evidencia ? fixMojibakeText(entrega.evidencia) : entrega.evidencia,
+      })),
+      riscos: action.draft.riscos.map((risco) => ({
+        risco: fixMojibakeText(risco.risco),
+        acaoTomar: fixMojibakeText(risco.acaoTomar),
+      })),
+      insightOrigem: action.draft.insightOrigem ? fixMojibakeText(action.draft.insightOrigem) : action.draft.insightOrigem,
+    },
+  };
+}
 
 export function SolutionPickPanel({
   data,
@@ -76,7 +142,7 @@ export function SolutionPickPanel({
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [summaryOverflows, setSummaryOverflows] = useState(false);
   const [expandedActionIds, setExpandedActionIds] = useState<Set<string>>(new Set());
-  const summaryRef = useRef<HTMLParagraphElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const loadRequestRef = useRef(0);
   const autoLoadAttemptedRef = useRef(false);
 
@@ -87,7 +153,13 @@ export function SolutionPickPanel({
   );
 
   const selected = useMemo(
-    () => reconcileSelectedWithSuggestions(parseSelectedSolutionActions(data), suggestions),
+    () => {
+      const raw = parseSelectedSolutionActions(data);
+      if (suggestions.length === 0) return raw;
+      return raw.filter((item) =>
+        suggestions.some((suggestion) => item.id.startsWith(`${suggestion.id}::delivery-`))
+      );
+    },
     [data, suggestions]
   );
   const selectedIds = useMemo(() => new Set(selected.map((s) => s.id)), [selected]);
@@ -118,7 +190,7 @@ export function SolutionPickPanel({
 
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 22;
     const maxCollapsedHeight = lineHeight * SUMMARY_COLLAPSED_LINES;
-    const clone = el.cloneNode(true) as HTMLParagraphElement;
+    const clone = el.cloneNode(true) as HTMLDivElement;
     clone.style.position = 'absolute';
     clone.style.visibility = 'hidden';
     clone.style.pointerEvents = 'none';
@@ -142,15 +214,18 @@ export function SolutionPickPanel({
       demoReason?: string;
       usedRag?: boolean;
     }) => {
-      setSuggestions(result.suggestions);
-      setCompanySummary(result.companySummary ?? null);
-      setCompanySituation(result.companySituation ?? null);
+      setSuggestions(result.suggestions.map(normalizeSuggestionText));
+      setCompanySummary(result.companySummary ? fixMojibakeText(result.companySummary) : null);
+      setCompanySituation(result.companySituation ? fixMojibakeText(result.companySituation) : null);
       setDemoMode(Boolean(result.demoMode));
       setRagUsed(Boolean(result.usedRag));
       setExpandedActionIds(new Set());
     },
     []
   );
+
+  const summaryParagraphs = useMemo(() => splitSummaryParagraphs(companySummary), [companySummary]);
+  const situationParagraphs = useMemo(() => splitSummaryParagraphs(companySituation), [companySituation]);
 
   const loadSuggestions = useCallback(
     async (options?: { force?: boolean }) => {
@@ -165,7 +240,7 @@ export function SolutionPickPanel({
       }
       if (!options?.force) {
         const cached = readCachedSolutionPick(context);
-        if (cached) {
+        if (cached && hasRobustSummary(cached)) {
           applyResult(cached);
           return;
         }
@@ -223,7 +298,9 @@ export function SolutionPickPanel({
     if (suggestions.length === 0) return;
     onDataChange((prev) => {
       const raw = parseSelectedSolutionActions(prev);
-      const reconciled = reconcileSelectedWithSuggestions(raw, suggestions);
+      const reconciled = raw.filter((item) =>
+        suggestions.some((suggestion) => item.id.startsWith(`${suggestion.id}::delivery-`))
+      );
       if (
         reconciled.length === raw.length &&
         reconciled.every((item, index) => item.id === raw[index]?.id)
@@ -234,16 +311,19 @@ export function SolutionPickPanel({
     });
   }, [suggestions, onDataChange]);
 
-  const toggle = (action: SuggestedSolutionAction) => {
+  const toggleDelivery = (action: SuggestedSolutionAction, entregaIndex: number) => {
     let limitReached = false;
+    const selection = buildDeliverySelection(action, entregaIndex);
     onDataChange((prev) => {
       const raw = parseSelectedSolutionActions(prev);
-      const current = reconcileSelectedWithSuggestions(raw, suggestions);
-      const exists = current.some((s) => s.id === action.id);
+      const current = raw.filter((item) =>
+        suggestions.some((suggestion) => item.id.startsWith(`${suggestion.id}::delivery-`))
+      );
+      const exists = current.some((s) => s.id === selection.id);
       if (exists) {
         return withSelectedSolutionActions(
           prev,
-          current.filter((s) => s.id !== action.id)
+          current.filter((s) => s.id !== selection.id)
         );
       }
       if (current.length >= MAX_SELECT) {
@@ -253,9 +333,9 @@ export function SolutionPickPanel({
         }
         return prev;
       }
-      return withSelectedSolutionActions(prev, [...current, action]);
+      return withSelectedSolutionActions(prev, [...current, selection]);
     });
-    setError(limitReached ? `Selecione no máximo ${MAX_SELECT} ações para o Design.` : null);
+    setError(limitReached ? `Selecione no máximo ${MAX_SELECT} sugestões personalizadas para o Design.` : null);
   };
 
   const toggleActionDetails = (actionId: string, event: MouseEvent<HTMLButtonElement>) => {
@@ -269,12 +349,9 @@ export function SolutionPickPanel({
   };
 
   const goToDesign = async () => {
-    const currentSelected = reconcileSelectedWithSuggestions(
-      parseSelectedSolutionActions(data),
-      suggestions
-    );
+    const currentSelected = selected;
     if (currentSelected.length === 0) {
-      setError('Selecione ao menos uma ação para seguir ao Design.');
+      setError('Selecione ao menos uma sugestão personalizada para seguir ao Design.');
       return;
     }
     if (!userId) return;
@@ -339,7 +416,7 @@ export function SolutionPickPanel({
 
       <DiagnosticLaudoModal open={laudoOpen} content={laudoText} onClose={() => setLaudoOpen(false)} />
 
-      {(companySummary || companySituation) && (
+      {(summaryParagraphs.length > 0 || situationParagraphs.length > 0) && (
         <div
           className={`solution-pick-company-summary ${summaryExpanded || !canExpandSummary ? 'is-expanded' : 'is-collapsed'}`}
           role="region"
@@ -347,15 +424,19 @@ export function SolutionPickPanel({
         >
           <h3>Resumo após o diagnóstico</h3>
           <div className="solution-pick-summary-body">
-            {companySummary ? (
-              <p ref={summaryRef} className="solution-pick-summary-lead">
-                {companySummary}
-              </p>
+            {summaryParagraphs.length > 0 ? (
+              <div ref={summaryRef} className="solution-pick-summary-lead">
+                {summaryParagraphs.map((paragraph, index) => (
+                  <p key={`summary-${index}`}>{paragraph}</p>
+                ))}
+              </div>
             ) : null}
-            {(summaryExpanded || !canExpandSummary) && companySituation ? (
+            {(summaryExpanded || !canExpandSummary) && situationParagraphs.length > 0 ? (
               <>
                 <p className="situation-label">O que a empresa está vivendo</p>
-                <p>{companySituation}</p>
+                {situationParagraphs.map((paragraph, index) => (
+                  <p key={`situation-${index}`}>{paragraph}</p>
+                ))}
               </>
             ) : null}
             {!summaryExpanded && canExpandSummary ? (
@@ -410,23 +491,21 @@ export function SolutionPickPanel({
       ) : (
         <ol className="solution-pick-list">
           {suggestions.map((action, index) => {
-            const isSelected = selectedIds.has(action.id);
             const isDetailsOpen = expandedActionIds.has(action.id);
             const details = getSolutionActionDetails(action);
             const letter = String.fromCharCode(97 + (index % 26));
             return (
               <li key={action.id}>
                 <article
-                  className={`solution-pick-card ${isSelected ? 'is-selected' : ''} ${
-                    isDetailsOpen ? 'is-details-open' : ''
-                  }`}
+                  className={`solution-pick-card ${isDetailsOpen ? 'is-details-open' : ''}`}
                 >
                   <div className="solution-pick-card-top">
                     <button
                       type="button"
                       className="solution-pick-card-select"
-                      onClick={() => toggle(action)}
-                      aria-pressed={isSelected}
+                      onClick={(event) => toggleActionDetails(action.id, event)}
+                      aria-expanded={isDetailsOpen}
+                      aria-controls={`solution-pick-details-${action.id}`}
                     >
                       <span className="solution-pick-letter">{letter})</span>
                       <div className="solution-pick-card-main">
@@ -473,12 +552,33 @@ export function SolutionPickPanel({
                       </div>
                       {details.entregas.length > 0 ? (
                         <div className="solution-pick-detail-block">
-                          <h4>Entregas sugeridas</h4>
-                          <ul className="solution-pick-detail-list">
+                          <h4>Sugestões personalizadas para você</h4>
+                          <ul className="solution-pick-detail-list solution-pick-delivery-list">
                             {details.entregas.map((entrega, entregaIndex) => (
                               <li key={entregaIndex}>
-                                <strong>{entrega.label}</strong>
-                                <span>{entrega.meta}</span>
+                                <button
+                                  type="button"
+                                  className={`solution-pick-delivery-choice ${
+                                    selectedIds.has(deliverySelectionId(action, entregaIndex)) ? 'is-selected' : ''
+                                  }`}
+                                  onClick={() => toggleDelivery(action, entregaIndex)}
+                                  aria-pressed={selectedIds.has(deliverySelectionId(action, entregaIndex))}
+                                >
+                                  <span className="solution-pick-delivery-choice__copy">
+                                    <strong>{entrega.label}</strong>
+                                    <span>{entrega.meta}</span>
+                                  </span>
+                                  <span className="solution-pick-delivery-choice__check">
+                                    {selectedIds.has(deliverySelectionId(action, entregaIndex)) ? (
+                                      <>
+                                        <Check size={14} aria-hidden />
+                                        Escolhida
+                                      </>
+                                    ) : (
+                                      'Escolher'
+                                    )}
+                                  </span>
+                                </button>
                               </li>
                             ))}
                           </ul>
@@ -503,12 +603,6 @@ export function SolutionPickPanel({
                     </div>
                   ) : null}
 
-                  {isSelected ? (
-                    <span className="solution-pick-selected-badge">
-                      <Check size={14} aria-hidden />
-                      Selecionada
-                    </span>
-                  ) : null}
                 </article>
               </li>
             );
@@ -519,8 +613,8 @@ export function SolutionPickPanel({
       <footer className="solution-pick-footer">
         <p>
           {selected.length > 0
-            ? `${selected.length} ação(ões) selecionada(s) — até ${MAX_SELECT}.`
-            : 'Nenhuma ação selecionada ainda.'}
+            ? `${selected.length} sugestão(ões) personalizada(s) escolhida(s) — até ${MAX_SELECT}.`
+            : 'Nenhuma sugestão personalizada escolhida ainda.'}
         </p>
         <button
           type="button"

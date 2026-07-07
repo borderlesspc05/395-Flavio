@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowRight, ClipboardList, Layers3, Sparkles } from 'lucide-react';
 import { auth } from '../config/firebase';
@@ -63,11 +63,19 @@ export function OrganizationalScansHubPage() {
 
   return (
     <div className="organizational-scans-page">
-      <header className="organizational-scans-hero">
-        <p className="organizational-scan-card-step">Diagnóstico organizacional</p>
-        <h1 className="premium-display">Como você quer diagnosticar?</h1>
-        <p>{hubIntro.intro}</p>
-        {hubIntro.guidance ? <p>{hubIntro.guidance}</p> : null}
+      <header className="organizational-scans-hero sprint-wave-header">
+        <div className="sprint-wave-title-group">
+          <div className="sprint-wave-icon-wrapper" aria-hidden>
+            <ClipboardList size={26} />
+          </div>
+          <div className="sprint-wave-title-copy">
+            <span className="organizational-scan-card-step sprint-wave-eyebrow">SPRINT WAVES™ · Onda 1</span>
+            <h1 className="premium-display sprint-wave-title">Diagnóstico</h1>
+            <p className="sprint-wave-subtitle">
+              Como você quer diagnosticar? {hubIntro.intro}
+            </p>
+          </div>
+        </div>
       </header>
 
       <div className="diagnostic-path-grid" role="list">
@@ -77,8 +85,8 @@ export function OrganizationalScansHubPage() {
           </div>
           <h2>Diagnóstico completo</h2>
           <p>
-            Canvas Magnus Waves 1.1 a 1.5 — Decoding, Gap Scan, System Scan, Team Scan e{' '}
-            <strong>Solution Pick</strong> com resumo executivo da empresa e planos priorizados pela IA.
+            Canvas Sprint Waves 1.1 a 1.5 — Decoding, Gap Scan, System Scan, Team Scan e{' '}
+            <strong>Solution Pick</strong> com resumo executivo da empresa e planos priorizados.
           </p>
           <ul className="diagnostic-path-features">
             <li>Múltiplas lentes e profundidade máxima</li>

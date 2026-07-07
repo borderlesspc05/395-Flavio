@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import {
   ChevronDown,
@@ -74,7 +74,7 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
     if (!userId) return;
     if (
       !window.confirm(
-        'Limpar o diagnóstico do ciclo ativo? Os ciclos arquivados permanecem na memória da IA.'
+        'Limpar o diagnóstico do ciclo ativo? Os ciclos arquivados permanecem na memória do projeto.'
       )
     ) {
       return;
@@ -168,8 +168,8 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
     { key: 'objectives', label: 'Objetivos' },
     { key: 'actionCanvases', label: 'Action Canvas' },
     { key: 'reports', label: 'Relatórios' },
-    { key: 'conversations', label: 'Consultoria IA' },
-    { key: 'magnusMemory', label: 'Memória IA' },
+    { key: 'conversations', label: 'Chat de IA' },
+    { key: 'magnusMemory', label: 'Memória do projeto' },
   ];
 
   const isHistorico = variant === 'full';
@@ -180,7 +180,7 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
       <section className="loop-workspace loop-workspace--full loop-workspace--historico">
         <div className="loop-workspace__intro">
           <span className="loop-workspace__eyebrow">Controle de ciclos</span>
-          <h2>Loop & memória da IA</h2>
+          <h2>Loop & memória do projeto</h2>
           <p>
             Selecione o ciclo em que a jornada trabalha. Objetivos, difusão e consultoria usam o ciclo ativo.
           </p>
@@ -189,7 +189,7 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
         <div className="loop-workspace__cycle-rail" role="listbox" aria-label="Ciclos de diagnóstico">
           {cyclesLoading ? (
             <div className="loop-workspace__empty-cycles">
-              <Loader2 size={18} className="spinning" /> Carregando ciclos…
+              <Loader2 size={18} className="spinning" /> Carregando ciclos...
             </div>
           ) : cycles.length === 0 ? (
             <div className="loop-workspace__empty-cycles">Nenhum ciclo ainda. Crie o primeiro abaixo.</div>

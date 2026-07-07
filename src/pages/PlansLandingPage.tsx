@@ -1,4 +1,4 @@
-import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
+﻿import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
 import {
   ArrowRight,
   Check,
@@ -12,7 +12,7 @@ import {
   Instagram,
 } from 'lucide-react';
 
-const INSTAGRAM_URL = 'https://www.instagram.com/magnusmind.io/';
+const INSTAGRAM_URL = 'https://www.instagram.com/Sprint/';
 import { ScrollReveal } from '../components/ScrollReveal';
 import { PlanCheckoutButton } from '../components/PlanCheckoutButton';
 import type { PlanId } from '../constants/plans';
@@ -26,11 +26,11 @@ const PLANS = [
     concurrency: 1,
     price: 'Ideal para começar',
     description:
-      'Um processo de pré-diagnóstico ativo por vez — ideal para validar o método Magnus Waves com foco.',
+      'Um processo de pré-diagnóstico ativo por vez — ideal para validar o método Sprint Waves com foco.',
     features: [
       '1 processo de pré-diagnóstico ativo',
-      'Consultoria IA + memória do diagnóstico',
-      'Action Canvas manual e com IA',
+      'Chat Sprint + memória do diagnóstico',
+      'Planos de ação e execução guiada',
       'Objetivos estratégicos',
     ],
     cta: 'Começar com Starter',
@@ -62,12 +62,12 @@ const PLANS = [
     concurrency: null,
     price: 'Escala sem fricção',
     description:
-      'Processos de pré-diagnóstico sem limite — para organizações que executam Magnus Waves em múltiplas frentes.',
+      'Processos de pré-diagnóstico sem limite — para organizações que executam Sprint Waves em múltiplas frentes.',
     features: [
       'Processos de pré-diagnóstico ilimitados',
       'Tudo do Advanced',
       'Suporte a squads e consultorias',
-      'Memória Magnus Waves completa',
+      'Memória Sprint Waves completa',
     ],
     cta: 'Assinar Premium',
     highlight: false,
@@ -117,9 +117,7 @@ export function PlansLandingPage() {
       <header className="plans-nav scroll-reveal is-visible">
         <ViewTransitionLink to="/" className="plans-logo">
           <img src="/icone-magnusmind.svg" alt="" width={36} height={36} />
-          <span>
-            Magnus <strong>Mind</strong>
-          </span>
+          <span>Sprint</span>
         </ViewTransitionLink>
         <nav className="plans-nav-links">
           <a href="#planos">Planos</a>
@@ -136,13 +134,13 @@ export function PlansLandingPage() {
       <section className="plans-hero">
         <ScrollReveal className="plans-hero-badge" delay={0}>
           <Cpu size={14} />
-          Magnus Waves™ · People Sprint 90+
+          Sprint Waves™ · People Sprint 90+
         </ScrollReveal>
         <ScrollReveal as="h1" className="plans-hero-title" delay={80}>
-          Planos para seus <em>projetos</em> Magnus Waves
+          Planos para seus <em>projetos</em> Sprint Waves
         </ScrollReveal>
         <ScrollReveal className="plans-hero-lead" delay={160}>
-          O mesmo universo visual do app Magnus Mind — diagnóstico, Design, Difusão e MID — com
+          O mesmo universo visual do app Sprint — diagnóstico, Design, Difusão e MID — com
           limites claros de <strong>processos de pré-diagnóstico ativos</strong> conforme o seu plano.
         </ScrollReveal>
         <ScrollReveal className="plans-hero-actions" delay={240}>
@@ -175,7 +173,7 @@ export function PlansLandingPage() {
           <span className="plans-eyebrow">Planos</span>
           <h2>Escolha quantos processos de pré-diagnóstico rodam ao mesmo tempo</h2>
           <p>
-            Cada plano define quantos processos Magnus Waves você pode ter ativos — o limite de uso
+            Cada plano define quantos processos Sprint Waves você pode ter ativos — o limite de uso
             de IA por domínio será definido em uma etapa posterior do contrato.
           </p>
         </ScrollReveal>
@@ -223,8 +221,8 @@ export function PlansLandingPage() {
         </ScrollReveal>
         <div className="plans-flow-grid">
           {[
-            { step: '01', title: 'Diagnóstico', icon: Sparkles, text: 'Human-to-Business Canvas com memória persistente para a IA.' },
-            { step: '02', title: 'Design', icon: GitBranch, text: 'Gate Zero e MM Blueprint conectados à Consultoria IA.' },
+            { step: '01', title: 'Diagnóstico', icon: Sparkles, text: 'Human-to-Business Canvas com memória persistente do projeto.' },
+            { step: '02', title: 'Design', icon: GitBranch, text: 'Gate Zero e MM Blueprint conectados ao fluxo de Design.' },
             { step: '03', title: 'Difusão', icon: Zap, text: 'Action Canvas, execução e objetivos com contexto unificado.' },
             { step: '04', title: 'MID', icon: Layers, text: 'Sign-off e visão de impacto no hub executivo.' },
           ].map((item, i) => (
@@ -241,10 +239,10 @@ export function PlansLandingPage() {
       <section id="tecnologia" className="plans-section plans-tech">
         <ScrollReveal className="plans-tech-panel" variant="up">
           <div className="plans-tech-copy">
-            <span className="plans-eyebrow">Stack Magnus Mind</span>
+            <span className="plans-eyebrow">Stack Sprint</span>
             <h2>Interface tecnológica, intuitiva e preparada para escala</h2>
             <p>
-              Scroll reveal, tipografia editorial e bronze Magnus — a landing reflete o produto que
+              Scroll reveal, tipografia editorial e bronze Sprint — a landing reflete o produto que
               você já usa no dashboard, com ênfase em performance e clareza de limites por plano.
             </p>
             <ul className="plans-tech-list">
@@ -258,7 +256,7 @@ export function PlansLandingPage() {
               </li>
               <li>
                 <Sparkles size={18} />
-                OpenRouter + memória Magnus Waves
+                OpenRouter + memória Sprint Waves
               </li>
             </ul>
           </div>
@@ -277,7 +275,7 @@ export function PlansLandingPage() {
 
       <section className="plans-section plans-cta-final">
         <ScrollReveal className="plans-cta-box" variant="scale">
-          <h2>Pronto para acelerar o Magnus Waves?</h2>
+          <h2>Pronto para acelerar o Sprint?</h2>
           <p>Comece no Starter, evolua para Advanced ou desbloqueie paralelismo ilimitado no Premium.</p>
           <div className="plans-hero-actions">
             <a href="#planos" className="plans-btn plans-btn--primary plans-btn--lg">
@@ -292,15 +290,15 @@ export function PlansLandingPage() {
       </section>
 
       <footer className="plans-footer">
-        <p>© {new Date().getFullYear()} Magnus Mind · Magnus Waves™</p>
+        <p>© {new Date().getFullYear()} Sprint · Sprint Waves™</p>
         <div className="plans-footer-links">
           <ViewTransitionLink to="/login">Login</ViewTransitionLink>
-          <a href="https://magnusmind.io" target="_blank" rel="noreferrer">
-            magnusmind.io
+          <a href="https://Sprint" target="_blank" rel="noreferrer">
+            Sprint
           </a>
           <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="plans-footer-instagram">
             <Instagram size={15} aria-hidden />
-            @magnusmind.io
+            @Sprint
           </a>
         </div>
       </footer>

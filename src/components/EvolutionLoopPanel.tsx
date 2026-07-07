@@ -136,7 +136,7 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
             <Waves size={14} aria-hidden />
             Onda 4.2 · Evolution Loop
           </p>
-          <h2 id="evo-loop-title">Aqui o Magnus Mind fecha o ciclo</h2>
+          <h2 id="evo-loop-title">Aqui o Sprint fecha o ciclo</h2>
           <p className="evo-loop__lede">
             A IA analisa diagnóstico original, blueprint, difusão e resultados obtidos — e
             recomenda o que continuar, ajustar ou abandonar antes da próxima onda.

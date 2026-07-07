@@ -1,4 +1,4 @@
-import { CircleAlert } from 'lucide-react';
+﻿import { CircleAlert } from 'lucide-react';
 
 type Props = {
   configured: boolean | null;
@@ -42,7 +42,7 @@ export function AiStatusAlert({
         <strong>IA não configurada no servidor</strong>
         <p>
           {notConfiguredDetail ??
-            'Recursos com IA exigem OPENROUTER_API_KEY ou OPENAI_API_KEY no backend (Render ou server/.env).'}
+            'Recursos inteligentes exigem OPENROUTER_API_KEY ou OPENAI_API_KEY no backend (Render ou server/.env).'}
         </p>
       </div>
     </div>

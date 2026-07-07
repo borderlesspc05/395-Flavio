@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -243,7 +243,7 @@ export function RelatoriosPage() {
                     <span>Dossiê · Relatório Completo</span>
                   </div>
                   <div className="report-paper-meta">
-                    <span className="report-paper-meta-brand">Magnus Intelligence Dashboard</span>
+                    <span className="report-paper-meta-brand">Sprint Intelligence Dashboard</span>
                     <span className="report-paper-meta-divider" aria-hidden>·</span>
                     <span className="report-paper-meta-date">
                       {new Date(detail.createdAt).toLocaleDateString('pt-BR', {
@@ -260,7 +260,7 @@ export function RelatoriosPage() {
                     <ReactMarkdown>{detail.conteudo}</ReactMarkdown>
                   </div>
                   <footer className="report-paper-footer">
-                    <span>Documento gerado por Magnus Mind · uso interno</span>
+                    <span>Documento gerado por Sprint · uso interno</span>
                     <span className="report-paper-stamp">CONFIDENCIAL</span>
                   </footer>
                 </article>

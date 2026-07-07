@@ -3,11 +3,9 @@ import { createEmptyDiagnosticData, getAllDiagnosticFields, getFieldKeys } from 
 import { db } from '../config/firebase';
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
 import { SELECTED_SOLUTION_ACTIONS_KEY } from '../types/solutionPick';
-import { DAILY_PROGRESS_CHECKLIST_KEY } from '../types/dailyProgress';
 
 const PRESERVED_EXTENSION_KEYS = [
   SELECTED_SOLUTION_ACTIONS_KEY,
-  DAILY_PROGRESS_CHECKLIST_KEY,
   'solucaoSelecionadaDesign',
   'solucoesPrioritarias',
   'organizationalScanData',

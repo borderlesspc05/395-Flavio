@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { Check, Lock, Circle } from 'lucide-react';
 import {
   MAGNUS_WAVES,
@@ -23,9 +23,9 @@ export function MagnusWavesProgress({ progress, compact = false }: MagnusWavesPr
   const activeId = getActiveWaveId(progress);
 
   return (
-    <section className="magnus-waves-progress" aria-label="Progresso Magnus Waves">
+    <section className="magnus-waves-progress" aria-label="Progresso Sprint Waves">
       <div className="magnus-waves-progress-header">
-        <span className="magnus-waves-badge">MM People Sprint 90+</span>
+        <span className="magnus-waves-badge">People Sprint 90+</span>
         <p className="magnus-waves-tagline">
           Diagnóstico revela · Design estrutura · Difusão move · Domínio sustenta
         </p>

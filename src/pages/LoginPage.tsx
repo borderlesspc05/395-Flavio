@@ -80,7 +80,7 @@ export function LoginPage() {
       subtitle={
         forgotMode
           ? 'Enviaremos um link seguro para o email da sua conta'
-          : 'Acesse sua conta Magnus Waves'
+          : 'Acesse sua conta Sprint'
       }
       backTo={{ href: '/', label: 'Voltar' }}
     >

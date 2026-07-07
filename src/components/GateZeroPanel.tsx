@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { GitBranch, Sparkles, Check, RotateCcw, ArrowDown } from 'lucide-react';
 import type { BlueprintPath } from '../constants/blueprintFlow';
@@ -76,7 +76,7 @@ export function GateZeroPanel({
 
   const requestAiSuggestion = async () => {
     if (!diagnosticContext.trim()) {
-      setLocalError('Complete o diagnóstico para a IA sugerir o caminho.');
+      setLocalError('Complete o diagnóstico para sugerir o caminho.');
       return;
     }
     setAiLoading(true);
@@ -338,7 +338,7 @@ export function GateZeroPanel({
             disabled={aiLoading || saving}
           >
             <Sparkles size={17} aria-hidden />
-            {aiLoading ? 'Consultando IA…' : 'Sugerir caminho com IA'}
+            {aiLoading ? 'Consultando…' : 'Sugerir caminho'}
           </button>
           <p className="gate-zero-rail-hint">
             A IA lê o canvas 1.1–1.5 e recomenda um caminho; você confirma ou corrige antes de seguir no Design.

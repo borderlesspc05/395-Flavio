@@ -1,4 +1,4 @@
-import type { BlueprintPath } from '../constants/blueprintFlow';
+﻿import type { BlueprintPath } from '../constants/blueprintFlow';
 import { loadMagnusWavesMemory, type MagnusWavesMemoryMeta } from './magnusWavesMemory';
 
 export interface DesignDiffusionContext {
@@ -11,7 +11,7 @@ export interface DesignDiffusionContext {
   meta?: MagnusWavesMemoryMeta;
 }
 
-/** Contexto de Difusão = memória completa Magnus Waves (diagnóstico → canvas → objetivos) */
+/** Contexto de Difusão = memória completa Sprint Waves (diagnóstico â†’ canvas â†’ objetivos) */
 export async function loadDesignDiffusionContext(userId: string): Promise<DesignDiffusionContext> {
   const memory = await loadMagnusWavesMemory(userId);
   return {

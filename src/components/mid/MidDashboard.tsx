@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Check, Flame, ListChecks, Pencil, X } from 'lucide-react';
+﻿import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Check, ListChecks, Pencil, X } from 'lucide-react';
 import type { MidDashboardData } from '../../types/mid';
 import { useCycle } from '../../context/CycleContext';
 import { MidExecutiveKpiCard } from './MidExecutiveKpiCard';
-import { ViewTransitionLink } from '../navigation/ViewTransitionLink';
 
 interface MidDashboardProps {
   data: MidDashboardData;
@@ -138,7 +137,7 @@ function EditableProjectName({ name }: { name: string }) {
 }
 
 export function MidDashboard({ data, loading }: MidDashboardProps) {
-  const { overview, executiveKpis, dailyRhythm, execution } = data;
+  const { overview, executiveKpis, execution } = data;
 
   if (loading) {
     return (
@@ -167,7 +166,7 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
         <div className="mid-overview-grid mid-overview-grid--slim">
           <div className="mid-overview-copy">
             <h1 id="mid-overview" className="mid-title">
-              Magnus Intelligence Dashboard
+              Sprint Intelligence Dashboard
             </h1>
             <p className="mid-mantra">
               A execução gera inteligência.
@@ -223,61 +222,6 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
         {executiveKpis.map((kpi, index) => (
           <MidExecutiveKpiCard key={kpi.id} kpi={kpi} index={index} />
         ))}
-      </section>
-
-      <section
-        className="mid-block mid-block--rhythm mid-reveal mid-reveal--1"
-        aria-labelledby="mid-daily-rhythm"
-      >
-        <div className="mid-rhythm-grid">
-          <div className="mid-rhythm-copy">
-            <h2 id="mid-daily-rhythm" className="mid-section-title">
-              Ritmo diário do projeto
-            </h2>
-            <p className="mid-rhythm-lead">
-              O checklist diário registra execução real e alimenta a leitura de consistência no MID.
-            </p>
-            <ViewTransitionLink to={dailyRhythm.route} className="mid-rhythm-cta">
-              Abrir checklist
-            </ViewTransitionLink>
-          </div>
-
-          <div className="mid-rhythm-metrics">
-            <article className="mid-rhythm-metric">
-              <span className="mid-rhythm-metric-label">Hoje</span>
-              <strong className="mid-rhythm-metric-value">{dailyRhythm.todayPercent}%</strong>
-              <span className="mid-rhythm-metric-sub">
-                {dailyRhythm.todayDone}/{dailyRhythm.todayTotal} itens
-              </span>
-            </article>
-            <article className="mid-rhythm-metric">
-              <span className="mid-rhythm-metric-label">
-                <Flame size={13} aria-hidden /> Sequência
-              </span>
-              <strong className="mid-rhythm-metric-value">{dailyRhythm.streakDays}</strong>
-              <span className="mid-rhythm-metric-sub">dias consistentes</span>
-            </article>
-            <article className="mid-rhythm-metric">
-              <span className="mid-rhythm-metric-label">Média 7 dias</span>
-              <strong className="mid-rhythm-metric-value">{dailyRhythm.weekAvgPercent}%</strong>
-              <div className="mid-rhythm-spark" role="img" aria-label="Histórico semanal do checklist">
-                {dailyRhythm.lastSevenDays.map((day) => (
-                  <span
-                    key={day.date}
-                    className="mid-rhythm-spark-bar"
-                    style={{ height: `${Math.max(10, day.percent)}%` }}
-                  />
-                ))}
-              </div>
-            </article>
-          </div>
-
-          {dailyRhythm.pendingLabels.length > 0 && (
-            <p className="mid-rhythm-pending">
-              Pendente hoje: {dailyRhythm.pendingLabels.join(', ')}
-            </p>
-          )}
-        </div>
       </section>
 
       <section className="mid-block mid-reveal mid-reveal--2" aria-labelledby="mid-execution">

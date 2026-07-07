@@ -1,0 +1,28 @@
+export function fixMojibakeText(value: string): string {
+  return value
+    .replaceAll('Ã§', 'ç')
+    .replaceAll('Ã£', 'ã')
+    .replaceAll('Ãµ', 'õ')
+    .replaceAll('Ã¡', 'á')
+    .replaceAll('Ã©', 'é')
+    .replaceAll('Ãª', 'ê')
+    .replaceAll('Ã­', 'í')
+    .replaceAll('Ã³', 'ó')
+    .replaceAll('Ãº', 'ú')
+    .replaceAll('Ã¢', 'â')
+    .replaceAll('Ã´', 'ô')
+    .replaceAll('Ãª', 'ê')
+    .replaceAll('Ã', 'Á')
+    .replaceAll('Ã‰', 'É')
+    .replaceAll('Ã', 'Í')
+    .replaceAll('Ã“', 'Ó')
+    .replaceAll('Ãš', 'Ú')
+    .replaceAll('Â·', '·')
+    .replaceAll('Â©', '©')
+    .replaceAll('â€”', '—')
+    .replaceAll('â€“', '–')
+    .replaceAll('â€¦', '...')
+    .replaceAll('â†’', '→')
+    .replaceAll('â‰ˆ', '≈')
+    .replaceAll('â„¢', '™');
+}

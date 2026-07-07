@@ -1,4 +1,5 @@
 import type { SuggestedSolutionAction } from '../types/solutionPick';
+import { fixMojibakeText } from './textEncoding';
 
 function formatPrazoBR(iso: string): string {
   const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -18,16 +19,17 @@ export type SolutionActionDetailSections = {
 export function buildSolutionActionDetalhes(action: SuggestedSolutionAction): string {
   const { draft } = action;
   const marcos = draft.entregas
-    .map((e) => `${e.entrega} (${e.responsavel}, até ${formatPrazoBR(e.prazo)})`)
+    .slice(0, 3)
+    .map((e) => `${fixMojibakeText(e.entrega)} (${fixMojibakeText(e.responsavel)}, até ${formatPrazoBR(e.prazo)})`)
     .join('; ');
   const risco = draft.riscos[0];
 
   const parts = [
-    `Esta ação responde a um gap de ${action.categoria} identificado no diagnóstico. ${action.rationale}`,
-    draft.objetivoEspecifico,
+    `Esta ação responde a um gap de ${fixMojibakeText(action.categoria)} identificado no diagnóstico. ${fixMojibakeText(action.rationale)}`,
+    fixMojibakeText(draft.objetivoEspecifico),
     marcos ? `Na prática, comece por: ${marcos}.` : '',
-    risco ? `Principal risco: ${risco.risco}. Mitigação sugerida: ${risco.acaoTomar}.` : '',
-    `Horizonte da iniciativa até ${formatPrazoBR(draft.prazoFinal)}, com owner ${draft.owner} e sponsor ${draft.sponsor}.`,
+    risco ? `Principal risco: ${fixMojibakeText(risco.risco)}. Mitigação sugerida: ${fixMojibakeText(risco.acaoTomar)}.` : '',
+    `Horizonte da iniciativa até ${formatPrazoBR(draft.prazoFinal)}, com owner ${fixMojibakeText(draft.owner)} e sponsor ${fixMojibakeText(draft.sponsor)}.`,
   ];
 
   return parts.filter(Boolean).join(' ');
@@ -37,17 +39,17 @@ export function getSolutionActionDetails(action: SuggestedSolutionAction): Solut
   const { draft } = action;
 
   return {
-    rationale: action.rationale,
-    objetivo: draft.objetivoEspecifico,
-    entregas: draft.entregas.map((e) => ({
-      label: e.entrega,
-      meta: `${e.responsavel} · ${formatPrazoBR(e.prazo)}`,
+    rationale: fixMojibakeText(action.rationale),
+    objetivo: fixMojibakeText(draft.objetivoEspecifico),
+    entregas: draft.entregas.slice(0, 3).map((e) => ({
+      label: fixMojibakeText(e.entrega),
+      meta: `${fixMojibakeText(e.responsavel)} · ${formatPrazoBR(e.prazo)}`,
     })),
     riscos: draft.riscos.map((r) => ({
-      risco: r.risco,
-      acao: r.acaoTomar,
+      risco: fixMojibakeText(r.risco),
+      acao: fixMojibakeText(r.acaoTomar),
     })),
     prazoFinal: formatPrazoBR(draft.prazoFinal),
-    detalhes: action.detalhes?.trim() || buildSolutionActionDetalhes(action),
+    detalhes: fixMojibakeText(action.detalhes?.trim() || buildSolutionActionDetalhes(action)),
   };
 }

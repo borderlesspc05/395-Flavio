@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowRight, CheckCircle, X } from 'lucide-react';
@@ -159,7 +159,7 @@ export function DashboardHome() {
         </div>
       )}
 
-      <nav className="mid-wave-strip" aria-label="Progresso Magnus Waves">
+      <nav className="mid-wave-strip" aria-label="Progresso Sprint Waves">
         {waveChips.map((wave) => (
           <span
             key={wave.id}
