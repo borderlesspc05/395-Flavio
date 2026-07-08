@@ -1,7 +1,6 @@
 ﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  AlertCircle,
   ArrowRight,
   BookOpen,
   CalendarDays,
@@ -14,7 +13,6 @@ import {
   RefreshCw,
   Sparkles,
   UserRound,
-  X,
 } from 'lucide-react';
 import { buildDiagnosticLaudo } from '../utils/diagnosticLaudo';
 import { computeEvolutionIndex } from '../utils/evolutionIndex';
@@ -36,6 +34,7 @@ import { isApiUnreachableError, localSolutionPickFallback } from '../services/so
 import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../utils/apiError';
 import { getSolutionActionDetails } from '../utils/solutionActionDetails';
 import { fixMojibakeText } from '../utils/textEncoding';
+import { ToastStack } from './ui/ToastStack';
 import type { InitialFormData } from '../types';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 
@@ -720,25 +719,21 @@ export function SolutionPickPanel({
         </button>
       </footer>
 
-      {limitNotice && (
-        <div className="solution-pick-toast" role="alert">
-          <span className="solution-pick-toast-icon" aria-hidden>
-            <AlertCircle size={18} />
-          </span>
-          <div className="solution-pick-toast-body">
-            <strong>Limite de {MAX_SELECT} sugestões atingido</strong>
-            <span>{limitNotice}</span>
-          </div>
-          <button
-            type="button"
-            className="solution-pick-toast-close"
-            onClick={() => setLimitNotice(null)}
-            aria-label="Fechar aviso"
-          >
-            <X size={15} aria-hidden />
-          </button>
-        </div>
-      )}
+      <ToastStack
+        toasts={
+          limitNotice
+            ? [
+                {
+                  id: 'limit',
+                  tone: 'warning',
+                  title: `Limite de ${MAX_SELECT} sugestões atingido`,
+                  message: limitNotice,
+                },
+              ]
+            : []
+        }
+        onDismiss={() => setLimitNotice(null)}
+      />
     </section>
   );
 }

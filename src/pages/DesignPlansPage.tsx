@@ -3,14 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
-  AlertCircle,
   ArrowRight,
   CheckCircle2,
   Loader2,
   Plus,
   Sparkles,
   Trash2,
-  X,
 } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { actionCanvasesApi } from '../services/api';
@@ -24,6 +22,7 @@ import { syncMagnusMemoryAfterCanvasChange } from '../services/magnusMemorySync'
 import { readStashedEvolution } from '../services/evolutionLoopStorage';
 import { enrichDraftObjetivo } from '../utils/enrichObjetivoEspecifico';
 import type { ActionCanvas, SuggestedActionCanvasDraft } from '../types';
+import { ToastStack } from '../components/ui/ToastStack';
 
 type EditablePlan = SuggestedActionCanvasDraft & {
   localId: string;
@@ -414,42 +413,13 @@ export function DesignPlansPage() {
         </div>
       </header>
 
-      {(error || notice) && (
-        <div className="design-plans-toast-stack">
-          {error && (
-            <div className="design-plans-toast design-plans-toast--error" role="alert">
-              <span className="design-plans-toast-icon" aria-hidden>
-                <AlertCircle size={18} />
-              </span>
-              <span className="design-plans-toast-text">{error}</span>
-              <button
-                type="button"
-                className="design-plans-toast-close"
-                onClick={() => setError(null)}
-                aria-label="Fechar aviso"
-              >
-                <X size={15} aria-hidden />
-              </button>
-            </div>
-          )}
-          {notice && (
-            <div className="design-plans-toast design-plans-toast--success" role="status">
-              <span className="design-plans-toast-icon" aria-hidden>
-                <CheckCircle2 size={18} />
-              </span>
-              <span className="design-plans-toast-text">{notice}</span>
-              <button
-                type="button"
-                className="design-plans-toast-close"
-                onClick={() => setNotice(null)}
-                aria-label="Fechar aviso"
-              >
-                <X size={15} aria-hidden />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <ToastStack
+        toasts={[
+          ...(error ? [{ id: 'error', tone: 'error' as const, message: error }] : []),
+          ...(notice ? [{ id: 'notice', tone: 'success' as const, message: notice }] : []),
+        ]}
+        onDismiss={(id) => (id === 'error' ? setError(null) : setNotice(null))}
+      />
 
       <div className="design-plans-workspace design-plans-workspace--single">
         <div className="design-plans-editor">
