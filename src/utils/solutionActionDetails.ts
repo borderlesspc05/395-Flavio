@@ -7,14 +7,39 @@ function formatPrazoBR(iso: string): string {
   return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
+export type SolutionDeliveryDetail = {
+  index: number;
+  label: string;
+  como: string;
+  responsavel: string;
+  prazo: string;
+  meta: string;
+};
+
 export type SolutionActionDetailSections = {
   rationale: string;
   objetivo: string;
-  entregas: Array<{ label: string; meta: string }>;
+  owner: string;
+  sponsor: string;
+  entregas: SolutionDeliveryDetail[];
   riscos: Array<{ risco: string; acao: string }>;
   prazoFinal: string;
   detalhes?: string;
 };
+
+function buildComo(
+  evidencia: string | undefined,
+  responsavel: string,
+  sponsor: string
+): string {
+  const ev = evidencia ? fixMojibakeText(evidencia).trim() : '';
+  if (ev) {
+    return `Conclui-se quando: ${ev}.`;
+  }
+  const quem = responsavel || 'o responsável';
+  const valida = sponsor ? ` e validação com ${sponsor}` : '';
+  return `Execução conduzida por ${quem}${valida}, com evidência de conclusão definida no Design.`;
+}
 
 export function buildSolutionActionDetalhes(action: SuggestedSolutionAction): string {
   const { draft } = action;
@@ -38,13 +63,25 @@ export function buildSolutionActionDetalhes(action: SuggestedSolutionAction): st
 export function getSolutionActionDetails(action: SuggestedSolutionAction): SolutionActionDetailSections {
   const { draft } = action;
 
+  const sponsor = fixMojibakeText(draft.sponsor);
+
   return {
     rationale: fixMojibakeText(action.rationale),
     objetivo: fixMojibakeText(draft.objetivoEspecifico),
-    entregas: draft.entregas.slice(0, 3).map((e) => ({
-      label: fixMojibakeText(e.entrega),
-      meta: `${fixMojibakeText(e.responsavel)} · ${formatPrazoBR(e.prazo)}`,
-    })),
+    owner: fixMojibakeText(draft.owner),
+    sponsor,
+    entregas: draft.entregas.slice(0, 3).map((e, index) => {
+      const responsavel = fixMojibakeText(e.responsavel);
+      const prazo = formatPrazoBR(e.prazo);
+      return {
+        index: index + 1,
+        label: fixMojibakeText(e.entrega),
+        como: buildComo(e.evidencia, responsavel, sponsor),
+        responsavel,
+        prazo,
+        meta: `${responsavel} · ${prazo}`,
+      };
+    }),
     riscos: draft.riscos.map((r) => ({
       risco: fixMojibakeText(r.risco),
       acao: fixMojibakeText(r.acaoTomar),

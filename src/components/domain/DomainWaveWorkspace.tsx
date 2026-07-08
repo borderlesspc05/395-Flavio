@@ -1,5 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useViewTransitionNavigate } from '../../hooks/useViewTransitionNavigate';
 import {
   AlertTriangle,
   ArrowRight,
@@ -79,6 +80,7 @@ interface Props {
 }
 
 export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
+  const navigate = useViewTransitionNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -271,6 +273,14 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
       setGeneratingAi(false);
     }
   };
+
+  const handleSaveAndClose = useCallback(async () => {
+    if (!domainData) return;
+    const ok = await persist(domainData);
+    if (ok) {
+      navigate('/dashboard/historico', { state: { cycleClosed: true } });
+    }
+  }, [domainData, persist, navigate]);
 
   useEffect(() => {
     if (!notice) return;
@@ -648,15 +658,15 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
           type="button"
           className="domain-primary-button"
           disabled={saving}
-          onClick={() => void persist(domainData)}
+          onClick={() => void handleSaveAndClose()}
         >
           {saving ? <Loader2 size={16} className="spinning" /> : <Save size={16} />}
-          {saving ? 'Salvando…' : 'Salvar Domínio'}
+          {saving ? 'Salvando…' : 'Salvar Domínio e fechar o ciclo'}
         </button>
         <p className="domain-wave-footer-note">
           <CheckCircle2 size={14} aria-hidden />
-          O Sustainability Score alimenta o MID em{' '}
-          <Link to="/dashboard/inicio">Início</Link>.
+          Ao salvar, o ciclo se fecha no <Link to="/dashboard/historico">Loop contínuo</Link> — onde
+          você avalia o ciclo e decide o próximo movimento.
         </p>
       </footer>
     </div>

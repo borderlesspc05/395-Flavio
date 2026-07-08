@@ -67,10 +67,23 @@ export interface DomainSustainabilityScore {
   label: string;
 }
 
+export type CycleNextStep = 'new_cycle' | 'undecided' | 'paused';
+
+export interface DomainCycleFeedback {
+  /** Satisfação geral com o ciclo (1–5). */
+  rating: number | null;
+  /** Texto livre: o que a pessoa achou do ciclo. */
+  comment: string;
+  /** Intenção declarada quanto ao próximo movimento. */
+  nextStep: CycleNextStep | null;
+  submittedAt?: string;
+}
+
 export interface DomainWaveData {
   impactByPlanId: Record<string, DomainPlanImpact>;
   learning: DomainLearningFields;
   sustainability: DomainSustainabilityRatings;
+  cycleFeedback?: DomainCycleFeedback;
   updatedAt?: string;
 }
 

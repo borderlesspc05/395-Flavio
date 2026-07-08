@@ -1240,3 +1240,267 @@
   color: #8ee4a8;
   border-color: rgba(110, 207, 143, 0.35);
 }
+
+/* —— Project card (nome · IA · progresso) —— */
+.mid-project-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  height: 100%;
+  padding: 1rem 1.05rem 1.05rem;
+  border-radius: 16px;
+  border: 1px solid var(--mid-border);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 188, 125, 0.06), transparent 60%),
+    rgba(14, 18, 24, 0.6);
+}
+
+.mid-project-card-label {
+  display: block;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mid-muted);
+}
+
+.mid-project-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mid-project-card-top .mid-project-name {
+  font-family: var(--mid-serif);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.mid-project-card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mid-project-card-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.mid-project-card-progress-head strong {
+  font-family: var(--mid-serif);
+  font-size: 1.05rem;
+  color: var(--mid-warm);
+  font-variant-numeric: tabular-nums;
+}
+
+.mid-project-card-progress .mid-progress {
+  flex: none;
+  width: 100%;
+  height: 8px;
+}
+
+/* —— Sprint IA copilot feed (read-only) —— */
+.mid-copilot {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  border-radius: 14px;
+  border: 1px solid var(--mid-border);
+  background:
+    linear-gradient(180deg, rgba(20, 26, 36, 0.72), rgba(10, 14, 20, 0.82));
+  overflow: hidden;
+}
+
+.mid-copilot__head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.16);
+  background: rgba(255, 188, 125, 0.04);
+}
+
+.mid-copilot__orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: #1a1206;
+  background: radial-gradient(circle at 30% 30%, #ffe0bd, #f0a860 65%, #d98a45);
+  box-shadow: 0 0 0 3px rgba(255, 188, 125, 0.1);
+}
+
+.mid-copilot__orb-core {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 188, 125, 0.4);
+  animation: mid-copilot-pulse 2.6s var(--mid-ease) infinite;
+}
+
+@keyframes mid-copilot-pulse {
+  0% { transform: scale(0.85); opacity: 0.75; }
+  70% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+.mid-copilot__id {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  flex: 1;
+  min-width: 0;
+}
+
+.mid-copilot__id strong {
+  font-size: 0.85rem;
+  color: var(--mid-text);
+}
+
+.mid-copilot__id span {
+  font-size: 0.66rem;
+  color: var(--mid-muted);
+}
+
+.mid-copilot__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8ee4a8;
+}
+
+.mid-copilot__live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8ee4a8;
+  box-shadow: 0 0 0 0 rgba(142, 228, 168, 0.6);
+  animation: mid-copilot-blink 1.8s ease-in-out infinite;
+}
+
+@keyframes mid-copilot-blink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(142, 228, 168, 0.55); }
+  50% { box-shadow: 0 0 0 5px rgba(142, 228, 168, 0); }
+}
+
+.mid-copilot__feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  overflow-y: auto;
+  max-height: 15rem;
+  scrollbar-width: thin;
+}
+
+.mid-copilot__feed::-webkit-scrollbar { width: 5px; }
+.mid-copilot__feed::-webkit-scrollbar-thumb {
+  background: rgba(175, 146, 112, 0.3);
+  border-radius: 99px;
+}
+
+.mid-copilot__msg {
+  position: relative;
+  padding: 0.55rem 0.7rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgba(175, 146, 112, 0.14);
+  border-left: 2px solid var(--mid-bronze);
+  background: rgba(255, 255, 255, 0.025);
+  animation: mid-copilot-in 0.4s var(--mid-ease) both;
+}
+
+@keyframes mid-copilot-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mid-copilot__msg p {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(242, 237, 230, 0.9);
+}
+
+.mid-copilot__tag {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mid-warm);
+}
+
+.mid-copilot__msg--positive { border-left-color: #6ecf8f; }
+.mid-copilot__msg--positive .mid-copilot__tag { color: #8ee4a8; }
+.mid-copilot__msg--attention { border-left-color: #fbbf24; }
+.mid-copilot__msg--attention .mid-copilot__tag { color: #fbbf24; }
+.mid-copilot__msg--action { border-left-color: var(--mid-warm); }
+.mid-copilot__msg--tip { border-left-color: #9db8ff; }
+.mid-copilot__msg--tip .mid-copilot__tag { color: #a9c0ff; }
+
+.mid-copilot__caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--mid-warm);
+  animation: mid-copilot-caret 0.9s step-end infinite;
+}
+
+@keyframes mid-copilot-caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.mid-copilot__dots {
+  display: inline-flex;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 0.5rem 0.7rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mid-copilot__dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mid-warm);
+  opacity: 0.5;
+  animation: mid-copilot-dot 1.2s ease-in-out infinite;
+}
+
+.mid-copilot__dots span:nth-child(2) { animation-delay: 0.18s; }
+.mid-copilot__dots span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes mid-copilot-dot {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
+
+.mid-copilot__foot {
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid rgba(175, 146, 112, 0.12);
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  color: rgba(242, 237, 230, 0.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mid-copilot__orb-core,
+  .mid-copilot__live i,
+  .mid-copilot__dots span,
+  .mid-copilot__caret,
+  .mid-copilot__msg {
+    animation: none;
+  }
+}

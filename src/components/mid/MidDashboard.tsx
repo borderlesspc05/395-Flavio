@@ -3,6 +3,7 @@ import { Check, ListChecks, Pencil, X } from 'lucide-react';
 import type { MidDashboardData } from '../../types/mid';
 import { useCycle } from '../../context/CycleContext';
 import { MidExecutiveKpiCard } from './MidExecutiveKpiCard';
+import { MidCopilotFeed } from './MidCopilotFeed';
 
 interface MidDashboardProps {
   data: MidDashboardData;
@@ -179,42 +180,27 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
             </p>
           </div>
 
-          <dl className="mid-meta-list mid-meta-list--compact">
-            <div className="mid-meta-project">
-              <dt>Projeto</dt>
-              <dd>
-                <EditableProjectName name={overview.projectName} />
-              </dd>
+          <div className="mid-project-card">
+            <div className="mid-project-card-top">
+              <span className="mid-project-card-label">Projeto</span>
+              <EditableProjectName name={overview.projectName} />
             </div>
-            <div>
-              <dt>Owner</dt>
-              <dd>{overview.owner}</dd>
-            </div>
-            <div>
-              <dt>Sponsor</dt>
-              <dd>{overview.sponsor}</dd>
-            </div>
-            <div>
-              <dt>Status</dt>
-              <dd>{overview.statusLabel}</dd>
-            </div>
-            <div>
-              <dt>Wave atual</dt>
-              <dd>{overview.currentWaveLabel}</dd>
-            </div>
-            <div className="mid-meta-progress">
-              <dt>Progresso</dt>
-              <dd>
-                <div className="mid-progress">
-                  <div
-                    className="mid-progress-fill"
-                    style={{ width: `${overview.progressPercent}%` }}
-                  />
-                </div>
+
+            <MidCopilotFeed data={data} />
+
+            <div className="mid-project-card-progress">
+              <div className="mid-project-card-progress-head">
+                <span className="mid-project-card-label">Progresso</span>
                 <strong>{overview.progressPercent}%</strong>
-              </dd>
+              </div>
+              <div className="mid-progress">
+                <div
+                  className="mid-progress-fill"
+                  style={{ width: `${overview.progressPercent}%` }}
+                />
+              </div>
             </div>
-          </dl>
+          </div>
         </div>
       </section>
 

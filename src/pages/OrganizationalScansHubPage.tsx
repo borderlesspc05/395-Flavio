@@ -84,8 +84,8 @@ export function OrganizationalScansHubPage() {
           </div>
           <h2>Diagnóstico completo</h2>
           <p>
-            Canvas Sprint Waves 1.1 a 1.5 — Decoding, Gap Scan, System Scan, Team Scan e{' '}
-            <strong>Solution Pick</strong> com resumo executivo da empresa e planos priorizados.
+            Canvas Sprint Waves e <strong>Solution Pick</strong>, com resumo executivo e planos
+            priorizados.
           </p>
           <ul className="diagnostic-path-features">
             <li>Múltiplas lentes e profundidade máxima</li>
@@ -107,10 +107,9 @@ export function OrganizationalScansHubPage() {
           </div>
           <h2>Diagnóstico focado</h2>
           <p>
-            Um scan temático substitui o canvas quando você precisa de algo mais rápido. Após concluir, você
-            segue para o <strong>Solution Pick</strong> — o mesmo motor de planos de ação da jornada completa.
+            Scan temático, mais rápido. Ao concluir, siga para o <strong>Solution Pick</strong>.
           </p>
-          <p className="diagnostic-path-card-note">Não é obrigatório responder todos os scans abaixo.</p>
+          <p className="diagnostic-path-card-note">Não precisa responder todos os scans.</p>
           {solutionPickReady ? (
             <button
               type="button"

@@ -38,10 +38,10 @@ const STEPS = [
   { id: 4, title: 'Sign-off', hint: 'Encerre e envie ao MID' },
 ] as const;
 
-const STATUS_OPTIONS: { value: DeliveryStatus; label: string; emoji: string }[] = [
-  { value: 'verde', label: 'No prazo', emoji: 'ðŸŸ¢' },
-  { value: 'amarelo', label: 'Atenção', emoji: '●' },
-  { value: 'vermelho', label: 'Atrasado', emoji: 'ðŸ”´' },
+const STATUS_OPTIONS: { value: DeliveryStatus; label: string }[] = [
+  { value: 'verde', label: 'No prazo' },
+  { value: 'amarelo', label: 'Atenção' },
+  { value: 'vermelho', label: 'Atrasado' },
 ];
 
 function newId(prefix: string) {
@@ -523,8 +523,15 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                           <span className="ac-badge ac-badge-draft">Em andamento</span>
                         )}
                         {sum.total > 0 && (
-                          <span className="ac-badge">
-                            {sum.verde}ðŸŸ¢ {sum.vermelho}ðŸ”´
+                          <span className="ac-badge ac-badge-counts">
+                            <span className="ac-count">
+                              <i className="ac-count-dot ac-count-dot--verde" aria-hidden />
+                              {sum.verde}
+                            </span>
+                            <span className="ac-count">
+                              <i className="ac-count-dot ac-count-dot--vermelho" aria-hidden />
+                              {sum.vermelho}
+                            </span>
                           </span>
                         )}
                       </div>
@@ -759,7 +766,8 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                                     onClick={() => !readOnly && updateDelivery(i, { status: o.value })}
                                     disabled={readOnly}
                                   >
-                                    {o.emoji} {o.label}
+                                    <span className="status-pill-dot" aria-hidden />
+                                    {o.label}
                                   </button>
                                 ))}
                               </div>

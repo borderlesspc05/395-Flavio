@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
+  AlertCircle,
   ArrowRight,
   CheckCircle2,
   Loader2,
   Plus,
   Sparkles,
   Trash2,
+  X,
 } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { actionCanvasesApi } from '../services/api';
@@ -75,6 +78,15 @@ function fromDraft(
 
 function normalizeTitle(value: string) {
   return value.trim().toLowerCase();
+}
+
+function extractApiError(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as { error?: string; message?: string } | undefined;
+    const serverMessage = data?.error || data?.message;
+    if (serverMessage) return serverMessage;
+  }
+  return fallback;
 }
 
 function toCreateBody(plan: EditablePlan) {
@@ -156,6 +168,18 @@ export function DesignPlansPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const syncTimers = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!error) return;
+    const timer = window.setTimeout(() => setError(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [error]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   const validatedCount = useMemo(() => plans.filter((p) => p.validated).length, [plans]);
   const allValidated = plans.length > 0 && validatedCount === plans.length;
@@ -283,8 +307,8 @@ export function DesignPlansPage() {
       );
       setNotice(`Plano "${plan.nomeIniciativa}" validado e sincronizado na Difusão.`);
       await syncMagnusMemoryAfterCanvasChange();
-    } catch {
-      setError('Erro ao publicar o plano. Tente novamente.');
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao publicar o plano. Tente novamente.'));
     } finally {
       setSyncingId(null);
     }
@@ -315,8 +339,8 @@ export function DesignPlansPage() {
           },
         },
       });
-    } catch {
-      setError('Erro ao concluir o Design. Tente novamente.');
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao concluir o Design. Tente novamente.'));
     } finally {
       setSaving(false);
     }
@@ -390,15 +414,41 @@ export function DesignPlansPage() {
         </div>
       </header>
 
-      {notice && (
-        <p className="design-plans-notice is-success" role="status">
-          {notice}
-        </p>
-      )}
-      {error && (
-        <p className="design-plans-notice is-error" role="alert">
-          {error}
-        </p>
+      {(error || notice) && (
+        <div className="design-plans-toast-stack">
+          {error && (
+            <div className="design-plans-toast design-plans-toast--error" role="alert">
+              <span className="design-plans-toast-icon" aria-hidden>
+                <AlertCircle size={18} />
+              </span>
+              <span className="design-plans-toast-text">{error}</span>
+              <button
+                type="button"
+                className="design-plans-toast-close"
+                onClick={() => setError(null)}
+                aria-label="Fechar aviso"
+              >
+                <X size={15} aria-hidden />
+              </button>
+            </div>
+          )}
+          {notice && (
+            <div className="design-plans-toast design-plans-toast--success" role="status">
+              <span className="design-plans-toast-icon" aria-hidden>
+                <CheckCircle2 size={18} />
+              </span>
+              <span className="design-plans-toast-text">{notice}</span>
+              <button
+                type="button"
+                className="design-plans-toast-close"
+                onClick={() => setNotice(null)}
+                aria-label="Fechar aviso"
+              >
+                <X size={15} aria-hidden />
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="design-plans-workspace design-plans-workspace--single">

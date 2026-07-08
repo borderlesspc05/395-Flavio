@@ -3,6 +3,17 @@ import { env } from '../config/env';
 
 let initialized = false;
 let useMemoryFallback = false;
+let settingsApplied = false;
+
+function applyFirestoreSettings(): void {
+  if (settingsApplied) return;
+  try {
+    admin.firestore().settings({ ignoreUndefinedProperties: true });
+    settingsApplied = true;
+  } catch (err) {
+    console.warn('[firebase] Failed to apply Firestore settings:', err);
+  }
+}
 
 export function isFirestoreCredentialError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
@@ -55,6 +66,7 @@ export function initFirebase(): void {
         storageBucket: env.firebase.storageBucket,
       });
       initialized = true;
+      applyFirestoreSettings();
       console.log('[firebase] Initialized via GOOGLE_APPLICATION_CREDENTIALS');
       return;
     } catch (err) {
@@ -73,6 +85,7 @@ export function initFirebase(): void {
         storageBucket: env.firebase.storageBucket,
       });
       initialized = true;
+      applyFirestoreSettings();
       console.log('[firebase] Initialized with service account env vars');
       return;
     } catch (err) {

@@ -1,6 +1,21 @@
 ﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Check, ChevronDown, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCheck,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  UserRound,
+  X,
+} from 'lucide-react';
 import { buildDiagnosticLaudo } from '../utils/diagnosticLaudo';
 import { computeEvolutionIndex } from '../utils/evolutionIndex';
 import {
@@ -137,6 +152,7 @@ export function SolutionPickPanel({
   const [demoMode, setDemoMode] = useState(false);
   const [ragUsed, setRagUsed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [limitNotice, setLimitNotice] = useState<string | null>(null);
   const [goingDesign, setGoingDesign] = useState(false);
   const [laudoOpen, setLaudoOpen] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
@@ -164,6 +180,12 @@ export function SolutionPickPanel({
   );
   const selectedIds = useMemo(() => new Set(selected.map((s) => s.id)), [selected]);
   const phasesReady = isSolutionPickReady(data);
+
+  useEffect(() => {
+    if (!limitNotice) return;
+    const timer = window.setTimeout(() => setLimitNotice(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [limitNotice]);
   const canExpandSummary = Boolean(companySituation) || summaryOverflows;
 
   useEffect(() => {
@@ -335,7 +357,13 @@ export function SolutionPickPanel({
       }
       return withSelectedSolutionActions(prev, [...current, selection]);
     });
-    setError(limitReached ? `Selecione no máximo ${MAX_SELECT} sugestões personalizadas para o Design.` : null);
+    if (limitReached) {
+      setLimitNotice(
+        `Você já escolheu o máximo de ${MAX_SELECT} sugestões. Desmarque uma para escolher outra.`
+      );
+    } else {
+      setLimitNotice(null);
+    }
   };
 
   const toggleActionDetails = (actionId: string, event: MouseEvent<HTMLButtonElement>) => {
@@ -450,6 +478,17 @@ export function SolutionPickPanel({
                 <ChevronDown size={22} aria-hidden />
               </button>
             ) : null}
+            {summaryExpanded && canExpandSummary ? (
+              <button
+                type="button"
+                className="solution-pick-summary-expand is-collapse"
+                onClick={() => setSummaryExpanded(false)}
+                aria-expanded
+                aria-label="Recolher resumo do diagnóstico"
+              >
+                <ChevronUp size={22} aria-hidden />
+              </button>
+            ) : null}
           </div>
         </div>
       )}
@@ -550,37 +589,91 @@ export function SolutionPickPanel({
                           <p>{details.objetivo}</p>
                         </div>
                       </div>
+                      {(details.owner || details.sponsor) && (
+                        <div className="solution-pick-detail-people">
+                          {details.owner && (
+                            <span className="solution-pick-people-chip">
+                              <UserRound size={13} aria-hidden />
+                              <span>
+                                <em>Owner</em>
+                                {details.owner}
+                              </span>
+                            </span>
+                          )}
+                          {details.sponsor && (
+                            <span className="solution-pick-people-chip">
+                              <ClipboardCheck size={13} aria-hidden />
+                              <span>
+                                <em>Sponsor</em>
+                                {details.sponsor}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      )}
                       {details.entregas.length > 0 ? (
-                        <div className="solution-pick-detail-block">
-                          <h4>Sugestões personalizadas para você</h4>
-                          <ul className="solution-pick-detail-list solution-pick-delivery-list">
-                            {details.entregas.map((entrega, entregaIndex) => (
-                              <li key={entregaIndex}>
-                                <button
-                                  type="button"
-                                  className={`solution-pick-delivery-choice ${
-                                    selectedIds.has(deliverySelectionId(action, entregaIndex)) ? 'is-selected' : ''
-                                  }`}
-                                  onClick={() => toggleDelivery(action, entregaIndex)}
-                                  aria-pressed={selectedIds.has(deliverySelectionId(action, entregaIndex))}
-                                >
-                                  <span className="solution-pick-delivery-choice__copy">
-                                    <strong>{entrega.label}</strong>
-                                    <span>{entrega.meta}</span>
-                                  </span>
-                                  <span className="solution-pick-delivery-choice__check">
-                                    {selectedIds.has(deliverySelectionId(action, entregaIndex)) ? (
-                                      <>
-                                        <Check size={14} aria-hidden />
-                                        Escolhida
-                                      </>
-                                    ) : (
-                                      'Escolher'
-                                    )}
-                                  </span>
-                                </button>
-                              </li>
-                            ))}
+                        <div className="solution-pick-detail-block solution-pick-delivery-block">
+                          <div className="solution-pick-delivery-head">
+                            <h4>Sugestões personalizadas para você</h4>
+                            <p className="solution-pick-delivery-intro">
+                              Cada item vira uma iniciativa (Action Canvas) no Design. Escolha o que você
+                              fará neste ciclo — veja <em>o que</em> entregar, <em>como</em> comprovar,{' '}
+                              <em>quem</em> conduz e <em>até quando</em>.
+                            </p>
+                          </div>
+                          <ul className="solution-pick-delivery-list">
+                            {details.entregas.map((entrega, entregaIndex) => {
+                              const isChosen = selectedIds.has(deliverySelectionId(action, entregaIndex));
+                              return (
+                                <li key={entregaIndex}>
+                                  <button
+                                    type="button"
+                                    className={`solution-pick-delivery-card ${isChosen ? 'is-selected' : ''}`}
+                                    onClick={() => toggleDelivery(action, entregaIndex)}
+                                    aria-pressed={isChosen}
+                                  >
+                                    <span className="solution-pick-delivery-step" aria-hidden>
+                                      {String(entrega.index).padStart(2, '0')}
+                                    </span>
+                                    <span className="solution-pick-delivery-body">
+                                      <span className="solution-pick-delivery-what">
+                                        <span className="solution-pick-delivery-tag">O que fazer</span>
+                                        <strong>{entrega.label}</strong>
+                                      </span>
+                                      <span className="solution-pick-delivery-how">
+                                        <ClipboardCheck size={13} aria-hidden />
+                                        {entrega.como}
+                                      </span>
+                                      <span className="solution-pick-delivery-meta">
+                                        <span className="solution-pick-delivery-chip">
+                                          <UserRound size={12} aria-hidden />
+                                          {entrega.responsavel || 'A definir'}
+                                        </span>
+                                        <span className="solution-pick-delivery-chip">
+                                          <CalendarDays size={12} aria-hidden />
+                                          {entrega.prazo}
+                                        </span>
+                                      </span>
+                                    </span>
+                                    <span
+                                      className={`solution-pick-delivery-check ${isChosen ? 'is-selected' : ''}`}
+                                    >
+                                      {isChosen ? (
+                                        <>
+                                          <Check size={14} aria-hidden />
+                                          Escolhida
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus size={14} aria-hidden />
+                                          Escolher
+                                        </>
+                                      )}
+                                    </span>
+                                  </button>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       ) : null}
@@ -626,6 +719,26 @@ export function SolutionPickPanel({
           Ir para Design
         </button>
       </footer>
+
+      {limitNotice && (
+        <div className="solution-pick-toast" role="alert">
+          <span className="solution-pick-toast-icon" aria-hidden>
+            <AlertCircle size={18} />
+          </span>
+          <div className="solution-pick-toast-body">
+            <strong>Limite de {MAX_SELECT} sugestões atingido</strong>
+            <span>{limitNotice}</span>
+          </div>
+          <button
+            type="button"
+            className="solution-pick-toast-close"
+            onClick={() => setLimitNotice(null)}
+            aria-label="Fechar aviso"
+          >
+            <X size={15} aria-hidden />
+          </button>
+        </div>
+      )}
     </section>
   );
 }
