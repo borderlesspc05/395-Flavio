@@ -25,7 +25,6 @@ export function OrganizationalScansHubPage() {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<InitialFormData>(createEmptyDiagnosticData());
 
-  const hubIntro = ORGANIZATIONAL_SCANS[0];
   const scanAnswers = useMemo(
     () => parseOrganizationalScanData(formData[ORGANIZATIONAL_SCAN_DATA_KEY]),
     [formData],
@@ -72,7 +71,7 @@ export function OrganizationalScansHubPage() {
             <span className="organizational-scan-card-step sprint-wave-eyebrow">SPRINT WAVES™ · Onda 1</span>
             <h1 className="premium-display sprint-wave-title">Diagnóstico</h1>
             <p className="sprint-wave-subtitle">
-              Como você quer diagnosticar? {hubIntro.intro}
+              Escolha o diagnóstico completo ou um scan focado para gerar o Solution Pick.
             </p>
           </div>
         </div>
