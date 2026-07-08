@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MM Blueprint — Onda 2 Design
  * Gate Zero, Caminho A (treinamento) e Caminho B (sistêmico)
  */
@@ -129,7 +129,7 @@ export const OUTCOME_FORGE_RULES = [
 /** Seções do questionário Build — Caminho A */
 export const BUILD_SECTIONS = [
   { id: 1, title: 'Identidade do programa' },
-  { id: 2, title: 'Âncora no Outcome' },
+  { id: 2, title: 'Ã‚ncora no Outcome' },
   { id: 3, title: 'Learning Objectives (Bloom)' },
   { id: 4, title: 'Métodos instrucionais' },
   { id: 5, title: 'Mídia e formato' },
@@ -160,7 +160,7 @@ export const IMPACT_LAYERS = [
     id: 3,
     name: 'Aplicação no trabalho',
     timing: '30 a 90 dias após',
-    note: 'Camada mais crítica para Magnus Waves',
+    note: 'Camada mais crítica para Sprint Waves',
   },
   {
     id: 4,
@@ -215,7 +215,7 @@ export function buildGateContextAppendix(
 ): string {
   const label =
     path === 'A'
-      ? 'A — Treinamento se aplica (Outcome Forge → Build → Impact Evaluation)'
+      ? 'A — Treinamento se aplica (Outcome Forge â†’ Build â†’ Impact Evaluation)'
       : 'B — Treinamento NÃO se aplica (Outcome / Build / Impact sistêmicos)';
   const lines = [
     '## Gate Zero confirmado (Onda 2 · MM Blueprint)',

@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -558,7 +558,7 @@ export function InitialFormPage() {
           postDiagnosticNotice: {
             title: `Projeto "${trimmedName}" iniciado`,
             message:
-              'Seu Human-to-Business Canvas foi salvo. Valide os planos de ação ou use a Consultoria IA na Equipe.',
+              'Seu Human-to-Business Canvas foi salvo. Valide os planos de ação no Design.',
             nextStepLabel: 'Próximo passo: validar planos no Design',
             completedAt: at.toISOString(),
           },
@@ -587,7 +587,7 @@ export function InitialFormPage() {
         <div className="diagnostic-brand">
           <img src="/icone-magnusmind.svg" alt="" aria-hidden />
           <div>
-            <span>Magnus Waves</span>
+            <span>Sprint Waves</span>
             <strong>Diagnóstico 1.1-1.5</strong>
           </div>
         </div>
@@ -766,7 +766,7 @@ export function InitialFormPage() {
             <span className="cycle-name-modal__kicker">Último passo</span>
             <h2 id="cycle-name-title">Nome do seu projeto</h2>
             <p>
-              Este nome identifica o ciclo em todo o Magnus Waves — hub de projetos, seletor de ciclos e
+              Este nome identifica o ciclo em todo o Sprint Waves — hub de projetos, seletor de ciclos e
               relatórios.
             </p>
             <label className="cycle-name-modal__field">

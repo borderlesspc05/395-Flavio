@@ -5,6 +5,7 @@ export interface PlanSummary {
   planId: PlanId;
   planName: string;
   concurrencyLimit: number | null;
+  maxOpenCycles: number | null;
 }
 
 export interface ClaimResult extends PlanSummary {
@@ -47,13 +48,12 @@ export const billingApi = {
       .then((r) => r.data),
 
   claim: (data: {
-    userId: string;
     email: string;
     checkoutSessionId?: string;
     demo?: boolean;
     planId?: PlanId;
   }) => api.post<ClaimResult>('/api/billing/claim', data).then((r) => r.data),
 
-  getPlan: (userId: string) =>
-    api.get<PlanSummary>('/api/billing/plan', { params: { userId } }).then((r) => r.data),
+  getPlan: () =>
+    api.get<PlanSummary>('/api/billing/plan').then((r) => r.data),
 };

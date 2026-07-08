@@ -34,34 +34,21 @@ export const supportApi = {
   getThread: async () => {
     const ctx = await getUserContext();
     if (!ctx) throw new Error('Faça login para falar com o suporte.');
-    const res = await api.get<{ ticket: SupportTicket }>('/api/support/thread', {
-      params: {
-        userId: ctx.userId,
-        userEmail: ctx.userEmail,
-        userDisplayName: ctx.userDisplayName,
-      },
-    });
+    const res = await api.get<{ ticket: SupportTicket }>('/api/support/thread');
     return res.data.ticket;
   },
 
   sendMessage: async (body: string) => {
     const ctx = await getUserContext();
     if (!ctx) throw new Error('Faça login para falar com o suporte.');
-    const res = await api.post<{ ticket: SupportTicket }>('/api/support/messages', {
-      userId: ctx.userId,
-      userEmail: ctx.userEmail,
-      userDisplayName: ctx.userDisplayName,
-      body,
-    });
+    const res = await api.post<{ ticket: SupportTicket }>('/api/support/messages', { body });
     return res.data.ticket;
   },
 
   markRead: async () => {
     const ctx = await getUserContext();
     if (!ctx) return null;
-    const res = await api.post<{ ticket: SupportTicket | null }>('/api/support/read', {
-      userId: ctx.userId,
-    });
+    const res = await api.post<{ ticket: SupportTicket | null }>('/api/support/read', {});
     return res.data.ticket;
   },
 };

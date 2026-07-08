@@ -12,7 +12,6 @@ import {
   Menu,
   UserCircle,
   FolderKanban,
-  ClipboardList,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -39,10 +38,6 @@ export function DashboardLayout() {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(SIDEBAR_COLLAPSE_STORAGE_KEY) === '1';
   });
-  const isEquipeConsultoria =
-    location.pathname === '/dashboard/minha-equipe' &&
-    new URLSearchParams(location.search).get('tab') === 'consultoria';
-  const isConsultoriaChat = isEquipeConsultoria || location.pathname === '/dashboard/consultoria-ia';
   const isDesignPage = location.pathname === '/dashboard/design';
 
   const isDiagnosticRoute =
@@ -56,7 +51,6 @@ export function DashboardLayout() {
     { id: 'consultoria', label: t.nav.design, icon: Bot, path: '/dashboard/design' },
     { id: 'objetivos', label: t.nav.diffusion, icon: Target, path: '/dashboard/objetivos' },
     { id: 'relatorios', label: t.nav.domain, icon: BarChart3, path: '/dashboard/relatorios' },
-    { id: 'checklist', label: t.nav.checklist, icon: ClipboardList, path: '/dashboard/checklist-diario' },
     { id: 'equipe', label: t.nav.team, icon: Users, path: '/dashboard/minha-equipe' },
     { id: 'historico', label: t.nav.loop, icon: History, path: '/dashboard/historico' },
     { id: 'conta', label: t.nav.account, icon: UserCircle, path: '/dashboard/conta' },
@@ -100,6 +94,15 @@ export function DashboardLayout() {
   const isScansRoute =
     location.pathname.startsWith('/dashboard/scans') ||
     location.pathname === '/dashboard/solution-pick';
+
+  const pageTitle =
+    navItems.find(
+      (item) =>
+        location.pathname === item.path ||
+        (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
+        (item.id === 'formulario' && isDiagnosticRoute) ||
+        (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe')
+    )?.label ?? 'Sprint';
 
   const handleNav = (_id: string, path: string) => {
     navigate(path);
@@ -148,7 +151,7 @@ export function DashboardLayout() {
               title={sidebarCollapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
             />
             <img src="/icone-magnusmind.svg" alt="" className="sidebar-logo" aria-hidden />
-            <p className="logo-text">magnus mind</p>
+            <p className="logo-text">Sprint</p>
           </div>
           <nav className="sidebar-nav">
             {navItems.map((item) => {
@@ -157,7 +160,6 @@ export function DashboardLayout() {
                 location.pathname === item.path ||
                 (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
                 (item.id === 'formulario' && isDiagnosticRoute) ||
-                (item.id === 'checklist' && location.pathname === '/dashboard/checklist-diario') ||
                 (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe');
               return (
                 <button
@@ -210,28 +212,33 @@ export function DashboardLayout() {
           </nav>
         </aside>
         <div
-          className={`dashboard-main-wrapper ${isConsultoriaChat ? 'consultoria-ia-active' : ''} ${isDesignPage ? 'design-page-active' : ''}`}
+          className={`dashboard-main-wrapper ${isDesignPage ? 'design-page-active' : ''}`}
         >
           <header className="dashboard-header">
-            <button
-              type="button"
-              className="menu-toggle"
-              onClick={() => {
-                setSidebarOpen(true);
-                setSidebarCollapsed(false);
-              }}
-              aria-label={t.nav.openMenu}
-              aria-expanded={sidebarOpen}
-            >
-              <Menu size={40} aria-hidden />
-            </button>
-            <CycleSelector />
+            <div className="dashboard-header__row dashboard-header__row--primary">
+              <button
+                type="button"
+                className="menu-toggle"
+                onClick={() => {
+                  setSidebarOpen(true);
+                  setSidebarCollapsed(false);
+                }}
+                aria-label={t.nav.openMenu}
+                aria-expanded={sidebarOpen}
+              >
+                <Menu size={22} aria-hidden />
+              </button>
+              <p className="dashboard-header__title">{pageTitle}</p>
+            </div>
+            <div className="dashboard-header__row dashboard-header__row--secondary">
+              <CycleSelector />
+            </div>
           </header>
           <main
             ref={mainRef}
             id="main-content"
             tabIndex={-1}
-            className={`dashboard-main ${isConsultoriaChat ? 'consultoria-ia-active' : ''} ${isDesignPage ? 'design-page-active' : ''}`}
+            className={`dashboard-main ${isDesignPage ? 'design-page-active' : ''}`}
           >
             {isScansRoute ? (
               <div className="scans-premium-shell">

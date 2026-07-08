@@ -31,7 +31,7 @@ export function MockCheckoutPage() {
     <main className="mock-checkout-page">
       <section className="mock-checkout-card">
         <p className="mock-checkout-kicker">Pagamento simulado (mock)</p>
-        <h1>Checkout Magnus Mind</h1>
+        <h1>Checkout Sprint</h1>
         <p className="mock-checkout-sub">
           Ambiente de teste: aqui validamos o fluxo antes do deploy com Stripe real.
         </p>

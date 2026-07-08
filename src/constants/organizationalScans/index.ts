@@ -1,4 +1,4 @@
-import type { OrganizationalScanDefinition } from '../../types/organizationalScans';
+﻿import type { OrganizationalScanDefinition } from '../../types/organizationalScans';
 import { cultureScan } from './cultureScan';
 import { leadershipScan } from './leadershipScan';
 import { customerExperienceScan } from './customerExperienceScan';
@@ -13,7 +13,7 @@ export const fullScanIntro: OrganizationalScanDefinition = {
   title: 'Full Scan',
   subtitle: 'Diagnóstico completo da organização',
   intro:
-    'Diagnostique a organização pelo canvas completo Magnus Waves (1.1–1.5, com Solution Pick e resumo executivo) ou por um scan temático mais rápido. As duas vias levam ao mesmo Solution Pick para escolher planos de ação.',
+    'Diagnostique a organização pelo canvas completo Sprint Waves (1.1–1.5, com Solution Pick e resumo executivo) ou por um scan temático mais rápido. As duas vias levam ao mesmo Solution Pick para escolher planos de ação.',
   guidance:
     'O diagnóstico completo fica no canvas 1.1 a 1.5. O scan focado é alternativa quando você precisa de profundidade em um tema só — ambos alimentam o Solution Pick com o contexto real da empresa.',
   blocks: [],

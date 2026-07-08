@@ -17,13 +17,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Ciclos de diagnóstico (loop contínuo)
+    // Ciclos de diagnóstico — leitura no cliente; escrita somente via API autenticada
     match /diagnosticCycles/{cycleId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
     }
 
     // Conversas (cliente)

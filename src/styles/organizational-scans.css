@@ -439,6 +439,13 @@
     align-items: stretch;
   }
 
+  .organizational-scan-actions.mm-sticky-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    gap: 0.5rem;
+  }
+
   .organizational-scan-actions-group {
     width: 100%;
   }

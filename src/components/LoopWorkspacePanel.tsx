@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import {
   ChevronDown,
@@ -50,12 +50,15 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
     loading: cyclesLoading,
     switching,
     switchCycle,
+    deleteCycle,
   } = useCycle();
   const [authUserId, setAuthUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const userId = userIdProp ?? authUserId;
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [sectors, setSectors] = useState<LoopResetSectors>({ ...DEFAULT_SECTORS });
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (userIdProp) return;
@@ -71,7 +74,7 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
     if (!userId) return;
     if (
       !window.confirm(
-        'Limpar o diagnóstico do ciclo ativo? Os ciclos arquivados permanecem na memória da IA.'
+        'Limpar o diagnóstico do ciclo ativo? Os ciclos arquivados permanecem na memória do projeto.'
       )
     ) {
       return;
@@ -119,6 +122,25 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
     }
   };
 
+  const handleDeleteCycle = async (cycleId: string) => {
+    setDeletingId(cycleId);
+    setMessage(null);
+    try {
+      const result = await deleteCycle(cycleId);
+      if (result.ok) {
+        setMessage('Processo excluído.');
+        await onReset?.();
+      } else {
+        setMessage(result.message ?? 'Não foi possível excluir o processo.');
+      }
+    } catch {
+      setMessage('Não foi possível excluir o processo.');
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
+    }
+  };
+
   const handleResetSectors = async () => {
     if (!userId) return;
     const sectorCount = Object.values(sectors).filter(Boolean).length;
@@ -146,19 +168,19 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
     { key: 'objectives', label: 'Objetivos' },
     { key: 'actionCanvases', label: 'Action Canvas' },
     { key: 'reports', label: 'Relatórios' },
-    { key: 'conversations', label: 'Consultoria IA' },
-    { key: 'magnusMemory', label: 'Memória IA' },
+    { key: 'conversations', label: 'Chat de IA' },
+    { key: 'magnusMemory', label: 'Memória do projeto' },
   ];
 
   const isHistorico = variant === 'full';
-  const disabled = !!busy || !userId || switching;
+  const disabled = !!busy || !userId || switching || Boolean(deletingId);
 
   if (isHistorico) {
     return (
       <section className="loop-workspace loop-workspace--full loop-workspace--historico">
         <div className="loop-workspace__intro">
           <span className="loop-workspace__eyebrow">Controle de ciclos</span>
-          <h2>Loop & memória da IA</h2>
+          <h2>Loop & memória do projeto</h2>
           <p>
             Selecione o ciclo em que a jornada trabalha. Objetivos, difusão e consultoria usam o ciclo ativo.
           </p>
@@ -167,7 +189,7 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
         <div className="loop-workspace__cycle-rail" role="listbox" aria-label="Ciclos de diagnóstico">
           {cyclesLoading ? (
             <div className="loop-workspace__empty-cycles">
-              <Loader2 size={18} className="spinning" /> Carregando ciclos…
+              <Loader2 size={18} className="spinning" /> Carregando ciclos...
             </div>
           ) : cycles.length === 0 ? (
             <div className="loop-workspace__empty-cycles">Nenhum ciclo ainda. Crie o primeiro abaixo.</div>
@@ -175,24 +197,69 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
             cycles.map((cycle) => {
               const isActive = cycle.id === activeCycle?.id;
               const date = cycle.archivedAt ?? cycle.createdAt;
+              const isConfirming = confirmDeleteId === cycle.id;
+              const isDeleting = deletingId === cycle.id;
+
+              if (isConfirming) {
+                return (
+                  <div key={cycle.id} className="loop-workspace__cycle-confirm" role="alertdialog">
+                    <p>
+                      Excluir <strong>{cycle.label}</strong>? Os dados serão removidos permanentemente.
+                    </p>
+                    <div className="loop-workspace__cycle-confirm-actions">
+                      <button
+                        type="button"
+                        className="loop-workspace__btn loop-workspace__btn--ghost"
+                        disabled={isDeleting}
+                        onClick={() => setConfirmDeleteId(null)}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        className="loop-workspace__btn loop-workspace__btn--danger"
+                        disabled={isDeleting}
+                        onClick={() => void handleDeleteCycle(cycle.id)}
+                      >
+                        {isDeleting ? <Loader2 size={14} className="spinning" /> : <Trash2 size={14} />}
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
-                <button
+                <div
                   key={cycle.id}
-                  type="button"
-                  role="option"
-                  aria-selected={isActive}
-                  className={`loop-workspace__cycle-card ${isActive ? 'is-active' : ''}`}
-                  disabled={switching || busy !== null}
-                  onClick={() => void switchCycle(cycle.id)}
+                  className={`loop-workspace__cycle-row ${isActive ? 'is-active' : ''}`}
                 >
-                  <strong>{cycle.label}</strong>
-                  <span>{new Date(date).toLocaleDateString('pt-BR')}</span>
-                  <em
-                    className={`loop-workspace__cycle-status loop-workspace__cycle-status--${cycle.status}`}
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={isActive}
+                    className={`loop-workspace__cycle-card ${isActive ? 'is-active' : ''}`}
+                    disabled={switching || busy !== null}
+                    onClick={() => void switchCycle(cycle.id)}
                   >
-                    {STATUS_LABELS[cycle.status]}
-                  </em>
-                </button>
+                    <strong>{cycle.label}</strong>
+                    <span>{new Date(date).toLocaleDateString('pt-BR')}</span>
+                    <em
+                      className={`loop-workspace__cycle-status loop-workspace__cycle-status--${cycle.status}`}
+                    >
+                      {STATUS_LABELS[cycle.status]}
+                    </em>
+                  </button>
+                  <button
+                    type="button"
+                    className="loop-workspace__cycle-delete"
+                    aria-label={`Excluir ${cycle.label}`}
+                    disabled={disabled}
+                    onClick={() => setConfirmDeleteId(cycle.id)}
+                  >
+                    <Trash2 size={14} aria-hidden />
+                  </button>
+                </div>
               );
             })
           )}

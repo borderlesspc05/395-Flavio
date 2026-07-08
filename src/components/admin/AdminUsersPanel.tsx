@@ -20,6 +20,19 @@ function defaultConcurrencyForPlan(planId: PlanId): string {
   return '';
 }
 
+function isDefaultLimitForPlan(planId: PlanId, limit: string): boolean {
+  const trimmed = limit.trim();
+  if (planId === 'premium') return trimmed === '';
+  if (planId === 'advanced') return trimmed === '3';
+  return trimmed === '1';
+}
+
+function concurrencyPayloadForPlan(planId: PlanId, limit: string): number | null | undefined {
+  if (isDefaultLimitForPlan(planId, limit)) return undefined;
+  const trimmed = limit.trim();
+  return trimmed === '' ? null : Number(trimmed);
+}
+
 export function AdminUsersPanel({ users, onRefresh, onSelectUser }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,7 +72,7 @@ export function AdminUsersPanel({ users, onRefresh, onSelectUser }: Props) {
         password,
         displayName: displayName.trim() || undefined,
         planId: createPlan,
-        concurrencyLimit: createLimit.trim() === '' ? null : createLimit.trim(),
+        concurrencyLimit: concurrencyPayloadForPlan(createPlan, createLimit),
       });
       setCreateSuccess('Usuário criado com sucesso.');
       setEmail('');
@@ -101,7 +114,7 @@ export function AdminUsersPanel({ users, onRefresh, onSelectUser }: Props) {
     try {
       await adminApi.updateUserAccess(userId, {
         planId: edit.planId,
-        concurrencyLimit: edit.limit.trim() === '' ? null : edit.limit.trim(),
+        concurrencyLimit: concurrencyPayloadForPlan(edit.planId, edit.limit),
       });
       onRefresh();
     } catch (err: unknown) {

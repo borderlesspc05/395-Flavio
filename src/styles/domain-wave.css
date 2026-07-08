@@ -1002,3 +1002,109 @@
 .relatorios-archive-body[hidden] {
   display: none;
 }
+
+/* Shared Sprint wave header */
+.sprint-wave-header {
+  position: relative;
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center !important;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem !important;
+  width: 100%;
+  margin: 0 0 1.4rem !important;
+  padding: 0.85rem 1rem 0.9rem !important;
+  border-radius: var(--ac-radius-lg, 20px) !important;
+  border: 1px solid rgba(175, 146, 112, 0.2) !important;
+  background: linear-gradient(135deg, rgba(12, 18, 28, 0.92) 0%, rgba(20, 28, 42, 0.88) 55%, rgba(14, 22, 36, 0.94) 100%) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22) !important;
+  overflow: hidden;
+}
+
+.sprint-wave-header::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  bottom: 0;
+  width: 56px;
+  height: 2px;
+  background: linear-gradient(90deg, #ffbc7d, rgba(255, 188, 125, 0));
+}
+
+.sprint-wave-title-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.85rem !important;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.sprint-wave-icon-wrapper {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 2.85rem !important;
+  height: 2.85rem !important;
+  flex: 0 0 2.85rem;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(175, 146, 112, 0.28) !important;
+  background: linear-gradient(135deg, rgba(175, 146, 112, 0.16), rgba(255, 188, 125, 0.06)) !important;
+  color: #c9a962 !important;
+  box-shadow: none !important;
+}
+
+.sprint-wave-title-copy {
+  min-width: 0;
+}
+
+.sprint-wave-eyebrow {
+  display: block !important;
+  margin: 0 0 0.3rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  border-radius: 0 !important;
+  font-family: 'Figtree', system-ui, sans-serif !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #af9270 !important;
+}
+
+.sprint-wave-title {
+  margin: 0 !important;
+  font-family: 'Newsreader', 'Georgia', serif !important;
+  font-size: clamp(1.2rem, 2.6vw, 1.55rem) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.15 !important;
+  background: linear-gradient(135deg, #f5f3f2 0%, #e8dcc8 55%, #ffbc7d 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+.sprint-wave-subtitle {
+  margin: 0.35rem 0 0 !important;
+  max-width: 54ch !important;
+  color: rgba(185, 182, 195, 0.82) !important;
+  font-size: 0.8rem !important;
+  line-height: 1.45 !important;
+}
+
+.sprint-wave-side {
+  flex: 0 0 auto;
+  margin: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .sprint-wave-header {
+    align-items: flex-start !important;
+  }
+
+  .sprint-wave-side {
+    width: 100%;
+  }
+}

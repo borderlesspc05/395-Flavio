@@ -892,6 +892,9 @@
 }
 
 .status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.5rem 0.85rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -902,6 +905,55 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s var(--ac-ease);
+}
+
+.status-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.status-pill--verde .status-pill-dot {
+  background: #86a878;
+}
+
+.status-pill--amarelo .status-pill-dot {
+  background: #ffbc7d;
+}
+
+.status-pill--vermelho .status-pill-dot {
+  background: #c86e6e;
+}
+
+.ac-badge-counts {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ac-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-count-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ac-count-dot--verde {
+  background: #86a878;
+}
+
+.ac-count-dot--vermelho {
+  background: #c86e6e;
 }
 
 .status-pill:hover:not(:disabled) {

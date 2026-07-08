@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowRight, ClipboardList, Layers3, Sparkles } from 'lucide-react';
 import { auth } from '../config/firebase';
@@ -25,7 +25,6 @@ export function OrganizationalScansHubPage() {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<InitialFormData>(createEmptyDiagnosticData());
 
-  const hubIntro = ORGANIZATIONAL_SCANS[0];
   const scanAnswers = useMemo(
     () => parseOrganizationalScanData(formData[ORGANIZATIONAL_SCAN_DATA_KEY]),
     [formData],
@@ -63,11 +62,19 @@ export function OrganizationalScansHubPage() {
 
   return (
     <div className="organizational-scans-page">
-      <header className="organizational-scans-hero">
-        <p className="organizational-scan-card-step">Diagnóstico organizacional</p>
-        <h1 className="premium-display">Como você quer diagnosticar?</h1>
-        <p>{hubIntro.intro}</p>
-        {hubIntro.guidance ? <p>{hubIntro.guidance}</p> : null}
+      <header className="organizational-scans-hero sprint-wave-header">
+        <div className="sprint-wave-title-group">
+          <div className="sprint-wave-icon-wrapper" aria-hidden>
+            <ClipboardList size={26} />
+          </div>
+          <div className="sprint-wave-title-copy">
+            <span className="organizational-scan-card-step sprint-wave-eyebrow">SPRINT WAVES™ · Onda 1</span>
+            <h1 className="premium-display sprint-wave-title">Diagnóstico</h1>
+            <p className="sprint-wave-subtitle">
+              Escolha o diagnóstico completo ou um scan focado para gerar o Solution Pick.
+            </p>
+          </div>
+        </div>
       </header>
 
       <div className="diagnostic-path-grid" role="list">
@@ -77,8 +84,8 @@ export function OrganizationalScansHubPage() {
           </div>
           <h2>Diagnóstico completo</h2>
           <p>
-            Canvas Magnus Waves 1.1 a 1.5 — Decoding, Gap Scan, System Scan, Team Scan e{' '}
-            <strong>Solution Pick</strong> com resumo executivo da empresa e planos priorizados pela IA.
+            Canvas Sprint Waves e <strong>Solution Pick</strong>, com resumo executivo e planos
+            priorizados.
           </p>
           <ul className="diagnostic-path-features">
             <li>Múltiplas lentes e profundidade máxima</li>
@@ -100,10 +107,9 @@ export function OrganizationalScansHubPage() {
           </div>
           <h2>Diagnóstico focado</h2>
           <p>
-            Um scan temático substitui o canvas quando você precisa de algo mais rápido. Após concluir, você
-            segue para o <strong>Solution Pick</strong> — o mesmo motor de planos de ação da jornada completa.
+            Scan temático, mais rápido. Ao concluir, siga para o <strong>Solution Pick</strong>.
           </p>
-          <p className="diagnostic-path-card-note">Não é obrigatório responder todos os scans abaixo.</p>
+          <p className="diagnostic-path-card-note">Não precisa responder todos os scans.</p>
           {solutionPickReady ? (
             <button
               type="button"
@@ -171,7 +177,7 @@ export function OrganizationalScansHubPage() {
         </div>
       </section>
 
-      <div className="organizational-scan-actions">
+      <div className="organizational-scan-actions mm-sticky-actions">
         <button
           type="button"
           className="diagnostic-secondary-button"

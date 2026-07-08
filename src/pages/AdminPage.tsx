@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import {
   Activity,
+  ExternalLink,
+  Globe,
+  LayoutDashboard,
   LogOut,
   RefreshCw,
   Save,
@@ -167,7 +170,7 @@ export function AdminPage() {
         <div className="admin-brand">
           <span className="admin-brand-mark">MM</span>
           <div>
-            <strong>Magnus Mind</strong>
+            <strong>Sprint</strong>
             <span>Console admin</span>
           </div>
         </div>
@@ -219,8 +222,29 @@ export function AdminPage() {
         </nav>
 
         <div className="admin-sidebar-foot">
-          <Link to="/">Landing</Link>
-          <Link to="/escolher-projeto">App</Link>
+          <p className="admin-sidebar-foot-label">Atalhos</p>
+          <div className="admin-sidebar-shortcuts">
+            <Link to="/" className="admin-sidebar-shortcut" title="Abrir landing pública">
+              <span className="admin-sidebar-shortcut-icon" aria-hidden>
+                <Globe size={16} strokeWidth={2} />
+              </span>
+              <span className="admin-sidebar-shortcut-text">
+                <strong>Landing</strong>
+                <small>Página pública</small>
+              </span>
+              <ExternalLink size={13} className="admin-sidebar-shortcut-arrow" aria-hidden />
+            </Link>
+            <Link to="/escolher-projeto" className="admin-sidebar-shortcut" title="Abrir aplicativo">
+              <span className="admin-sidebar-shortcut-icon" aria-hidden>
+                <LayoutDashboard size={16} strokeWidth={2} />
+              </span>
+              <span className="admin-sidebar-shortcut-text">
+                <strong>App</strong>
+                <small>Área logada</small>
+              </span>
+              <ExternalLink size={13} className="admin-sidebar-shortcut-arrow" aria-hidden />
+            </Link>
+          </div>
           <button type="button" className="admin-sidebar-logout" onClick={() => void handleLogout()}>
             <LogOut size={16} />
             Sair
@@ -312,7 +336,7 @@ export function AdminPage() {
                 <section className="admin-card admin-card--settings">
                   <header className="admin-card-head">
                     <h2>Alterar valores dos planos</h2>
-                    <p>Preços na landing e limites de requisições simultâneas na API</p>
+                    <p>Preços na landing, projetos ativos e operações de IA por plano</p>
                   </header>
                   <form className="admin-settings-form" onSubmit={(e) => void handleSavePlans(e)}>
                     <div className="admin-plan-grid">
@@ -347,7 +371,27 @@ export function AdminPage() {
                             />
                           </label>
                           <label>
-                            Requisições simultâneas (vazio = ilimitado)
+                            Projetos ativos (vazio = ilimitado)
+                            <input
+                              type="text"
+                              placeholder="1, 3 ou deixe vazio"
+                              value={
+                                planDraft[planId].maxOpenCycles === null
+                                  ? ''
+                                  : String(planDraft[planId].maxOpenCycles)
+                              }
+                              onChange={(e) => {
+                                const raw = e.target.value.trim();
+                                updatePlanField(
+                                  planId,
+                                  'maxOpenCycles',
+                                  raw === '' ? null : Number(raw)
+                                );
+                              }}
+                            />
+                          </label>
+                          <label>
+                            Operações IA em paralelo (vazio = ilimitado)
                             <input
                               type="text"
                               placeholder="1, 3 ou deixe vazio"

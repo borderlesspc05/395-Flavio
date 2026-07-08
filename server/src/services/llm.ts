@@ -109,6 +109,14 @@ export function getDefaultModel(): string {
   return env.openai.defaultModel;
 }
 
+/** Modelo rápido para JSON estruturado (solution pick, sugestões em lote). */
+export function getFastStructuredModel(): string {
+  const provider = resolveLlmProvider();
+  if (provider === 'openai') return 'gpt-4o-mini';
+  if (provider === 'openrouter') return 'openai/gpt-4o-mini';
+  return getDefaultModel();
+}
+
 /** Compat: rotas antigas importam AI_MODELS de openrouter */
 export const AI_MODELS = getAiModels();
 

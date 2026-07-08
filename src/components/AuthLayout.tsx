@@ -1,6 +1,7 @@
 import { ViewTransitionLink } from './navigation/ViewTransitionLink';
 import { ArrowLeft } from 'lucide-react';
 import { CursorGlowBackground } from './CursorGlowBackground';
+import logoMark from '../assets/icone-magnusmind.svg';
 
 interface AuthLayoutProps {
   title: string;
@@ -29,14 +30,15 @@ export function AuthLayout({ title, subtitle, children, footer, backTo, cardClas
         <div className={`auth-card auth-card-vivid auth-card--compact${cardClassName ? ` ${cardClassName}` : ''}`}>
           <header className="auth-card-head">
             <img
-              src="/icone-magnusmind.svg"
-              alt=""
+              src={logoMark}
+              alt="Sprint"
               className="auth-card-mark"
               width={44}
               height={44}
+              decoding="async"
             />
             <div className="auth-card-head-copy">
-              <p className="auth-eyebrow">Magnus Mind</p>
+              <p className="auth-eyebrow">Sprint</p>
               <h1 className="auth-form-heading">{title}</h1>
               {subtitle ? <p className="auth-card-sub">{subtitle}</p> : null}
             </div>

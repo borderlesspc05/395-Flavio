@@ -1,4 +1,4 @@
-import { buildDiagnosticContext } from '../constants/diagnosticFlow';
+﻿import { buildDiagnosticContext } from '../constants/diagnosticFlow';
 import { buildGateContextAppendix } from '../constants/blueprintFlow';
 import { getBlueprintGate } from './blueprintGate';
 import { getInitialForm } from './initialForm';
@@ -39,7 +39,7 @@ function formatCanvas(canvas: ActionCanvas): string {
   if (entregas.length) {
     lines.push('- Entregas:');
     for (const e of entregas) {
-      const st = e.status === 'verde' ? '🟢' : e.status === 'vermelho' ? '🔴' : '🟡';
+      const st = e.status === 'verde' ? 'ðŸŸ¢' : e.status === 'vermelho' ? 'ðŸ”´' : '●';
       lines.push(`  - ${st} ${e.entrega} (${e.responsavel || '—'})`);
     }
   }
@@ -47,7 +47,7 @@ function formatCanvas(canvas: ActionCanvas): string {
   if (riscos.length) {
     lines.push('- Riscos:');
     for (const r of riscos) {
-      lines.push(`  - ${r.risco} → ${r.acaoTomar || '—'}`);
+      lines.push(`  - ${r.risco} â†’ ${r.acaoTomar || '—'}`);
     }
   }
   return lines.join('\n');
@@ -94,7 +94,7 @@ export async function loadMagnusWavesMemory(userId: string): Promise<MagnusWaves
     : 'Diagnóstico pendente';
 
   const sections: string[] = [
-    '# Memória Magnus Waves (consultoria integrada)',
+    '# Memória Sprint Waves (consultoria integrada)',
     activeCycle
       ? `## Ciclo ativo: ${activeCycle.label} (${activeCycle.status})`
       : 'Use diagnóstico, design e difusão como fonte única.',

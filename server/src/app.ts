@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
 import { createCorsOriginCallback } from './config/cors';
-import { resolveUserId } from './middleware/userId';
+import { initRequestAuthContext, requireUser } from './middleware/userAuth';
 import { errorHandler } from './middleware/errorHandler';
 import { initFirebase } from './services/firebase';
 import { isFirebaseEnabled } from './services/firebase';
@@ -24,7 +24,10 @@ import workspaceRouter from './routes/workspace';
 import supportRouter from './routes/support';
 import meRouter from './routes/me';
 import ragRouter from './routes/rag';
+import cyclesRouter from './routes/cycles';
+import authRouter from './routes/auth';
 import { requestLogger } from './middleware/requestLogger';
+import { securityHeaders } from './middleware/securityHeaders';
 import { getLlmStatus } from './services/llm';
 
 initFirebase();
@@ -37,6 +40,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(securityHeaders);
 
 /** Stripe webhook precisa do body bruto (antes do express.json) */
 app.post(
@@ -44,6 +48,7 @@ app.post(
   express.raw({ type: 'application/json' }),
   billingWebhookHandler
 );
+app.use('/api/whatsapp/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json({ limit: '2mb' }));
 
@@ -76,25 +81,27 @@ app.get('/', (_req, res) => {
   });
 });
 
-app.use(resolveUserId);
+app.use(initRequestAuthContext);
 app.use(requestLogger);
 
 app.use('/api/plans', publicPlansRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/billing', billingRouter);
-app.use('/api/objectives', objectivesRouter);
-app.use('/api/action-canvases', actionCanvasesRouter);
-app.use('/api/team-members', teamMembersRouter);
-app.use('/api/activities', activitiesRouter);
-app.use('/api/ai', aiRouter);
-app.use('/api/magnus-memory', magnusMemoryRouter);
-app.use('/api/agent', agentRouter);
-app.use('/api/reports', reportsRouter);
+app.use('/api/objectives', requireUser, objectivesRouter);
+app.use('/api/action-canvases', requireUser, actionCanvasesRouter);
+app.use('/api/team-members', requireUser, teamMembersRouter);
+app.use('/api/activities', requireUser, activitiesRouter);
+app.use('/api/ai', requireUser, aiRouter);
+app.use('/api/magnus-memory', requireUser, magnusMemoryRouter);
+app.use('/api/agent', requireUser, agentRouter);
+app.use('/api/reports', requireUser, reportsRouter);
 app.use('/api/whatsapp', whatsappRouter);
-app.use('/api/workspace', workspaceRouter);
-app.use('/api/support', supportRouter);
-app.use('/api/me', meRouter);
-app.use('/api/rag', ragRouter);
+app.use('/api/workspace', requireUser, workspaceRouter);
+app.use('/api/support', requireUser, supportRouter);
+app.use('/api/me', requireUser, meRouter);
+app.use('/api/rag', requireUser, ragRouter);
+app.use('/api/cycles', requireUser, cyclesRouter);
 
 app.use((_req, res) => {
   res.status(404).json({

@@ -1,4 +1,4 @@
-/** Fluxo oficial do Miro - MM People Sprint 90+ / Magnus Waves */
+﻿/** Fluxo oficial do Miro - People Sprint 90+ / Sprint Waves */
 
 import type { InitialFormData } from '../types';
 
@@ -68,7 +68,7 @@ export const MAGNUS_WAVES: MagnusWave[] = [
     id: 'dominio',
     number: 4,
     label: 'Domínio',
-    subtitle: 'Magnus Intelligence Dashboard (MID)',
+    subtitle: 'Sprint Intelligence Dashboard (MID)',
     miroRef: 'Kirkpatrick 4 + loop contínuo',
     route: '/dashboard/relatorios',
     steps: [

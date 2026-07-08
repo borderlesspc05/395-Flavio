@@ -35,7 +35,7 @@ export function getRouteForCycleDoc(cycle: DiagnosticCycle): string {
 
 /**
  * Após ativar o ciclo no workspace, consulta dados escopados ao cycleId
- * e devolve a melhor rota de entrada no fluxo Magnus Waves.
+ * e devolve a melhor rota de entrada no fluxo Sprint Waves.
  */
 export async function resolveCycleEntryRoute(cycle: DiagnosticCycle): Promise<string> {
   if (cycle.status === 'archived') return '/dashboard/historico';
@@ -56,7 +56,7 @@ export async function resolveCycleEntryRoute(cycle: DiagnosticCycle): Promise<st
     if (objList.length > 0) return '/dashboard/objetivos';
     if (canvasList.length > 0) return '/dashboard/design';
     if (!cycle.gatePath && !cycle.gateSummary?.trim()) {
-      return '/dashboard/minha-equipe?tab=consultoria';
+      return '/dashboard/inicio';
     }
     return '/dashboard/design';
   } catch {

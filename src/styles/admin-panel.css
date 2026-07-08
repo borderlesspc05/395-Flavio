@@ -203,25 +203,135 @@
   padding-top: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: 0.65rem;
 }
 
 @media (max-width: 900px) {
   .admin-sidebar-foot {
     flex-direction: row;
     flex-wrap: wrap;
+    align-items: center;
     margin-top: 0;
     padding-top: 0;
+    gap: 0.5rem 0.75rem;
   }
 }
 
-.admin-sidebar-foot a {
-  color: var(--adm-gold);
-  text-decoration: none;
+.admin-sidebar-foot-label {
+  margin: 0;
+  padding: 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(242, 237, 230, 0.38);
 }
 
-.admin-sidebar-foot a:hover {
+@media (max-width: 900px) {
+  .admin-sidebar-foot-label {
+    width: 100%;
+  }
+}
+
+.admin-sidebar-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+@media (max-width: 900px) {
+  .admin-sidebar-shortcuts {
+    flex-direction: row;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.admin-sidebar-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 48px;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid rgba(175, 146, 112, 0.2);
+  background: rgba(175, 146, 112, 0.06);
+  color: var(--adm-text);
+  text-decoration: none;
+  transition:
+    border-color 0.2s var(--adm-ease),
+    background 0.2s var(--adm-ease),
+    transform 0.2s var(--adm-ease),
+    box-shadow 0.2s var(--adm-ease);
+}
+
+@media (max-width: 900px) {
+  .admin-sidebar-shortcut {
+    flex: 1;
+    min-width: 140px;
+  }
+}
+
+.admin-sidebar-shortcut:hover {
+  border-color: rgba(201, 169, 98, 0.45);
+  background: rgba(175, 146, 112, 0.14);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+  transform: translateY(-1px);
+}
+
+.admin-sidebar-shortcut:focus-visible {
+  outline: 2px solid var(--adm-gold);
+  outline-offset: 2px;
+}
+
+.admin-sidebar-shortcut-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(201, 169, 98, 0.22), rgba(175, 146, 112, 0.1));
+  color: var(--adm-gold);
+  border: 1px solid rgba(201, 169, 98, 0.25);
+}
+
+.admin-sidebar-shortcut-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-sidebar-shortcut-text strong {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--adm-text);
+}
+
+.admin-sidebar-shortcut-text small {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--adm-muted);
+  line-height: 1.2;
+}
+
+.admin-sidebar-shortcut-arrow {
+  flex-shrink: 0;
+  color: rgba(201, 169, 98, 0.55);
+  opacity: 0;
+  transform: translate(-4px, 2px);
+  transition:
+    opacity 0.2s var(--adm-ease),
+    transform 0.2s var(--adm-ease),
+    color 0.2s var(--adm-ease);
+}
+
+.admin-sidebar-shortcut:hover .admin-sidebar-shortcut-arrow {
+  opacity: 1;
+  transform: translate(0, 0);
   color: var(--adm-warm);
 }
 
@@ -229,17 +339,28 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 0.5rem;
-  padding: 0;
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.35rem;
   border: none;
+  border-radius: 8px;
   background: none;
   color: var(--adm-muted);
   font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: color 0.2s var(--adm-ease), background 0.2s var(--adm-ease);
+}
+
+@media (max-width: 900px) {
+  .admin-sidebar-logout {
+    margin-top: 0;
+    margin-left: auto;
+  }
 }
 
 .admin-sidebar-logout:hover {
   color: #ffb4b4;
+  background: rgba(255, 100, 100, 0.08);
 }
 
 /* —— Main —— */

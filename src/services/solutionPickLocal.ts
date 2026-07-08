@@ -1,4 +1,4 @@
-import type { SuggestedSolutionAction } from '../types/solutionPick';
+﻿import type { SuggestedSolutionAction } from '../types/solutionPick';
 import { enrichObjetivoEspecifico } from '../utils/enrichObjetivoEspecifico';
 import { buildSolutionActionDetalhes } from '../utils/solutionActionDetails';
 
@@ -6,6 +6,35 @@ function defaultPrazo(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0];
+}
+
+function desiredDeliveryCount(index: number): number {
+  return (index % 3) + 1;
+}
+
+function buildVariableEntregas(titulo: string, index: number) {
+  const templates = [
+    {
+      entrega: `Planejar escopo: ${titulo}`,
+      responsavel: 'Owner',
+      prazo: defaultPrazo(14),
+      status: 'amarelo' as const,
+      evidencia: 'Documento de alinhamento',
+    },
+    {
+      entrega: 'Executar piloto e medir resultado',
+      responsavel: 'Equipe núcleo',
+      prazo: defaultPrazo(35),
+      status: 'amarelo' as const,
+    },
+    {
+      entrega: 'Consolidar aprendizados e padronizar rotina',
+      responsavel: 'Sponsor executivo',
+      prazo: defaultPrazo(55),
+      status: 'amarelo' as const,
+    },
+  ];
+  return templates.slice(0, desiredDeliveryCount(index));
 }
 
 const SAMPLES: Array<{
@@ -96,21 +125,7 @@ export function localSolutionPickFallback(): {
 } {
   const suggestions: SuggestedSolutionAction[] = SAMPLES.map((s, i) => {
     const prazoFinal = defaultPrazo(60 + i * 7);
-    const entregas = [
-      {
-        entrega: `Planejar escopo: ${s.titulo}`,
-        responsavel: 'Owner',
-        prazo: defaultPrazo(14),
-        status: 'amarelo' as const,
-        evidencia: 'Documento de alinhamento',
-      },
-      {
-        entrega: 'Executar piloto e medir resultado',
-        responsavel: 'Equipe núcleo',
-        prazo: defaultPrazo(45),
-        status: 'amarelo' as const,
-      },
-    ];
+    const entregas = buildVariableEntregas(s.titulo, i);
 
     const riscos = [
       {
@@ -153,9 +168,9 @@ export function localSolutionPickFallback(): {
   return {
     suggestions,
     companySummary:
-      'Resumo executivo indisponível offline. As sugestões abaixo são de demonstração até a API responder.',
+      'Resumo executivo indisponível offline. As sugestões abaixo são de demonstração até a API responder, mas o espaço já está preparado para uma síntese consultiva em dois parágrafos, conectando dores, prioridades e implicações para o negócio.\n\nQuando o backend voltar a responder, o Sprint vai substituir este fallback por uma análise baseada nas evidências do diagnóstico completo, incluindo Decoding, Gap Scan, System Scan, Team Scan e Solution Pick.',
     companySituation:
-      'Servidor de IA indisponível ou sem conexão. Você pode selecionar ações de exemplo ou tentar atualizar quando o backend estiver ativo.',
+      'Servidor de IA indisponível ou sem conexão. Neste modo, não é possível consolidar automaticamente o que a empresa está vivendo, mas o bloco final será composto por dois parágrafos com sintomas, tensões e riscos organizacionais.\n\nVocê pode selecionar ações de exemplo para testar o fluxo ou tentar atualizar quando o backend estiver ativo. Assim que a API responder, esta leitura será refeita com base no contexto real da empresa.',
     demoMode: true,
     localFallback: true,
   };

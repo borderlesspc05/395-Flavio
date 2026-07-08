@@ -6,9 +6,13 @@ import type { SubscriptionRecord } from './subscriptions';
 import { getSubscriptionByEmail } from './subscriptions';
 import { getPlanSummaryForUser } from './subscriptions';
 
+export interface AdminUserDetailPlan extends Awaited<ReturnType<typeof getPlanSummaryForUser>> {
+  hasActiveSubscription: boolean;
+}
+
 export interface AdminUserDetail {
   profile: UserProfile | null;
-  plan: Awaited<ReturnType<typeof getPlanSummaryForUser>>;
+  plan: AdminUserDetailPlan;
   subscription: SubscriptionRecord | null;
   diagnostic: {
     organization?: string;
@@ -72,6 +76,8 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
     planId: plan.planId,
     planName: plan.planName,
     concurrencyLimit: plan.concurrencyLimit,
+    maxOpenCycles: plan.maxOpenCycles,
+    isDemoPlan: plan.isDemoPlan,
     hasActiveSubscription: subscription?.status === 'active',
   };
 

@@ -13,6 +13,7 @@ import { buildDiagnosticContext } from '../constants/diagnosticFlow';
 import { buildGateContextAppendix } from '../constants/blueprintFlow';
 import {
   createDiagnosticCycle,
+  deleteDiagnosticCycle,
   getDiagnosticCycle,
   listDiagnosticCycles,
   loadCycleIntoWorkspace,
@@ -22,8 +23,10 @@ import {
 } from '../services/diagnosticCycles';
 import { getInitialForm } from '../services/initialForm';
 import { getBlueprintGate } from '../services/blueprintGate';
-import { setActiveCycleId, resolveActiveCycleId } from '../services/cycleWorkspace';
+import { clearActiveCycleId, resolveActiveCycleId, setActiveCycleId } from '../services/cycleWorkspace';
 import { workspaceApi } from '../services/api';
+import { usePlan } from './PlanContext';
+import { canCreateMoreCycles, cycleLimitMessage } from '../utils/cycleLimits';
 
 interface CycleContextValue {
   userId: string | null;
@@ -35,6 +38,7 @@ interface CycleContextValue {
   refreshCycles: () => Promise<void>;
   switchCycle: (cycleId: string) => Promise<void>;
   startNewCycle: (options?: { label?: string }) => Promise<{ ok: boolean; message?: string }>;
+  deleteCycle: (cycleId: string) => Promise<{ ok: boolean; message?: string }>;
   clearNeedsDiagnosis: () => void;
   persistActiveCycleSnapshot: () => Promise<void>;
   renameActiveCycle: (label: string) => Promise<{ ok: boolean; message?: string }>;
@@ -42,11 +46,15 @@ interface CycleContextValue {
 
 const CycleContext = createContext<CycleContextValue | null>(null);
 
+function pickPreferredCycle(cycles: DiagnosticCycle[]): DiagnosticCycle {
+  const active = cycles.find((c) => c.status === 'draft' || c.status === 'active');
+  return active ?? cycles[0];
+}
+
 async function ensureDefaultCycle(userId: string): Promise<DiagnosticCycle> {
-  const cycles = await listDiagnosticCycles(userId);
+  let cycles = await listDiagnosticCycles(userId);
   if (cycles.length > 0) {
-    const active = cycles.find((c) => c.status === 'draft' || c.status === 'active');
-    return active ?? cycles[0];
+    return pickPreferredCycle(cycles);
   }
 
   const [{ data, completedAt }, gate] = await Promise.all([
@@ -62,35 +70,44 @@ async function ensureDefaultCycle(userId: string): Promise<DiagnosticCycle> {
         })
       : undefined;
 
-  const created = await createDiagnosticCycle(userId, {
-    label: 'Ciclo 1 · Base',
-    status: completedAt ? 'active' : diagnosticContext.trim() ? 'draft' : 'draft',
-    diagnosticContext,
-    gateSummary,
-    formData: data,
-  });
-
-  if (completedAt) {
-    await updateDiagnosticCycle(created.id, {
-      completedAt: completedAt.toISOString(),
-      status: 'active',
-      ...(gate?.selectedPath ? { gatePath: gate.selectedPath } : {}),
-      ...(gate?.rationale ? { gateRationale: gate.rationale } : {}),
-      ...(gate?.selectedPath
-        ? {
-            gateSummary: buildGateContextAppendix(gate.selectedPath, {
-              aiRecommendedPath: gate.aiRecommendedPath,
-              rationale: gate.rationale,
-            }),
-          }
-        : {}),
+  try {
+    const created = await createDiagnosticCycle(userId, {
+      label: 'Ciclo 1 · Base',
+      status: completedAt ? 'active' : diagnosticContext.trim() ? 'draft' : 'draft',
+      diagnosticContext,
+      gateSummary,
+      formData: data,
     });
-  }
 
-  return (await getDiagnosticCycle(created.id)) ?? created;
+    if (completedAt) {
+      await updateDiagnosticCycle(created.id, {
+        completedAt: completedAt.toISOString(),
+        status: 'active',
+        ...(gate?.selectedPath ? { gatePath: gate.selectedPath } : {}),
+        ...(gate?.rationale ? { gateRationale: gate.rationale } : {}),
+        ...(gate?.selectedPath
+          ? {
+              gateSummary: buildGateContextAppendix(gate.selectedPath, {
+                aiRecommendedPath: gate.aiRecommendedPath,
+                rationale: gate.rationale,
+              }),
+            }
+          : {}),
+      });
+    }
+
+    return (await getDiagnosticCycle(created.id)) ?? created;
+  } catch {
+    cycles = await listDiagnosticCycles(userId);
+    if (cycles.length > 0) {
+      return pickPreferredCycle(cycles);
+    }
+    throw new Error('Não foi possível preparar o primeiro projeto.');
+  }
 }
 
 export function CycleProvider({ children }: { children: ReactNode }) {
+  const { maxOpenCycles, plan } = usePlan();
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const [cycles, setCycles] = useState<DiagnosticCycle[]>([]);
   const [activeCycle, setActiveCycle] = useState<DiagnosticCycle | null>(null);
@@ -181,18 +198,31 @@ export function CycleProvider({ children }: { children: ReactNode }) {
     if (!userId) return { ok: false, message: 'Usuário não autenticado.' };
 
     try {
-      if (activeCycle) {
+      if (!canCreateMoreCycles(cycles, maxOpenCycles)) {
+        const limit = maxOpenCycles ?? 1;
+        return {
+          ok: false,
+          message: cycleLimitMessage(plan?.planName ?? 'Starter', limit),
+        };
+      }
+
+      let archiveCycleId: string | undefined;
+
+      if (activeCycle && activeCycle.status !== 'archived') {
         await snapshotFormIntoCycle(activeCycle.id, userId);
         const { data, completedAt } = await getInitialForm(userId);
         const diagnosticContext = buildDiagnosticContext(data);
+
+        await updateDiagnosticCycle(activeCycle.id, {
+          status: 'archived',
+          archivedAt: true,
+          diagnosticContext,
+          formData: data,
+          ...(completedAt ? { completedAt: completedAt.toISOString() } : {}),
+        });
+        archiveCycleId = activeCycle.id;
+
         if (diagnosticContext.trim()) {
-          await updateDiagnosticCycle(activeCycle.id, {
-            status: 'archived',
-            archivedAt: true,
-            diagnosticContext,
-            formData: data,
-            ...(completedAt ? { completedAt: completedAt.toISOString() } : {}),
-          });
           try {
             await workspaceApi.archiveCycle({
               cycleNumber: activeCycle.cycleNumber,
@@ -209,6 +239,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       const next = await createDiagnosticCycle(userId, {
         status: 'draft',
         diagnosticContext: '',
+        archiveCycleId,
         ...(label ? { label } : {}),
       });
       await setActiveCycleId(userId, next.id);
@@ -225,7 +256,48 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       const msg = err instanceof Error ? err.message : 'Erro ao criar ciclo';
       return { ok: false, message: msg };
     }
-  }, [userId, activeCycle, refreshCycles]);
+  }, [userId, activeCycle, refreshCycles, cycles, maxOpenCycles, plan?.planName]);
+
+  const deleteCycle = useCallback(
+    async (cycleId: string) => {
+      if (!userId) return { ok: false, message: 'Usuário não autenticado.' };
+
+      const target = cycles.find((c) => c.id === cycleId);
+      if (!target) return { ok: false, message: 'Processo não encontrado.' };
+
+      try {
+        if (activeCycle?.id === cycleId) {
+          await snapshotFormIntoCycle(cycleId, userId).catch(() => undefined);
+        }
+
+        await deleteDiagnosticCycle(cycleId, userId);
+
+        const remaining = cycles.filter((c) => c.id !== cycleId);
+        if (activeCycle?.id === cycleId) {
+          const next =
+            remaining.find((c) => c.status === 'draft' || c.status === 'active') ?? remaining[0];
+          if (next) {
+            await loadCycleIntoWorkspace(next, userId);
+            await setActiveCycleId(userId, next.id);
+            setActiveCycle(next);
+            setNeedsDiagnosis(next.status === 'draft' && !next.completedAt);
+          } else {
+            await clearActiveCycleId(userId);
+            setActiveCycle(null);
+            setNeedsDiagnosis(false);
+          }
+        }
+
+        setCycles(remaining);
+        await refreshCycles();
+        return { ok: true, message: 'Processo excluído.' };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Erro ao excluir processo';
+        return { ok: false, message: msg };
+      }
+    },
+    [userId, cycles, activeCycle, refreshCycles]
+  );
 
   const renameActiveCycle = useCallback(
     async (label: string) => {
@@ -268,6 +340,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       refreshCycles,
       switchCycle,
       startNewCycle,
+      deleteCycle,
       clearNeedsDiagnosis: () => setNeedsDiagnosis(false),
       persistActiveCycleSnapshot,
       renameActiveCycle,
@@ -282,6 +355,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
       refreshCycles,
       switchCycle,
       startNewCycle,
+      deleteCycle,
       persistActiveCycleSnapshot,
       renameActiveCycle,
     ]

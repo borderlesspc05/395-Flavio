@@ -15,24 +15,22 @@ export async function claimSubscriptionForUser(
 
   claimInflightUserId = userId;
   claimInflight = (async () => {
-  const pending = readPendingCheckout();
-  try {
-    const result = await billingApi.claim({
-      userId,
-      email,
-      checkoutSessionId: pending?.sessionId,
-      demo: pending?.demo,
-      planId: pending?.planId,
-    });
-    setClientConcurrencyLimit(result.concurrencyLimit);
-    clearPendingCheckout();
-    return result;
-  } catch {
-    clearPendingCheckout();
-    const plan = await billingApi.getPlan(userId).catch(() => null);
-    if (plan) setClientConcurrencyLimit(plan.concurrencyLimit);
-    return plan;
-  }
+    const pending = readPendingCheckout();
+    try {
+      const result = await billingApi.claim({
+        email,
+        checkoutSessionId: pending?.sessionId,
+        demo: pending?.demo,
+        planId: pending?.planId,
+      });
+      setClientConcurrencyLimit(result.concurrencyLimit);
+      clearPendingCheckout();
+      return result;
+    } catch {
+      const plan = await billingApi.getPlan().catch(() => null);
+      if (plan) setClientConcurrencyLimit(plan.concurrencyLimit);
+      return plan;
+    }
   })().finally(() => {
     claimInflight = null;
     claimInflightUserId = null;

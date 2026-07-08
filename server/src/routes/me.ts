@@ -33,9 +33,8 @@ router.post('/photo', async (req: Request, res: Response, next: NextFunction) =>
       throw new AppError(400, 'dataUrl é obrigatório.');
     }
 
-    const email = typeof req.body?.email === 'string' ? req.body.email : undefined;
     const { buffer, contentType } = parseProfilePhotoDataUrl(dataUrl);
-    const photoURL = await saveUserProfilePhoto(userId, buffer, contentType, email);
+    const photoURL = await saveUserProfilePhoto(userId, buffer, contentType, req.userEmail);
 
     res.json({ ok: true, photoURL });
   } catch (err) {

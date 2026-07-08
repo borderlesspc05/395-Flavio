@@ -11,7 +11,15 @@ export function isPlanId(value: string): value is PlanId {
 }
 
 export function formatConcurrencyLimit(limit: number | null): string {
-  if (limit === null) return 'Ilimitado';
-  if (limit === 1) return '1 requisição por vez';
-  return `${limit} requisições por vez`;
+  if (limit === null) return 'IA sem fila de espera';
+  if (limit === 1) return '1 operação de IA por vez';
+  return `${limit} operações de IA em paralelo`;
+}
+
+import { formatMaxOpenCycles } from '../utils/cycleLimits';
+
+export { formatMaxOpenCycles };
+
+export function formatPlanQuotaSummary(maxOpenCycles: number | null): string {
+  return formatMaxOpenCycles(maxOpenCycles);
 }

@@ -1,6 +1,19 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
+﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Check, ChevronDown, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCheck,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  UserRound,
+} from 'lucide-react';
 import { buildDiagnosticLaudo } from '../utils/diagnosticLaudo';
 import { computeEvolutionIndex } from '../utils/evolutionIndex';
 import {
@@ -12,7 +25,6 @@ import { aiApi } from '../services/api';
 import {
   parseSelectedSolutionActions,
   readCachedSolutionPick,
-  reconcileSelectedWithSuggestions,
   stashSelectedSolutionActions,
   clearCachedSolutionPick,
   withSelectedSolutionActions,
@@ -21,11 +33,20 @@ import {
 import { isApiUnreachableError, localSolutionPickFallback } from '../services/solutionPickLocal';
 import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../utils/apiError';
 import { getSolutionActionDetails } from '../utils/solutionActionDetails';
+import { fixMojibakeText } from '../utils/textEncoding';
+import { ToastStack } from './ui/ToastStack';
 import type { InitialFormData } from '../types';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 
 const MAX_SELECT = 5;
-const SUMMARY_COLLAPSED_LINES = 5;
+const SUMMARY_COLLAPSED_LINES = 4;
+
+const LOADING_STEPS = [
+  'Lendo seu diagnóstico...',
+  'Identificando gaps e oportunidades...',
+  'Montando 10 planos de ação priorizados...',
+  'Quase pronto — finalizando scores e resumo...',
+] as const;
 
 const CATEGORY_LABELS: Record<string, string> = {
   pessoas: 'Pessoas',
@@ -42,12 +63,78 @@ function scoreClass(score: number) {
   return 'low';
 }
 
+function splitSummaryParagraphs(value?: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(/\n{2,}|\r\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function hasRobustSummary(result: { companySummary?: string | null; companySituation?: string | null }) {
+  return splitSummaryParagraphs(result.companySummary).length >= 2 &&
+    splitSummaryParagraphs(result.companySituation).length >= 2;
+}
+
 type Props = {
   data: InitialFormData;
   userId: string | null;
   onDataChange: Dispatch<SetStateAction<InitialFormData>>;
   onSaveDraft: (payload: InitialFormData) => Promise<void>;
 };
+
+function deliverySelectionId(action: SuggestedSolutionAction, entregaIndex: number) {
+  return `${action.id}::delivery-${entregaIndex}`;
+}
+
+function buildDeliverySelection(action: SuggestedSolutionAction, entregaIndex: number): SuggestedSolutionAction {
+  const cleanAction = normalizeSuggestionText(action);
+  const entrega = cleanAction.draft.entregas[entregaIndex];
+  if (!entrega) return action;
+
+  return {
+    ...cleanAction,
+    id: deliverySelectionId(cleanAction, entregaIndex),
+    titulo: entrega.entrega || cleanAction.titulo,
+    descricao: `${cleanAction.titulo}: ${cleanAction.descricao}`,
+    detalhes: undefined,
+    draft: {
+      ...cleanAction.draft,
+      nomeIniciativa: entrega.entrega || cleanAction.draft.nomeIniciativa,
+      objetivoEspecifico: cleanAction.draft.objetivoEspecifico,
+      entregas: [entrega],
+      insightOrigem: `${cleanAction.rationale} Sugestão personalizada escolhida: ${entrega.entrega}.`,
+    },
+  };
+}
+
+function normalizeSuggestionText(action: SuggestedSolutionAction): SuggestedSolutionAction {
+  return {
+    ...action,
+    titulo: fixMojibakeText(action.titulo),
+    descricao: fixMojibakeText(action.descricao),
+    rationale: fixMojibakeText(action.rationale),
+    detalhes: action.detalhes ? fixMojibakeText(action.detalhes) : undefined,
+    draft: {
+      ...action.draft,
+      nomeIniciativa: fixMojibakeText(action.draft.nomeIniciativa),
+      objetivoEspecifico: fixMojibakeText(action.draft.objetivoEspecifico),
+      owner: fixMojibakeText(action.draft.owner),
+      sponsor: fixMojibakeText(action.draft.sponsor),
+      entregas: action.draft.entregas.map((entrega) => ({
+        ...entrega,
+        entrega: fixMojibakeText(entrega.entrega),
+        responsavel: fixMojibakeText(entrega.responsavel),
+        evidencia: entrega.evidencia ? fixMojibakeText(entrega.evidencia) : entrega.evidencia,
+      })),
+      riscos: action.draft.riscos.map((risco) => ({
+        risco: fixMojibakeText(risco.risco),
+        acaoTomar: fixMojibakeText(risco.acaoTomar),
+      })),
+      insightOrigem: action.draft.insightOrigem ? fixMojibakeText(action.draft.insightOrigem) : action.draft.insightOrigem,
+    },
+  };
+}
 
 export function SolutionPickPanel({
   data,
@@ -60,15 +147,17 @@ export function SolutionPickPanel({
   const [companySummary, setCompanySummary] = useState<string | null>(null);
   const [companySituation, setCompanySituation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [demoMode, setDemoMode] = useState(false);
   const [ragUsed, setRagUsed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [limitNotice, setLimitNotice] = useState<string | null>(null);
   const [goingDesign, setGoingDesign] = useState(false);
   const [laudoOpen, setLaudoOpen] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [summaryOverflows, setSummaryOverflows] = useState(false);
   const [expandedActionIds, setExpandedActionIds] = useState<Set<string>>(new Set());
-  const summaryRef = useRef<HTMLParagraphElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const loadRequestRef = useRef(0);
   const autoLoadAttemptedRef = useRef(false);
 
@@ -79,12 +168,35 @@ export function SolutionPickPanel({
   );
 
   const selected = useMemo(
-    () => reconcileSelectedWithSuggestions(parseSelectedSolutionActions(data), suggestions),
+    () => {
+      const raw = parseSelectedSolutionActions(data);
+      if (suggestions.length === 0) return raw;
+      return raw.filter((item) =>
+        suggestions.some((suggestion) => item.id.startsWith(`${suggestion.id}::delivery-`))
+      );
+    },
     [data, suggestions]
   );
   const selectedIds = useMemo(() => new Set(selected.map((s) => s.id)), [selected]);
   const phasesReady = isSolutionPickReady(data);
+
+  useEffect(() => {
+    if (!limitNotice) return;
+    const timer = window.setTimeout(() => setLimitNotice(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [limitNotice]);
   const canExpandSummary = Boolean(companySituation) || summaryOverflows;
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStep(0);
+      return;
+    }
+    const interval = window.setInterval(() => {
+      setLoadingStep((prev) => (prev + 1) % LOADING_STEPS.length);
+    }, 2800);
+    return () => window.clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     setSummaryExpanded(false);
@@ -99,7 +211,7 @@ export function SolutionPickPanel({
 
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 22;
     const maxCollapsedHeight = lineHeight * SUMMARY_COLLAPSED_LINES;
-    const clone = el.cloneNode(true) as HTMLParagraphElement;
+    const clone = el.cloneNode(true) as HTMLDivElement;
     clone.style.position = 'absolute';
     clone.style.visibility = 'hidden';
     clone.style.pointerEvents = 'none';
@@ -123,15 +235,18 @@ export function SolutionPickPanel({
       demoReason?: string;
       usedRag?: boolean;
     }) => {
-      setSuggestions(result.suggestions);
-      setCompanySummary(result.companySummary ?? null);
-      setCompanySituation(result.companySituation ?? null);
+      setSuggestions(result.suggestions.map(normalizeSuggestionText));
+      setCompanySummary(result.companySummary ? fixMojibakeText(result.companySummary) : null);
+      setCompanySituation(result.companySituation ? fixMojibakeText(result.companySituation) : null);
       setDemoMode(Boolean(result.demoMode));
       setRagUsed(Boolean(result.usedRag));
       setExpandedActionIds(new Set());
     },
     []
   );
+
+  const summaryParagraphs = useMemo(() => splitSummaryParagraphs(companySummary), [companySummary]);
+  const situationParagraphs = useMemo(() => splitSummaryParagraphs(companySituation), [companySituation]);
 
   const loadSuggestions = useCallback(
     async (options?: { force?: boolean }) => {
@@ -146,7 +261,7 @@ export function SolutionPickPanel({
       }
       if (!options?.force) {
         const cached = readCachedSolutionPick(context);
-        if (cached) {
+        if (cached && hasRobustSummary(cached)) {
           applyResult(cached);
           return;
         }
@@ -204,7 +319,9 @@ export function SolutionPickPanel({
     if (suggestions.length === 0) return;
     onDataChange((prev) => {
       const raw = parseSelectedSolutionActions(prev);
-      const reconciled = reconcileSelectedWithSuggestions(raw, suggestions);
+      const reconciled = raw.filter((item) =>
+        suggestions.some((suggestion) => item.id.startsWith(`${suggestion.id}::delivery-`))
+      );
       if (
         reconciled.length === raw.length &&
         reconciled.every((item, index) => item.id === raw[index]?.id)
@@ -215,16 +332,19 @@ export function SolutionPickPanel({
     });
   }, [suggestions, onDataChange]);
 
-  const toggle = (action: SuggestedSolutionAction) => {
+  const toggleDelivery = (action: SuggestedSolutionAction, entregaIndex: number) => {
     let limitReached = false;
+    const selection = buildDeliverySelection(action, entregaIndex);
     onDataChange((prev) => {
       const raw = parseSelectedSolutionActions(prev);
-      const current = reconcileSelectedWithSuggestions(raw, suggestions);
-      const exists = current.some((s) => s.id === action.id);
+      const current = raw.filter((item) =>
+        suggestions.some((suggestion) => item.id.startsWith(`${suggestion.id}::delivery-`))
+      );
+      const exists = current.some((s) => s.id === selection.id);
       if (exists) {
         return withSelectedSolutionActions(
           prev,
-          current.filter((s) => s.id !== action.id)
+          current.filter((s) => s.id !== selection.id)
         );
       }
       if (current.length >= MAX_SELECT) {
@@ -234,9 +354,15 @@ export function SolutionPickPanel({
         }
         return prev;
       }
-      return withSelectedSolutionActions(prev, [...current, action]);
+      return withSelectedSolutionActions(prev, [...current, selection]);
     });
-    setError(limitReached ? `Selecione no máximo ${MAX_SELECT} ações para o Design.` : null);
+    if (limitReached) {
+      setLimitNotice(
+        `Você já escolheu o máximo de ${MAX_SELECT} sugestões. Desmarque uma para escolher outra.`
+      );
+    } else {
+      setLimitNotice(null);
+    }
   };
 
   const toggleActionDetails = (actionId: string, event: MouseEvent<HTMLButtonElement>) => {
@@ -250,12 +376,9 @@ export function SolutionPickPanel({
   };
 
   const goToDesign = async () => {
-    const currentSelected = reconcileSelectedWithSuggestions(
-      parseSelectedSolutionActions(data),
-      suggestions
-    );
+    const currentSelected = selected;
     if (currentSelected.length === 0) {
-      setError('Selecione ao menos uma ação para seguir ao Design.');
+      setError('Selecione ao menos uma sugestão personalizada para seguir ao Design.');
       return;
     }
     if (!userId) return;
@@ -320,7 +443,7 @@ export function SolutionPickPanel({
 
       <DiagnosticLaudoModal open={laudoOpen} content={laudoText} onClose={() => setLaudoOpen(false)} />
 
-      {(companySummary || companySituation) && (
+      {(summaryParagraphs.length > 0 || situationParagraphs.length > 0) && (
         <div
           className={`solution-pick-company-summary ${summaryExpanded || !canExpandSummary ? 'is-expanded' : 'is-collapsed'}`}
           role="region"
@@ -328,15 +451,19 @@ export function SolutionPickPanel({
         >
           <h3>Resumo após o diagnóstico</h3>
           <div className="solution-pick-summary-body">
-            {companySummary ? (
-              <p ref={summaryRef} className="solution-pick-summary-lead">
-                {companySummary}
-              </p>
+            {summaryParagraphs.length > 0 ? (
+              <div ref={summaryRef} className="solution-pick-summary-lead">
+                {summaryParagraphs.map((paragraph, index) => (
+                  <p key={`summary-${index}`}>{paragraph}</p>
+                ))}
+              </div>
             ) : null}
-            {(summaryExpanded || !canExpandSummary) && companySituation ? (
+            {(summaryExpanded || !canExpandSummary) && situationParagraphs.length > 0 ? (
               <>
                 <p className="situation-label">O que a empresa está vivendo</p>
-                <p>{companySituation}</p>
+                {situationParagraphs.map((paragraph, index) => (
+                  <p key={`situation-${index}`}>{paragraph}</p>
+                ))}
               </>
             ) : null}
             {!summaryExpanded && canExpandSummary ? (
@@ -348,6 +475,17 @@ export function SolutionPickPanel({
                 aria-label="Ver resumo completo do diagnóstico"
               >
                 <ChevronDown size={22} aria-hidden />
+              </button>
+            ) : null}
+            {summaryExpanded && canExpandSummary ? (
+              <button
+                type="button"
+                className="solution-pick-summary-expand is-collapse"
+                onClick={() => setSummaryExpanded(false)}
+                aria-expanded
+                aria-label="Recolher resumo do diagnóstico"
+              >
+                <ChevronUp size={22} aria-hidden />
               </button>
             ) : null}
           </div>
@@ -381,30 +519,31 @@ export function SolutionPickPanel({
       )}
 
       {loading && suggestions.length === 0 ? (
-        <div className="solution-pick-loading">
+        <div className="solution-pick-loading" role="status" aria-live="polite">
           <Loader2 size={28} className="spin" aria-hidden />
-          <span>Analisando diagnóstico e gerando 10 opções de plano de ação…</span>
+          <span className="solution-pick-loading-title">{LOADING_STEPS[loadingStep]}</span>
+          <span className="solution-pick-loading-sub">
+            Isso costuma levar de 15 a 40 segundos na primeira vez.
+          </span>
         </div>
       ) : (
         <ol className="solution-pick-list">
           {suggestions.map((action, index) => {
-            const isSelected = selectedIds.has(action.id);
             const isDetailsOpen = expandedActionIds.has(action.id);
             const details = getSolutionActionDetails(action);
             const letter = String.fromCharCode(97 + (index % 26));
             return (
               <li key={action.id}>
                 <article
-                  className={`solution-pick-card ${isSelected ? 'is-selected' : ''} ${
-                    isDetailsOpen ? 'is-details-open' : ''
-                  }`}
+                  className={`solution-pick-card ${isDetailsOpen ? 'is-details-open' : ''}`}
                 >
                   <div className="solution-pick-card-top">
                     <button
                       type="button"
                       className="solution-pick-card-select"
-                      onClick={() => toggle(action)}
-                      aria-pressed={isSelected}
+                      onClick={(event) => toggleActionDetails(action.id, event)}
+                      aria-expanded={isDetailsOpen}
+                      aria-controls={`solution-pick-details-${action.id}`}
                     >
                       <span className="solution-pick-letter">{letter})</span>
                       <div className="solution-pick-card-main">
@@ -449,16 +588,91 @@ export function SolutionPickPanel({
                           <p>{details.objetivo}</p>
                         </div>
                       </div>
+                      {(details.owner || details.sponsor) && (
+                        <div className="solution-pick-detail-people">
+                          {details.owner && (
+                            <span className="solution-pick-people-chip">
+                              <UserRound size={13} aria-hidden />
+                              <span>
+                                <em>Owner</em>
+                                {details.owner}
+                              </span>
+                            </span>
+                          )}
+                          {details.sponsor && (
+                            <span className="solution-pick-people-chip">
+                              <ClipboardCheck size={13} aria-hidden />
+                              <span>
+                                <em>Sponsor</em>
+                                {details.sponsor}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      )}
                       {details.entregas.length > 0 ? (
-                        <div className="solution-pick-detail-block">
-                          <h4>Entregas sugeridas</h4>
-                          <ul className="solution-pick-detail-list">
-                            {details.entregas.map((entrega, entregaIndex) => (
-                              <li key={entregaIndex}>
-                                <strong>{entrega.label}</strong>
-                                <span>{entrega.meta}</span>
-                              </li>
-                            ))}
+                        <div className="solution-pick-detail-block solution-pick-delivery-block">
+                          <div className="solution-pick-delivery-head">
+                            <h4>Sugestões personalizadas para você</h4>
+                            <p className="solution-pick-delivery-intro">
+                              Cada item vira uma iniciativa (Action Canvas) no Design. Escolha o que você
+                              fará neste ciclo — veja <em>o que</em> entregar, <em>como</em> comprovar,{' '}
+                              <em>quem</em> conduz e <em>até quando</em>.
+                            </p>
+                          </div>
+                          <ul className="solution-pick-delivery-list">
+                            {details.entregas.map((entrega, entregaIndex) => {
+                              const isChosen = selectedIds.has(deliverySelectionId(action, entregaIndex));
+                              return (
+                                <li key={entregaIndex}>
+                                  <button
+                                    type="button"
+                                    className={`solution-pick-delivery-card ${isChosen ? 'is-selected' : ''}`}
+                                    onClick={() => toggleDelivery(action, entregaIndex)}
+                                    aria-pressed={isChosen}
+                                  >
+                                    <span className="solution-pick-delivery-step" aria-hidden>
+                                      {String(entrega.index).padStart(2, '0')}
+                                    </span>
+                                    <span className="solution-pick-delivery-body">
+                                      <span className="solution-pick-delivery-what">
+                                        <span className="solution-pick-delivery-tag">O que fazer</span>
+                                        <strong>{entrega.label}</strong>
+                                      </span>
+                                      <span className="solution-pick-delivery-how">
+                                        <ClipboardCheck size={13} aria-hidden />
+                                        {entrega.como}
+                                      </span>
+                                      <span className="solution-pick-delivery-meta">
+                                        <span className="solution-pick-delivery-chip">
+                                          <UserRound size={12} aria-hidden />
+                                          {entrega.responsavel || 'A definir'}
+                                        </span>
+                                        <span className="solution-pick-delivery-chip">
+                                          <CalendarDays size={12} aria-hidden />
+                                          {entrega.prazo}
+                                        </span>
+                                      </span>
+                                    </span>
+                                    <span
+                                      className={`solution-pick-delivery-check ${isChosen ? 'is-selected' : ''}`}
+                                    >
+                                      {isChosen ? (
+                                        <>
+                                          <Check size={14} aria-hidden />
+                                          Escolhida
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus size={14} aria-hidden />
+                                          Escolher
+                                        </>
+                                      )}
+                                    </span>
+                                  </button>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       ) : null}
@@ -481,12 +695,6 @@ export function SolutionPickPanel({
                     </div>
                   ) : null}
 
-                  {isSelected ? (
-                    <span className="solution-pick-selected-badge">
-                      <Check size={14} aria-hidden />
-                      Selecionada
-                    </span>
-                  ) : null}
                 </article>
               </li>
             );
@@ -497,8 +705,8 @@ export function SolutionPickPanel({
       <footer className="solution-pick-footer">
         <p>
           {selected.length > 0
-            ? `${selected.length} ação(ões) selecionada(s) — até ${MAX_SELECT}.`
-            : 'Nenhuma ação selecionada ainda.'}
+            ? `${selected.length} sugestão(ões) personalizada(s) escolhida(s) — até ${MAX_SELECT}.`
+            : 'Nenhuma sugestão personalizada escolhida ainda.'}
         </p>
         <button
           type="button"
@@ -510,6 +718,22 @@ export function SolutionPickPanel({
           Ir para Design
         </button>
       </footer>
+
+      <ToastStack
+        toasts={
+          limitNotice
+            ? [
+                {
+                  id: 'limit',
+                  tone: 'warning',
+                  title: `Limite de ${MAX_SELECT} sugestões atingido`,
+                  message: limitNotice,
+                },
+              ]
+            : []
+        }
+        onDismiss={() => setLimitNotice(null)}
+      />
     </section>
   );
 }

@@ -1,5 +1,5 @@
-/** Origens sempre permitidas além da lista em CORS_ORIGIN (domínio de produção). */
-const TRUSTED_HOST_SUFFIXES = ['.magnusmind.io', '.netlify.app'] as const;
+/** Origens sempre permitidas além da lista explícita em CORS_ORIGIN. */
+const TRUSTED_HOST_SUFFIXES = ['.magnusmind.io'] as const;
 
 export function isCorsOriginAllowed(
   origin: string | undefined,

@@ -286,17 +286,18 @@ body {
   position: absolute;
   left: var(--mouse-x);
   top: var(--mouse-y);
-  width: min(560px, 90vw);
-  height: min(560px, 90vw);
+  width: min(520px, 88vw);
+  height: min(520px, 88vw);
   transform: translate(-50%, -50%);
+  border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(147, 197, 253, 0.22) 0%,
-    rgba(59, 130, 246, 0.12) 35%,
-    rgba(59, 130, 246, 0.04) 55%,
-    transparent 70%
+    rgba(147, 197, 253, 0.16) 0%,
+    rgba(59, 130, 246, 0.09) 28%,
+    rgba(59, 130, 246, 0.035) 52%,
+    transparent 72%
   );
-  filter: blur(48px);
+  filter: blur(56px);
   transition: left 0.12s ease-out, top 0.12s ease-out;
   will-change: left, top;
 }
@@ -464,7 +465,7 @@ body {
   font-size: 1.12rem !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
-  color: #ffbc7d !important;
+  color: #af9270 !important;
 }
 
 .nav-item {
@@ -657,8 +658,7 @@ body {
 /* Viewport fallbacks (mobile menu, full-width main) */
 @media (max-width: 768px) {
   .dashboard-main {
-    padding: var(--spacing-md) !important;
-    padding-top: calc(56px + var(--spacing-md)) !important;
+    padding: var(--page-pad-x, var(--spacing-md)) !important;
   }
 
   .dashboard-home-header {

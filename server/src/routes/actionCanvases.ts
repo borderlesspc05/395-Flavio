@@ -109,12 +109,19 @@ router.post('/suggest', async (req: Request, res: Response, next: NextFunction) 
 
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const existing = await listByUser<ActionCanvas>(COLLECTIONS.actionCanvases, req.userId);
+    const body = req.body as Record<string, unknown>;
+    const cycleId = typeof body.cycleId === 'string' && body.cycleId ? body.cycleId : undefined;
+    const existing = await listByUser<ActionCanvas>(
+      COLLECTIONS.actionCanvases,
+      req.userId,
+      'createdAt',
+      cycleId
+    );
     if (existing.length >= MAX_CANVASES) {
-      throw new AppError(400, `Limite de ${MAX_CANVASES} Action Canvas por usuário.`);
+      throw new AppError(400, `Limite de ${MAX_CANVASES} Action Canvas por ciclo.`);
     }
 
-    const canvas = buildCanvasPayload(req.userId, req.body as Record<string, unknown>);
+    const canvas = buildCanvasPayload(req.userId, body);
     await create(COLLECTIONS.actionCanvases, canvas.id, canvas as unknown as Record<string, unknown>);
     await logActivity(req.userId, 'action_canvas', `Action Canvas criado: ${canvas.nomeIniciativa || 'Sem nome'}`, {
       entidade: 'action_canvas',

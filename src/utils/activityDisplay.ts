@@ -9,7 +9,7 @@ import {
 import type { Activity as ActivityItem } from '../types';
 
 export const ACTIVITY_TYPE_LABELS: Record<string, string> = {
-  chat: 'Consultoria IA',
+  chat: 'Chat Sprint',
   objective: 'Objetivo',
   team: 'Equipe',
   team_email: 'E-mail equipe',
@@ -47,7 +47,7 @@ export function activityTypeIcon(type: string): LucideIcon {
 }
 
 export function activityLinkForType(type: string): string | null {
-  if (type === 'chat') return '/dashboard/minha-equipe?tab=consultoria';
+  if (type === 'chat') return '/dashboard/inicio';
   if (type === 'objective' || type === 'action_canvas') return '/dashboard/objetivos';
   if (type === 'team' || type === 'team_email') return '/dashboard/minha-equipe';
   if (type === 'report') return '/dashboard/relatorios';

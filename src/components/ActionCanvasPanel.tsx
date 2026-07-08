@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -38,10 +38,10 @@ const STEPS = [
   { id: 4, title: 'Sign-off', hint: 'Encerre e envie ao MID' },
 ] as const;
 
-const STATUS_OPTIONS: { value: DeliveryStatus; label: string; emoji: string }[] = [
-  { value: 'verde', label: 'No prazo', emoji: '🟢' },
-  { value: 'amarelo', label: 'Atenção', emoji: '🟡' },
-  { value: 'vermelho', label: 'Atrasado', emoji: '🔴' },
+const STATUS_OPTIONS: { value: DeliveryStatus; label: string }[] = [
+  { value: 'verde', label: 'No prazo' },
+  { value: 'amarelo', label: 'Atenção' },
+  { value: 'vermelho', label: 'Atrasado' },
 ];
 
 function newId(prefix: string) {
@@ -121,7 +121,7 @@ function stepDone(step: number, draft: ActionCanvas): boolean {
 
 interface ActionCanvasPanelProps {
   onCanvasClosed?: () => void;
-  /** Diagnóstico concluído — necessário para gerar com IA */
+  /** Diagnóstico concluído — necessário para gerar automaticamente */
   canUseAi?: boolean;
 }
 
@@ -230,7 +230,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
           state: {
             autoGenerate: true,
             midConcludeNotice:
-              'Action Canvas encerrado com sign-off positivo. Gerando relatório Domínio (MID)…',
+              'Action Canvas encerrado com sign-off positivo. Gerando relatório Domínio (MID)...',
           },
         });
         return;
@@ -316,7 +316,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
     if (!canUseAi || canvases.length >= MAX_CANVASES) return;
     const user = auth.currentUser;
     if (!user) {
-      setError('Faça login para gerar Action Canvas com IA.');
+      setError('Faça login para gerar iniciativas.');
       return;
     }
 
@@ -341,7 +341,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
         setAiModalOpen(false);
       }
     } catch {
-      setError('Não foi possível gerar Action Canvas com IA. Verifique o servidor.');
+      setError('Não foi possível gerar iniciativas. Verifique o servidor.');
       setAiModalOpen(false);
     } finally {
       setAiLoading(false);
@@ -396,7 +396,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
       if (created[0]) openCanvas(created[0]);
       setAiModalOpen(false);
       setNotice(
-        `${created.length} Action Canvas criado${created.length > 1 ? 's' : ''} pela IA. Revise e salve se necessário.`
+        `${created.length} Action Canvas criado${created.length > 1 ? 's' : ''} automaticamente. Revise e salve se necessário.`
       );
       void syncMagnusMemoryAfterCanvasChange();
       onCanvasClosed?.();
@@ -419,7 +419,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
             03
           </span>
           <div>
-            <span className="action-canvas-eyebrow">MAGNUS WAVES™ · Difusão</span>
+            <span className="action-canvas-eyebrow">SPRINT WAVES™ · Difusão</span>
             <h2 id="action-canvas-heading" className="action-canvas-panel-title">
               Action Canvas
             </h2>
@@ -446,14 +446,14 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
             disabled={saving || aiLoading || !canUseAi || slotsLeft <= 0}
             title={
               !canUseAi
-                ? 'Complete o diagnóstico Magnus Waves primeiro'
+                ? 'Complete o diagnóstico Sprint Waves primeiro'
                 : slotsLeft <= 0
                   ? 'Limite de 5 Action Canvas atingido'
-                  : 'Gerar iniciativas com IA a partir do diagnóstico e da escolha de caminho'
+                  : 'Gerar iniciativas a partir do diagnóstico e da escolha de caminho'
             }
           >
             <Sparkles size={17} />
-            Gerar com IA
+            Gerar iniciativas
           </button>
           <button
             type="button"
@@ -523,8 +523,15 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                           <span className="ac-badge ac-badge-draft">Em andamento</span>
                         )}
                         {sum.total > 0 && (
-                          <span className="ac-badge">
-                            {sum.verde}🟢 {sum.vermelho}🔴
+                          <span className="ac-badge ac-badge-counts">
+                            <span className="ac-count">
+                              <i className="ac-count-dot ac-count-dot--verde" aria-hidden />
+                              {sum.verde}
+                            </span>
+                            <span className="ac-count">
+                              <i className="ac-count-dot ac-count-dot--vermelho" aria-hidden />
+                              {sum.vermelho}
+                            </span>
                           </span>
                         )}
                       </div>
@@ -759,7 +766,8 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                                     onClick={() => !readOnly && updateDelivery(i, { status: o.value })}
                                     disabled={readOnly}
                                   >
-                                    {o.emoji} {o.label}
+                                    <span className="status-pill-dot" aria-hidden />
+                                    {o.label}
                                   </button>
                                 ))}
                               </div>
@@ -924,9 +932,9 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
           <div className="action-canvas-ai-modal">
             <header className="action-canvas-ai-modal-head">
               <div>
-                <h3 id="ac-ai-title">Action Canvas sugeridos pela IA</h3>
+                <h3 id="ac-ai-title">Iniciativas sugeridas</h3>
                 <p>
-                  Com base no diagnóstico, escolha de caminho e memória Magnus Waves. Selecione e importe — você pode editar
+                  Com base no diagnóstico, escolha de caminho e memória Sprint Waves. Selecione e importe — você pode editar
                   depois.
                 </p>
               </div>
@@ -947,7 +955,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
             )}
 
             {aiLoading ? (
-              <div className="action-canvas-ai-loading">Gerando iniciativas…</div>
+              <div className="action-canvas-ai-loading">Gerando iniciativas...</div>
             ) : (
               <ul className="action-canvas-ai-list">
                 {aiSuggestions.map((s, i) => (
@@ -985,7 +993,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                 disabled={aiLoading || aiImporting || aiSelected.size === 0}
                 onClick={() => void importAiSuggestions()}
               >
-                {aiImporting ? 'Importando…' : `Importar ${aiSelected.size} selecionado(s)`}
+                {aiImporting ? 'Importando...' : `Importar ${aiSelected.size} selecionado(s)`}
               </button>
             </footer>
           </div>

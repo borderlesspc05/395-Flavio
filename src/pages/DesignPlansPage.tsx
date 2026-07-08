@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   ArrowRight,
   CheckCircle2,
   Loader2,
-  MessageCircle,
   Plus,
   Sparkles,
   Trash2,
@@ -22,6 +22,7 @@ import { syncMagnusMemoryAfterCanvasChange } from '../services/magnusMemorySync'
 import { readStashedEvolution } from '../services/evolutionLoopStorage';
 import { enrichDraftObjetivo } from '../utils/enrichObjetivoEspecifico';
 import type { ActionCanvas, SuggestedActionCanvasDraft } from '../types';
+import { ToastStack } from '../components/ui/ToastStack';
 
 type EditablePlan = SuggestedActionCanvasDraft & {
   localId: string;
@@ -76,6 +77,15 @@ function fromDraft(
 
 function normalizeTitle(value: string) {
   return value.trim().toLowerCase();
+}
+
+function extractApiError(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as { error?: string; message?: string } | undefined;
+    const serverMessage = data?.error || data?.message;
+    if (serverMessage) return serverMessage;
+  }
+  return fallback;
 }
 
 function toCreateBody(plan: EditablePlan) {
@@ -158,6 +168,18 @@ export function DesignPlansPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const syncTimers = useRef<Record<string, number>>({});
 
+  useEffect(() => {
+    if (!error) return;
+    const timer = window.setTimeout(() => setError(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [error]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
   const validatedCount = useMemo(() => plans.filter((p) => p.validated).length, [plans]);
   const allValidated = plans.length > 0 && validatedCount === plans.length;
   const activePlan = useMemo(
@@ -223,7 +245,7 @@ export function DesignPlansPage() {
       syncTimers.current[plan.localId] = window.setTimeout(() => {
         setSyncingId(plan.localId);
         void persistCanvas(plan)
-          .catch(() => setError('Não foi possível sincronizar com o Action Canvas.'))
+          .catch(() => setError('Não foi possível sincronizar o plano.'))
           .finally(() => setSyncingId(null));
       }, 450);
     },
@@ -250,7 +272,7 @@ export function DesignPlansPage() {
       try {
         await actionCanvasesApi.remove(plan.canvasId);
       } catch {
-        setError('Não foi possível remover o canvas vinculado.');
+        setError('Não foi possível remover o plano vinculado.');
         return;
       }
     }
@@ -282,21 +304,15 @@ export function DesignPlansPage() {
           p.localId === localId ? { ...p, validated: true, canvasId: canvasId ?? p.canvasId } : p
         )
       );
-      setNotice(`Plano "${plan.nomeIniciativa}" validado e sincronizado com o Action Canvas.`);
+      setNotice(`Plano "${plan.nomeIniciativa}" validado e sincronizado na Difusão.`);
       await syncMagnusMemoryAfterCanvasChange();
-    } catch {
-      setError('Erro ao publicar no Action Canvas. Tente novamente.');
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao publicar o plano. Tente novamente.'));
     } finally {
       setSyncingId(null);
     }
   };
 
-  const openEnrichmentChat = (plan: EditablePlan) => {
-    const message = `Quero enriquecer o plano de ação "${plan.nomeIniciativa}". Objetivo: ${plan.objetivoEspecifico}. Me ajude a detalhar entregas, riscos e como executar.`;
-    navigate('/dashboard/minha-equipe?tab=consultoria', {
-      state: { prefillMessage: message },
-    });
-  };
 
   const concludeDesign = async () => {
     if (!userId || !allValidated) return;
@@ -322,15 +338,15 @@ export function DesignPlansPage() {
           },
         },
       });
-    } catch {
-      setError('Erro ao concluir o Design. Tente novamente.');
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao concluir o Design. Tente novamente.'));
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <p className="form-loading">Carregando planos de Design…</p>;
+    return <p className="form-loading">Carregando planos de Design...</p>;
   }
 
   if (plans.length === 0) {
@@ -349,7 +365,7 @@ export function DesignPlansPage() {
         <p>
           {evolution
             ? 'Crie os planos desta nova onda com base nos aprendizados do ciclo anterior.'
-            : 'Conclua o diagnóstico e escolha ações no Solution Pick (1.5), ou use a Consultoria IA na Equipe para chegar aqui.'}
+            : 'Conclua o diagnóstico e escolha ações no Solution Pick (1.5) para chegar aqui.'}
         </p>
         <div className="design-plans-empty-actions">
           {evolution ? (
@@ -359,9 +375,6 @@ export function DesignPlansPage() {
           ) : null}
           <Link to="/dashboard/initial-form" className="design-plans-link">
             Ir para o diagnóstico
-          </Link>
-          <Link to="/dashboard/minha-equipe?tab=consultoria" className="design-plans-link">
-            Consultoria IA na Equipe
           </Link>
         </div>
       </div>
@@ -379,16 +392,20 @@ export function DesignPlansPage() {
           <p>{evolutionCarryOver.nextWave.rationale}</p>
         </div>
       )}
-      <header className="design-plans-header">
-        <div>
-          <span className="design-plans-kicker">Onda 2 · Design</span>
-          <h1>Valide seus planos de ação</h1>
-          <p>
-            Valide cada plano selecionado, construa junto com a IA. Após a aprovação, os planos são publicados na
-            Difusão.
-          </p>
+      <header className="design-plans-header sprint-wave-header">
+        <div className="sprint-wave-title-group">
+          <div className="sprint-wave-icon-wrapper" aria-hidden>
+            <Sparkles size={26} />
+          </div>
+          <div className="sprint-wave-title-copy">
+            <span className="design-plans-kicker sprint-wave-eyebrow">SPRINT WAVES™ · Onda 2</span>
+            <h1 className="sprint-wave-title">Design</h1>
+            <p className="sprint-wave-subtitle">
+              Valide seus planos de ação e confirme apenas o que estiver pronto para ser publicado na Difusão.
+            </p>
+          </div>
         </div>
-        <div className="design-plans-progress" aria-label={`${validatedCount} de ${plans.length} planos validados`}>
+        <div className="design-plans-progress sprint-wave-side" aria-label={`${validatedCount} de ${plans.length} planos validados`}>
           <strong>
             {validatedCount}/{plans.length}
           </strong>
@@ -396,16 +413,13 @@ export function DesignPlansPage() {
         </div>
       </header>
 
-      {notice && (
-        <p className="design-plans-notice is-success" role="status">
-          {notice}
-        </p>
-      )}
-      {error && (
-        <p className="design-plans-notice is-error" role="alert">
-          {error}
-        </p>
-      )}
+      <ToastStack
+        toasts={[
+          ...(error ? [{ id: 'error', tone: 'error' as const, message: error }] : []),
+          ...(notice ? [{ id: 'notice', tone: 'success' as const, message: notice }] : []),
+        ]}
+        onDismiss={(id) => (id === 'error' ? setError(null) : setNotice(null))}
+      />
 
       <div className="design-plans-workspace design-plans-workspace--single">
         <div className="design-plans-editor">
@@ -436,7 +450,7 @@ export function DesignPlansPage() {
                   {plan.validated && (
                     <span className="design-plan-validated">
                       <CheckCircle2 size={15} aria-hidden />
-                      No canvas
+                      Validado
                     </span>
                   )}
                   {syncingId === plan.localId && (
@@ -460,7 +474,7 @@ export function DesignPlansPage() {
                     rows={5}
                     value={plan.objetivoEspecifico}
                     onChange={(e) => updatePlan(plan.localId, { objetivoEspecifico: e.target.value })}
-                    placeholder="Ex.: Até 30/09, reduzir em 20% o retrabalho no processo X, com piloto em 2 squads, métrica semanal validada pelo sponsor e evidências nas entregas do canvas."
+                    placeholder="Ex.: Até 30/09, reduzir em 20% o retrabalho no processo X, com piloto em 2 squads, métrica semanal validada pelo sponsor e evidências nas entregas."
                   />
                 </label>
                 <div className="design-plan-row">
@@ -483,7 +497,7 @@ export function DesignPlansPage() {
                 </label>
 
                 <div className="design-plan-deliveries">
-                  <h3>Entregas sugeridas</h3>
+                  <h3>Sugestões personalizadas para você</h3>
                   <ul>
                     {plan.entregas.map((e, i) => (
                       <li key={i}>
@@ -494,10 +508,6 @@ export function DesignPlansPage() {
                 </div>
 
                 <div className="design-plan-actions" onClick={(e) => e.stopPropagation()}>
-                  <button type="button" className="design-plan-btn is-ghost" onClick={() => openEnrichmentChat(plan)}>
-                    <MessageCircle size={16} aria-hidden />
-                    Conversar com IA
-                  </button>
                   {!plan.validated && (
                     <button
                       type="button"
@@ -505,7 +515,7 @@ export function DesignPlansPage() {
                       onClick={() => void validatePlan(plan.localId)}
                       disabled={syncingId === plan.localId}
                     >
-                      Validar e criar canvas
+                      Validar plano
                     </button>
                   )}
                   <button

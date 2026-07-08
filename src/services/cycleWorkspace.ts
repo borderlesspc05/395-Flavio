@@ -23,6 +23,16 @@ export async function getActiveCycleIdRemote(userId: string): Promise<string | n
   return typeof id === 'string' ? id : null;
 }
 
+export async function clearActiveCycleId(userId: string): Promise<void> {
+  setActiveCycleIdLocal(null);
+  const ref = doc(db, COLLECTION, userId);
+  await setDoc(
+    ref,
+    { activeCycleId: null, updatedAt: serverTimestamp() },
+    { merge: true }
+  );
+}
+
 export async function setActiveCycleId(userId: string, cycleId: string): Promise<void> {
   setActiveCycleIdLocal(cycleId);
   const ref = doc(db, COLLECTION, userId);

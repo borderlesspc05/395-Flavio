@@ -2,7 +2,8 @@ export class AppError extends Error {
   constructor(
     public statusCode: number,
     message: string,
-    public code?: string
+    public code?: string,
+    public retryAfterSeconds?: number
   ) {
     super(message);
     this.name = 'AppError';
