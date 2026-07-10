@@ -12,7 +12,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CORS_ORIGIN
-        value: http://localhost:5173,https://app.magnusmind.io,https://395-flavio2.netlify.app,https://395-flavio.netlify.app
+        value: http://localhost:5173,https://app.magnusmind.io,https://395-flavio2.netlify.app,https://395-flavio.netlify.app,https://melodic-cupcake-80e777.netlify.app
       - key: FRONTEND_URL
         value: https://app.magnusmind.io
       # IA real — cole OPENAI_API_KEY no painel (Secret); mesma chave do server/.env local
