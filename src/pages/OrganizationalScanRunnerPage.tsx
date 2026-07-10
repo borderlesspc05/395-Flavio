@@ -1,7 +1,7 @@
 ﻿import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { ArrowLeft, CircleAlert, ClipboardCheck, Save } from 'lucide-react';
+import { ArrowLeft, CircleAlert, ClipboardCheck, Lock, RotateCcw, Save } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { ScanFieldControl } from '../components/scans/ScanFieldControl';
 import { ORGANIZATIONAL_SCAN_MAP } from '../constants/organizationalScans';
@@ -9,7 +9,7 @@ import { buildDiagnosticContext, createEmptyDiagnosticData } from '../constants/
 import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
-import { getInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
+import { getInitialForm, reopenInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
 import { syncMagnusMemoryToServer } from '../services/magnusMemorySync';
 import {
   getScanAnswersFromForm,
@@ -41,9 +41,12 @@ export function OrganizationalScanRunnerPage() {
   const [savingDraft, setSavingDraft] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<InitialFormData>(createEmptyDiagnosticData());
+  const [formCompletedAt, setFormCompletedAt] = useState<Date | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
   const [showCycleNameModal, setShowCycleNameModal] = useState(false);
+  const [showRedoConfirm, setShowRedoConfirm] = useState(false);
+  const [redoing, setRedoing] = useState(false);
   const [cycleName, setCycleName] = useState('');
   const [cycleNameError, setCycleNameError] = useState<string | null>(null);
 
@@ -58,6 +61,7 @@ export function OrganizationalScanRunnerPage() {
     [scan, answers],
   );
   const status = useMemo(() => (scan ? getScanStatus(scan, answers) : 'not_started'), [scan, answers]);
+  const isLocked = Boolean(formCompletedAt);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null));
@@ -69,8 +73,11 @@ export function OrganizationalScanRunnerPage() {
     let cancelled = false;
     setLoading(true);
     getInitialForm(userId)
-      .then(({ data }) => {
-        if (!cancelled) setFormData(data);
+      .then(({ data, completedAt }) => {
+        if (!cancelled) {
+          setFormData(data);
+          setFormCompletedAt(completedAt);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -82,7 +89,7 @@ export function OrganizationalScanRunnerPage() {
 
   const setAnswer = useCallback(
     (fieldId: string, value: DiagnosticFieldValue) => {
-      if (!scan) return;
+      if (!scan || isLocked) return;
       setFormData((prev) => mergeScanAnswer(prev, scan.id, fieldId, value));
       setErrors((prev) => {
         if (!prev[fieldId]) return prev;
@@ -92,7 +99,7 @@ export function OrganizationalScanRunnerPage() {
       });
       setFeedback(null);
     },
-    [scan],
+    [scan, isLocked],
   );
 
   const validateComplete = () => {
@@ -122,7 +129,7 @@ export function OrganizationalScanRunnerPage() {
   };
 
   const handleDraft = async () => {
-    if (!userId || !scan) return;
+    if (!userId || !scan || isLocked) return;
     setSavingDraft(true);
     setFeedback(null);
     try {
@@ -136,7 +143,7 @@ export function OrganizationalScanRunnerPage() {
   };
 
   const openCycleNameModal = () => {
-    if (!userId || !validateComplete()) return;
+    if (!userId || isLocked || !validateComplete()) return;
     const fromCreate = (location.state as { newProjectName?: string } | null)?.newProjectName?.trim();
     const current = activeCycle?.label?.trim() ?? '';
     const isAutoLabel = /^Ciclo \d+/i.test(current);
@@ -158,6 +165,7 @@ export function OrganizationalScanRunnerPage() {
     setCycleNameError(null);
     try {
       const at = await saveInitialForm(userId, formData);
+      setFormCompletedAt(at);
       const diagnosticContext = buildDiagnosticContext(formData);
       await syncMagnusMemoryToServer({ diagnosticContext });
       if (activeCycle) {
@@ -192,7 +200,31 @@ export function OrganizationalScanRunnerPage() {
 
   const handleComplete = (event: FormEvent) => {
     event.preventDefault();
+    if (isLocked) return;
     openCycleNameModal();
+  };
+
+  const handleRedoConfirm = async () => {
+    if (!userId) return;
+    setRedoing(true);
+    setFeedback(null);
+    try {
+      await reopenInitialForm(userId);
+      setFormCompletedAt(null);
+      if (activeCycle) {
+        await updateDiagnosticCycle(activeCycle.id, {
+          status: 'draft',
+          completedAt: null,
+        });
+        await refreshCycles();
+      }
+      setShowRedoConfirm(false);
+      setFeedback('Diagnóstico reaberto para edição.');
+    } catch {
+      setFeedback('Não foi possível refazer o diagnóstico. Tente novamente.');
+    } finally {
+      setRedoing(false);
+    }
   };
 
   if (!scan || scan.comingSoon || scan.id === 'fullScan') {
@@ -212,7 +244,7 @@ export function OrganizationalScanRunnerPage() {
 
   return (
     <>
-      <form className="organizational-scan-runner" onSubmit={handleComplete}>
+      <form className={`organizational-scan-runner ${isLocked ? 'is-locked' : ''}`} onSubmit={handleComplete}>
         <header className="organizational-scan-runner-header">
           <button
             type="button"
@@ -232,7 +264,7 @@ export function OrganizationalScanRunnerPage() {
           </p>
           <div className="organizational-scans-progress" aria-label="Progresso deste scan">
             <div>
-              <strong>{getScanStatusLabel(status)}</strong>
+              <strong>{isLocked ? 'Concluído' : getScanStatusLabel(status)}</strong>
               <span> neste tema</span>
             </div>
             <span>
@@ -240,6 +272,13 @@ export function OrganizationalScanRunnerPage() {
             </span>
           </div>
         </header>
+
+        {isLocked ? (
+          <div className="organizational-scan-readonly-banner" role="status">
+            <Lock size={16} aria-hidden />
+            <span>Diagnóstico concluído e bloqueado para edição.</span>
+          </div>
+        ) : null}
 
         {feedback ? (
           <div className="diagnostic-feedback" role="status">
@@ -259,6 +298,7 @@ export function OrganizationalScanRunnerPage() {
                   value={answers[field.id]}
                   error={errors[field.id]}
                   onChange={(value) => setAnswer(field.id, value)}
+                  readOnly={isLocked}
                 />
               ))}
             </div>
@@ -269,21 +309,72 @@ export function OrganizationalScanRunnerPage() {
           <button type="button" className="diagnostic-secondary-button" onClick={() => navigate('/dashboard/scans')}>
             Voltar
           </button>
-          <div className="organizational-scan-actions-group">
-            <button
-              type="button"
-              className="diagnostic-secondary-button"
-              onClick={() => void handleDraft()}
-              disabled={savingDraft || saving}
+          {showRedoConfirm ? (
+            <div
+              className="organizational-scan-redo-confirm"
+              role="alertdialog"
+              aria-labelledby="scan-redo-title"
             >
-              <Save size={16} aria-hidden />
-              {savingDraft ? 'Salvando...' : 'Salvar rascunho'}
-            </button>
-            <button type="submit" className="diagnostic-primary-button" disabled={saving || savingDraft}>
-              <ClipboardCheck size={16} aria-hidden />
-              {saving ? 'Concluindo...' : 'Concluir diagnóstico'}
-            </button>
-          </div>
+              <p id="scan-redo-title">Tem certeza que quer refazer?</p>
+              <div className="organizational-scan-redo-confirm-actions">
+                <button
+                  type="button"
+                  className="organizational-scan-redo-cancel"
+                  disabled={redoing}
+                  onClick={() => setShowRedoConfirm(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="organizational-scan-redo-confirm-btn"
+                  disabled={redoing}
+                  onClick={() => void handleRedoConfirm()}
+                >
+                  {redoing ? 'Refazendo...' : 'Sim, refazer'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="organizational-scan-actions-group">
+              {isLocked ? (
+                <>
+                  <button
+                    type="button"
+                    className="diagnostic-secondary-button"
+                    onClick={() => navigate('/dashboard/solution-pick')}
+                  >
+                    Ir para Solution Pick
+                  </button>
+                  <button
+                    type="button"
+                    className="diagnostic-primary-button"
+                    onClick={() => setShowRedoConfirm(true)}
+                    disabled={redoing}
+                  >
+                    <RotateCcw size={16} aria-hidden />
+                    Refazer diagnóstico
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="diagnostic-secondary-button"
+                    onClick={() => void handleDraft()}
+                    disabled={savingDraft || saving}
+                  >
+                    <Save size={16} aria-hidden />
+                    {savingDraft ? 'Salvando...' : 'Salvar rascunho'}
+                  </button>
+                  <button type="submit" className="diagnostic-primary-button" disabled={saving || savingDraft}>
+                    <ClipboardCheck size={16} aria-hidden />
+                    {saving ? 'Concluindo...' : 'Concluir diagnóstico'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </form>
 

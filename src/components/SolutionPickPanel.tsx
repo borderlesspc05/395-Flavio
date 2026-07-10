@@ -406,7 +406,7 @@ export function SolutionPickPanel({
           </span>
           <h2>Escolha as ações para o Design</h2>
           <p>
-            A IA pesquisou planos de ação com base no diagnóstico. Selecione as que fazem sentido — quanto
+            O Sprint pesquisou planos de ação com base no diagnóstico. Selecione as que fazem sentido — quanto
             maior o score, maior a probabilidade de impacto segundo o que você reportou.
           </p>
         </div>

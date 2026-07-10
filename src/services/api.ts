@@ -15,6 +15,7 @@ import {
   normalizeReport,
   normalizeSuggestResponse,
 } from './apiNormalize';
+import type { TeamMemberDevelopmentEntry } from '../types';
 
 /** Em dev, usa API local por padrão. Para forçar remoto em dev, defina VITE_USE_LOCAL_API=false. */
 const API_BASE_URL =
@@ -173,6 +174,15 @@ export const teamApi = {
         { params: scopeParams(null) }
       )
       .then((r) => r.data as { ok: boolean; demoMode: boolean; preview?: string }),
+  listDevelopment: (id: string) =>
+    api.get(`/api/team-members/${id}/development`).then((r) => r.data as TeamMemberDevelopmentEntry[]),
+  addDevelopment: (id: string, data: { score: number; notes?: string }) =>
+    api
+      .post(`/api/team-members/${id}/development`, {
+        ...data,
+        cycleId: getActiveCycleId() || undefined,
+      })
+      .then((r) => r.data as { entry: TeamMemberDevelopmentEntry; member: Record<string, unknown> }),
 };
 
 export const workspaceApi = {

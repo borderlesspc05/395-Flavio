@@ -137,7 +137,7 @@ export async function updateDiagnosticCycleForUser(
     gatePath: 'A' | 'B';
     gateRationale: string;
     formData: Record<string, unknown>;
-    completedAt: string;
+    completedAt: string | null;
     archivedAt: string | true;
   }>
 ): Promise<ServerDiagnosticCycle> {

@@ -1,4 +1,4 @@
-/* Equipe · Difusão — editorial human sprint */
+/* Equipe — People Sprint (Onda 3) */
 
 .minha-equipe {
   max-width: 1280px;
@@ -64,33 +64,21 @@
   overflow: hidden;
 }
 
-.minha-equipe .equipe-header {
-  margin-bottom: 1.5rem;
-  padding: 1.35rem 1.5rem;
-  border-radius: 18px;
-  border: 1px solid rgba(175, 146, 112, 0.2);
-  background:
-    radial-gradient(ellipse 80% 60% at 10% 0%, rgba(175, 146, 112, 0.1), transparent 55%),
-    linear-gradient(165deg, rgba(22, 30, 42, 0.92), rgba(14, 19, 28, 0.96));
-  box-shadow: 0 20px 50px -30px rgba(0, 0, 0, 0.65);
-}
-
-.minha-equipe .equipe-title {
-  font-family: 'Roboto Slab', Georgia, serif;
-  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
-  color: #f3ead8;
-  letter-spacing: -0.02em;
-}
-
-.minha-equipe .equipe-subtitle {
-  margin-top: 0.35rem;
-  color: rgba(241, 235, 224, 0.68);
-  font-size: 0.92rem;
-  line-height: 1.5;
-  max-width: 52ch;
+.minha-equipe .equipe-section .section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .minha-equipe .add-member-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
   font-family: 'Sora', sans-serif;
   letter-spacing: 0.03em;
   border-radius: 12px;
@@ -126,6 +114,15 @@
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
+.minha-equipe .member-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.minha-equipe .member-card::after {
+  display: none;
+}
+
 .minha-equipe .member-card:hover {
   transform: translateY(-2px);
   border-color: rgba(175, 146, 112, 0.32);
@@ -137,11 +134,25 @@
   color: #f3ead8;
 }
 
+.minha-equipe .member-actions {
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+.minha-equipe .member-card-footer {
+  position: relative;
+  z-index: 3;
+}
+
 .minha-equipe .action-button {
+  position: relative;
+  z-index: 4;
   border-radius: 10px;
   border: 1px solid rgba(175, 146, 112, 0.2);
   background: rgba(6, 18, 31, 0.5);
   color: #d9c8a8;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .minha-equipe .action-button:hover {
@@ -149,33 +160,277 @@
   color: #fff;
 }
 
-/* Modal com scroll funcional */
+.minha-equipe .action-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+/* Development tracking */
+.member-development {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(175, 146, 112, 0.16);
+}
+
+.member-development-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.member-development-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(217, 200, 168, 0.85);
+}
+
+.dev-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.35rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-weight: 600;
+}
+
+.dev-trend--improved {
+  background: rgba(145, 211, 177, 0.14);
+  color: #91d3b1;
+  border: 1px solid rgba(145, 211, 177, 0.28);
+}
+
+.dev-trend--declined {
+  background: rgba(252, 165, 165, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(252, 165, 165, 0.28);
+}
+
+.dev-trend--stable {
+  background: rgba(175, 146, 112, 0.12);
+  color: #d9c8a8;
+  border: 1px solid rgba(175, 146, 112, 0.24);
+}
+
+.dev-trend-delta {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.dev-checkin-button {
+  padding: 0.28rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(175, 146, 112, 0.1);
+  color: #e8dcc8;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dev-checkin-button:hover {
+  background: rgba(175, 146, 112, 0.2);
+  border-color: rgba(201, 168, 124, 0.45);
+}
+
+.member-development-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dev-timeline-item {
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: rgba(241, 235, 224, 0.72);
+}
+
+.dev-timeline-date {
+  font-variant-numeric: tabular-nums;
+  color: rgba(217, 200, 168, 0.7);
+  min-width: 3.2rem;
+}
+
+.dev-timeline-score {
+  font-weight: 700;
+  color: #f3ead8;
+  font-variant-numeric: tabular-nums;
+}
+
+.dev-timeline-trend {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+}
+
+.dev-timeline-notes {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(241, 235, 224, 0.55);
+}
+
+.member-development-empty {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: rgba(241, 235, 224, 0.5);
+}
+
+.membro-modal-container--compact {
+  width: min(480px, 100%);
+}
+
+.membro-form-field textarea {
+  width: 100%;
+  padding: 0.62rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  background: rgba(6, 18, 31, 0.55);
+  color: #f3ead8;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.membro-form-field textarea:focus-visible,
+.membro-form-field input:focus-visible,
+.membro-form-field select:focus-visible {
+  outline: none;
+  border-color: rgba(201, 168, 124, 0.55);
+  box-shadow: 0 0 0 3px rgba(175, 146, 112, 0.18);
+}
+
+/* —— Modal overlay (portal no body) —— */
+@keyframes membro-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes membro-modal-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .membro-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 10050;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: clamp(1rem, 4vh, 2.5rem) 1rem;
+  padding:
+    max(1rem, env(safe-area-inset-top, 0px))
+    max(1rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px))
+    max(1rem, env(safe-area-inset-left, 0px));
   overflow-y: auto;
-  background: rgba(4, 8, 14, 0.72);
-  backdrop-filter: blur(6px);
+  overscroll-behavior: contain;
+  background: rgba(4, 8, 14, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: membro-modal-fade-in 0.22s ease;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(175, 146, 112, 0.35) transparent;
+}
+
+.membro-modal-overlay::-webkit-scrollbar {
+  width: 8px;
+}
+
+.membro-modal-overlay::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.membro-modal-overlay::-webkit-scrollbar-thumb {
+  background: rgba(175, 146, 112, 0.35);
+  border-radius: 999px;
 }
 
 .membro-modal-container {
   width: min(720px, 100%);
-  max-height: none;
+  max-height: min(calc(100dvh - 2rem), 720px);
+  margin: auto;
   display: flex;
   flex-direction: column;
-  overflow: visible !important;
-  margin: auto 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  animation: membro-modal-rise-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.membro-modal-container--compact {
+  max-height: min(calc(100dvh - 2rem), 520px);
 }
 
 .membro-modal-header {
   flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
   padding: 1.1rem 1.25rem 0.85rem;
   border-bottom: 1px solid rgba(175, 146, 112, 0.14);
+}
+
+.membro-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(175, 146, 112, 0.2);
+  border-radius: 10px;
+  background: rgba(6, 18, 31, 0.45);
+  color: #d9c8a8;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.membro-modal-close:hover:not(:disabled) {
+  background: rgba(175, 146, 112, 0.16);
+  border-color: rgba(201, 168, 124, 0.45);
+  color: #f3ead8;
+}
+
+.membro-modal-close:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .membro-modal-hint {
@@ -190,23 +445,42 @@
 }
 
 .membro-modal-title {
+  margin: 0;
   font-family: 'Roboto Slab', Georgia, serif;
   color: #f3ead8;
   font-size: 1.15rem;
+  line-height: 1.3;
+  padding-right: 0.25rem;
+}
+
+.membro-modal-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .membro-modal-form {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
-  max-height: min(68vh, 640px);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1rem 1.25rem 0.5rem;
+  padding: 1rem 1.25rem 0.25rem;
   scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(175, 146, 112, 0.35) transparent;
+}
+
+.membro-modal-form--checkin {
+  max-height: none;
 }
 
 .membro-modal-form::-webkit-scrollbar {
   width: 8px;
+}
+
+.membro-modal-form::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .membro-modal-form::-webkit-scrollbar-thumb {
@@ -216,14 +490,112 @@
 
 .membro-modal-actions {
   flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.65rem;
   padding: 0.85rem 1.25rem 1.1rem;
   border-top: 1px solid rgba(175, 146, 112, 0.14);
   background: linear-gradient(180deg, rgba(16, 22, 32, 0.4), rgba(16, 22, 32, 0.98));
+}
+
+.membro-button-primary,
+.membro-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 12px;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.membro-button-secondary {
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(6, 18, 31, 0.55);
+  color: #d9c8a8;
+}
+
+.membro-button-secondary:hover:not(:disabled) {
+  border-color: rgba(201, 168, 124, 0.45);
+  color: #f3ead8;
+}
+
+.membro-button-primary--bronze {
+  border: none !important;
+  background: linear-gradient(135deg, #c9a87c, #af9270) !important;
+  color: #1a1510 !important;
+  box-shadow: 0 8px 24px -10px rgba(175, 146, 112, 0.55) !important;
+}
+
+.membro-button-primary--bronze:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -10px rgba(201, 168, 124, 0.6);
+}
+
+.membro-button-primary:disabled,
+.membro-button-secondary:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+
+.membro-field-error {
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #fecaca;
+  background: rgba(252, 165, 165, 0.1);
+  border: 1px solid rgba(252, 165, 165, 0.28);
+}
+
+.membro-modal-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2rem 1.5rem 2.25rem;
+}
+
+.membro-modal-success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  color: #91d3b1;
+  background: rgba(145, 211, 177, 0.12);
+  border: 1px solid rgba(145, 211, 177, 0.28);
+  margin-bottom: 0.25rem;
+}
+
+.membro-modal-success-title {
+  margin: 0;
+  font-family: 'Roboto Slab', Georgia, serif;
+  font-size: 1.1rem;
+  color: #f3ead8;
+}
+
+.membro-modal-success-copy {
+  margin: 0;
+  max-width: 28ch;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: rgba(241, 235, 224, 0.68);
 }
 
 .membro-form-row {
@@ -286,12 +658,11 @@
 }
 
 @media (max-width: 640px) {
-  .minha-equipe .header-content {
-    flex-direction: column;
-    align-items: stretch;
+  .minha-equipe .equipe-section .section-actions {
+    width: 100%;
   }
 
-  .minha-equipe .add-member-button {
+  .minha-equipe .equipe-section .add-member-button {
     width: 100%;
     justify-content: center;
   }
@@ -300,7 +671,28 @@
     grid-template-columns: 1fr;
   }
 
-  .membro-modal-form {
-    max-height: min(72vh, 560px);
+  .membro-modal-overlay {
+    align-items: flex-end;
+    padding:
+      max(0.5rem, env(safe-area-inset-top, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px))
+      max(0.75rem, env(safe-area-inset-bottom, 0px))
+      max(0.75rem, env(safe-area-inset-left, 0px));
+  }
+
+  .membro-modal-container {
+    width: 100%;
+    max-height: min(calc(100dvh - 1rem), 92dvh);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .membro-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .membro-modal-actions .membro-button-primary,
+  .membro-modal-actions .membro-button-secondary {
+    width: 100%;
   }
 }

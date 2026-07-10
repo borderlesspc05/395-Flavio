@@ -79,7 +79,12 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
         req.body?.formData && typeof req.body.formData === 'object'
           ? (req.body.formData as Record<string, unknown>)
           : undefined,
-      completedAt: typeof req.body?.completedAt === 'string' ? req.body.completedAt : undefined,
+      completedAt:
+        req.body?.completedAt === null
+          ? null
+          : typeof req.body?.completedAt === 'string'
+            ? req.body.completedAt
+            : undefined,
       archivedAt:
         archivedAt === true || typeof archivedAt === 'string' ? archivedAt : undefined,
     });

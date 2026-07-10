@@ -55,6 +55,9 @@ export interface Objective {
   updatedAt: string;
 }
 
+export type TeamMemberStatus = 'active' | 'on-leave' | 'remote';
+export type DevelopmentTrend = 'improved' | 'declined' | 'stable';
+
 export interface TeamMember {
   id: string;
   userId: string;
@@ -63,9 +66,26 @@ export interface TeamMember {
   email?: string;
   telefone?: string;
   departamento?: string;
+  localizacao?: string;
+  dataContratacao?: string;
+  status?: TeamMemberStatus;
+  skills?: string[];
+  performance?: number;
   ativo: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TeamMemberDevelopmentEntry {
+  id: string;
+  userId: string;
+  memberId: string;
+  score: number;
+  notes?: string;
+  trend: DevelopmentTrend;
+  delta?: number;
+  cycleId?: string;
+  createdAt: string;
 }
 
 export interface Activity {

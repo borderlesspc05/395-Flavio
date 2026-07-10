@@ -1,4 +1,4 @@
-import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { deleteDoc, deleteField, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { createEmptyDiagnosticData, getAllDiagnosticFields, getFieldKeys } from '../constants/diagnosticFlow';
 import { db } from '../config/firebase';
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
@@ -111,4 +111,16 @@ export async function saveInitialForm(userId: string, data: InitialFormData) {
   );
   void import('./api').then(({ ragApi }) => ragApi.indexInitialForm());
   return new Date();
+}
+
+export async function reopenInitialForm(userId: string) {
+  const ref = doc(db, COLLECTION, userId);
+  await setDoc(
+    ref,
+    {
+      completedAt: deleteField(),
+    },
+    { merge: true }
+  );
+  void import('./api').then(({ ragApi }) => ragApi.indexInitialForm());
 }

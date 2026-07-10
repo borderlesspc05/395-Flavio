@@ -116,6 +116,19 @@ export interface TeamMember {
   userId?: string;
 }
 
+export type DevelopmentTrend = 'improved' | 'declined' | 'stable';
+
+export interface TeamMemberDevelopmentEntry {
+  id: string;
+  memberId: string;
+  score: number;
+  notes?: string;
+  trend: DevelopmentTrend;
+  delta?: number;
+  cycleId?: string;
+  createdAt: string;
+}
+
 export interface ChatMessage {
   id: string;
   conversationId: string;

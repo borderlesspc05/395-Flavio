@@ -333,6 +333,7 @@
 .mid-exec-kpi {
   display: grid;
   gap: 0.55rem;
+  min-width: 0;
   padding: 1rem 1.05rem;
   border-radius: 16px;
   border: 1px solid var(--mid-border);
@@ -340,6 +341,8 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   animation: mid-reveal 0.7s var(--mid-ease) both;
   transition: border-color 0.2s ease, transform 0.2s ease;
+  container-type: inline-size;
+  container-name: mid-exec-kpi;
 }
 
 .mid-exec-kpi:hover {
@@ -367,6 +370,11 @@
   display: flex;
   gap: 0.65rem;
   align-items: flex-start;
+  min-width: 0;
+}
+
+.mid-exec-kpi-head > div {
+  min-width: 0;
 }
 
 .mid-exec-kpi-icon {
@@ -399,14 +407,16 @@
 }
 
 .mid-exec-kpi-score-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
 }
 
 .mid-exec-kpi-score {
   margin: 0;
+  min-width: 0;
   font-family: var(--mid-serif);
   font-size: 2rem;
   font-weight: 700;
@@ -431,8 +441,11 @@
   border: 1px solid rgba(175, 146, 112, 0.22);
   background: rgba(8, 12, 18, 0.55);
   color: var(--mid-muted);
+  flex: 0 1 auto;
   max-width: 100%;
-  justify-self: end;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -448,9 +461,13 @@
 
 .mid-exec-kpi-status {
   margin: 0;
+  min-width: 0;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--mid-warm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mid-exec-kpi-meta {
@@ -512,13 +529,12 @@
   }
 
   .mid-exec-kpi-score-row {
-    grid-template-columns: 1fr;
-    align-items: start;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0.2rem;
   }
 
   .mid-exec-kpi-trend {
-    justify-self: start;
     font-size: 0.6rem;
     padding: 0.18rem 0.38rem;
     max-width: 100%;
@@ -536,6 +552,29 @@
   .mid-exec-kpi-meta li {
     font-size: 0.66rem;
     line-height: 1.3;
+  }
+}
+
+/* Narrow executive KPI cards (e.g. 5-column grid at ~1280px) */
+@container mid-exec-kpi (max-width: 300px) {
+  .mid-exec-kpi-score-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+
+  .mid-exec-kpi-score {
+    font-size: 1.55rem;
+  }
+
+  .mid-exec-kpi-score span {
+    font-size: 0.82rem;
+  }
+
+  .mid-exec-kpi-trend {
+    font-size: 0.62rem;
+    padding: 0.2rem 0.42rem;
+    max-width: 100%;
   }
 }
 

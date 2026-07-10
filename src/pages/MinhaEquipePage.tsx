@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Briefcase,
   Calendar,
+  CheckCircle2,
   Loader2,
   Mail,
   MapPin,
@@ -13,12 +14,16 @@ import {
   Pencil,
   Send,
   Trash2,
-  X,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  LineChart,
 } from 'lucide-react';
 import axios from 'axios';
+import { Modal } from '../components/ui/Modal';
 import { teamApi } from '../services/api';
 import { useCycle } from '../context/CycleContext';
-import type { TeamMember } from '../types';
+import type { DevelopmentTrend, TeamMember, TeamMemberDevelopmentEntry } from '../types';
 
 type FormState = {
   name: string;
@@ -52,6 +57,26 @@ const STATUS_LABELS: Record<TeamMember['status'], string> = {
   remote: 'Remoto',
 };
 
+const TREND_LABELS: Record<DevelopmentTrend, string> = {
+  improved: 'Melhorou',
+  declined: 'Piorou',
+  stable: 'Estável',
+};
+
+function trendIcon(trend: DevelopmentTrend) {
+  if (trend === 'improved') return TrendingUp;
+  if (trend === 'declined') return TrendingDown;
+  return Minus;
+}
+
+function formatCheckInDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  } catch {
+    return iso;
+  }
+}
+
 function normalizeMember(raw: Record<string, unknown>): TeamMember {
   const ativo = raw.ativo !== false;
   return {
@@ -61,8 +86,16 @@ function normalizeMember(raw: Record<string, unknown>): TeamMember {
     role: String(raw.role ?? raw.cargo ?? ''),
     department: raw.department ? String(raw.department) : raw.departamento ? String(raw.departamento) : undefined,
     phone: raw.phone ? String(raw.phone) : raw.telefone ? String(raw.telefone) : undefined,
-    location: raw.location ? String(raw.location) : undefined,
-    hireDate: raw.hireDate ? String(raw.hireDate) : undefined,
+    location: raw.location
+      ? String(raw.location)
+      : raw.localizacao
+        ? String(raw.localizacao)
+        : undefined,
+    hireDate: raw.hireDate
+      ? String(raw.hireDate)
+      : raw.dataContratacao
+        ? String(raw.dataContratacao)
+        : undefined,
     status: (raw.status as TeamMember['status']) || (ativo ? 'active' : 'on-leave'),
     skills: Array.isArray(raw.skills) ? (raw.skills as string[]) : undefined,
     performance: typeof raw.performance === 'number' ? raw.performance : undefined,
@@ -122,7 +155,38 @@ export function MinhaEquipePage() {
   const [emailSendingId, setEmailSendingId] = useState<string | null>(null);
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [emailNoticeType, setEmailNoticeType] = useState<'success' | 'error' | 'demo'>('success');
+  const [developmentByMember, setDevelopmentByMember] = useState<
+    Record<string, TeamMemberDevelopmentEntry[]>
+  >({});
+  const [checkInMember, setCheckInMember] = useState<TeamMember | null>(null);
+  const [checkInScore, setCheckInScore] = useState('75');
+  const [checkInNotes, setCheckInNotes] = useState('');
+  const [checkInSaving, setCheckInSaving] = useState(false);
+  const [checkInError, setCheckInError] = useState<string | null>(null);
+  const [checkInSuccess, setCheckInSuccess] = useState(false);
+  const checkInSuccessTimerRef = useRef<number | null>(null);
   const { activeCycle } = useCycle();
+
+  const loadDevelopment = useCallback(async (memberIds: string[]) => {
+    if (memberIds.length === 0) {
+      setDevelopmentByMember({});
+      return;
+    }
+    const results = await Promise.allSettled(
+      memberIds.map(async (id) => {
+        const entries = await teamApi.listDevelopment(id);
+        return [id, entries] as const;
+      })
+    );
+    const map: Record<string, TeamMemberDevelopmentEntry[]> = {};
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        const [id, entries] = result.value;
+        map[id] = entries;
+      }
+    }
+    setDevelopmentByMember(map);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -131,12 +195,13 @@ export function MinhaEquipePage() {
       const data = await teamApi.list();
       const list = (Array.isArray(data) ? data : []).map((m: Record<string, unknown>) => normalizeMember(m));
       setMembers(list);
+      void loadDevelopment(list.map((m) => m.id));
     } catch {
       setError('Não foi possível carregar a equipe.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadDevelopment]);
 
   useEffect(() => {
     load();
@@ -217,8 +282,71 @@ export function MinhaEquipePage() {
 
   const remove = async (id: string) => {
     if (!window.confirm('Remover este membro da equipe?')) return;
-    await teamApi.remove(id);
-    await load();
+    try {
+      await teamApi.remove(id);
+      await load();
+    } catch {
+      setEmailNoticeType('error');
+      setEmailNotice('Não foi possível remover o membro. Tente novamente.');
+    }
+  };
+
+  const closeCheckIn = () => {
+    if (checkInSaving) return;
+    if (checkInSuccessTimerRef.current != null) {
+      window.clearTimeout(checkInSuccessTimerRef.current);
+      checkInSuccessTimerRef.current = null;
+    }
+    setCheckInMember(null);
+    setCheckInSuccess(false);
+    setCheckInError(null);
+  };
+
+  const openCheckIn = (member: TeamMember) => {
+    setCheckInMember(member);
+    setCheckInScore(String(member.performance ?? 75));
+    setCheckInNotes('');
+    setCheckInError(null);
+    setCheckInSuccess(false);
+  };
+
+  const saveCheckIn = async () => {
+    if (!checkInMember) return;
+    const score = Number(checkInScore);
+    if (Number.isNaN(score) || score < 0 || score > 100) {
+      setCheckInError('Informe uma nota entre 0 e 100.');
+      return;
+    }
+    setCheckInSaving(true);
+    setCheckInError(null);
+    try {
+      const result = await teamApi.addDevelopment(checkInMember.id, {
+        score,
+        notes: checkInNotes.trim() || undefined,
+      });
+      setDevelopmentByMember((prev) => ({
+        ...prev,
+        [checkInMember.id]: [result.entry, ...(prev[checkInMember.id] ?? [])],
+      }));
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === checkInMember.id ? { ...m, performance: result.entry.score } : m
+        )
+      );
+      setCheckInSuccess(true);
+      if (checkInSuccessTimerRef.current != null) {
+        window.clearTimeout(checkInSuccessTimerRef.current);
+      }
+      checkInSuccessTimerRef.current = window.setTimeout(() => {
+        checkInSuccessTimerRef.current = null;
+        setCheckInMember(null);
+        setCheckInSuccess(false);
+      }, 1400);
+    } catch {
+      setCheckInError('Não foi possível registrar o check-in.');
+    } finally {
+      setCheckInSaving(false);
+    }
   };
 
   const sendDevelopmentEmail = async (member: TeamMember) => {
@@ -249,14 +377,26 @@ export function MinhaEquipePage() {
     } catch (err) {
       setEmailNoticeType('error');
       const payload = axios.isAxiosError(err)
-        ? (err.response?.data as { message?: string; error?: string } | undefined)
+        ? (err.response?.data as { message?: string; error?: string; code?: string } | undefined)
         : undefined;
-      const detail = payload?.message || payload?.error || (err instanceof Error ? err.message : '');
-      setEmailNotice(
-        detail
-          ? `Falha ao enviar e-mail: ${detail}`
-          : 'Não foi possível enviar o e-mail. Verifique se o servidor está ativo e o membro pertence à sua conta.'
-      );
+      const code = payload?.code;
+      const detail = payload?.error || payload?.message || (err instanceof Error ? err.message : '');
+      if (code === 'EMAIL_NOT_CONFIGURED') {
+        setEmailNotice(
+          detail ||
+            'E-mail transacional não configurado. Defina RESEND_API_KEY no servidor ou remova a chave inválida para usar o modo demonstração.'
+        );
+      } else if (code === 'EMAIL_RECIPIENT_FORBIDDEN' || code === 'EMAIL_DOMAIN_NOT_VERIFIED') {
+        setEmailNotice(detail || 'Configure e verifique seu domínio no Resend para enviar e-mails aos membros.');
+      } else {
+        setEmailNotice(
+          detail
+            ? detail.startsWith('Falha ao enviar') || detail.includes('Resend') || detail.includes('RESEND')
+              ? detail
+              : `Falha ao enviar e-mail: ${detail}`
+            : 'Não foi possível enviar o e-mail. Verifique se o servidor está ativo e o membro pertence à sua conta.'
+        );
+      }
     } finally {
       setEmailSendingId(null);
     }
@@ -264,24 +404,26 @@ export function MinhaEquipePage() {
 
   return (
     <div className="minha-equipe">
-      <header className="equipe-header">
-        <div className="header-content">
-          <div className="header-title-group">
-            <div className="header-icon-wrapper">
-              <Users size={32} />
-            </div>
-            <div>
-              <h1 className="equipe-title">Equipe · Difusão</h1>
-              <p className="equipe-subtitle">
-                People Sprint da Difusão — vincule donos, envie desenvolvimento por e-mail e alinhe entregas ao ciclo{' '}
-                <strong>{activeCycle?.label ?? 'atual'}</strong>.
-              </p>
-            </div>
+      <header className="equipe-header sprint-wave-header">
+        <div className="sprint-wave-title-group">
+          <div className="sprint-wave-icon-wrapper" aria-hidden>
+            <Users size={26} />
           </div>
-          <button type="button" className="add-member-button" onClick={openCreate}>
-            <Plus size={20} />
-            Adicionar membro
-          </button>
+          <div className="sprint-wave-title-copy">
+            <span className="equipe-header-kicker sprint-wave-eyebrow">SPRINT WAVES™ · Onda 3</span>
+            <h1 className="sprint-wave-title">Equipe</h1>
+            <p className="sprint-wave-subtitle">
+              Vincule donos, envie desenvolvimento por e-mail e alinhe entregas ao ciclo{' '}
+              <strong>{activeCycle?.label ?? 'atual'}</strong>.
+            </p>
+          </div>
+        </div>
+        <div
+          className="equipe-header-progress design-plans-progress sprint-wave-side"
+          aria-label={`${stats.total} membros na equipe`}
+        >
+          <strong>{stats.total}</strong>
+          <span>membros</span>
         </div>
       </header>
 
@@ -334,6 +476,10 @@ export function MinhaEquipePage() {
         <div className="section-header">
           <h2 className="section-title">Membros da equipe</h2>
           <div className="section-actions">
+            <button type="button" className="add-member-button" onClick={openCreate}>
+              <Plus size={20} />
+              Adicionar membro
+            </button>
             <select
               className="filter-select"
               value={departmentFilter}
@@ -370,6 +516,9 @@ export function MinhaEquipePage() {
           <div className="members-grid">
             {filtered.map((member) => {
               const perfClass = performanceClass(member.performance);
+              const devEntries = developmentByMember[member.id] ?? [];
+              const latestDev = devEntries[0];
+              const TrendIcon = latestDev ? trendIcon(latestDev.trend) : LineChart;
               return (
                 <article key={member.id} className="member-card">
                   <div className="member-card-header">
@@ -430,6 +579,54 @@ export function MinhaEquipePage() {
                       </div>
                     </div>
                   )}
+                  <div className="member-development">
+                    <div className="member-development-header">
+                      <div className="member-development-title">
+                        <LineChart size={14} aria-hidden />
+                        <span>Evolução</span>
+                        {latestDev && (
+                          <span className={`dev-trend dev-trend--${latestDev.trend}`}>
+                            <TrendIcon size={12} aria-hidden />
+                            {TREND_LABELS[latestDev.trend]}
+                            {latestDev.delta != null && latestDev.delta !== 0 && (
+                              <span className="dev-trend-delta">
+                                {latestDev.delta > 0 ? '+' : ''}
+                                {latestDev.delta}%
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="dev-checkin-button"
+                        onClick={() => openCheckIn(member)}
+                      >
+                        Registrar
+                      </button>
+                    </div>
+                    {devEntries.length > 0 ? (
+                      <ul className="member-development-timeline">
+                        {devEntries.slice(0, 4).map((entry) => {
+                          const EntryTrendIcon = trendIcon(entry.trend);
+                          return (
+                            <li key={entry.id} className="dev-timeline-item">
+                              <span className="dev-timeline-date">{formatCheckInDate(entry.createdAt)}</span>
+                              <span className="dev-timeline-score">{entry.score}%</span>
+                              <span className={`dev-timeline-trend dev-trend--${entry.trend}`}>
+                                <EntryTrendIcon size={11} aria-hidden />
+                              </span>
+                              {entry.notes && <span className="dev-timeline-notes">{entry.notes}</span>}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="member-development-empty">
+                        Nenhum check-in ainda. Registre a evolução para acompanhar melhorias ao longo do tempo.
+                      </p>
+                    )}
+                  </div>
                   {member.skills && member.skills.length > 0 && (
                     <div className="member-skills">
                       <span className="skills-label">Habilidades</span>
@@ -492,22 +689,106 @@ export function MinhaEquipePage() {
         )}
       </section>
 
-      {modalOpen && (
-        <div className="membro-modal-overlay" onClick={() => setModalOpen(false)}>
-          <div className="membro-modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="membro-modal-header">
-              <h2 className="membro-modal-title">{editing ? 'Editar membro' : 'Adicionar membro'}</h2>
-              <button type="button" className="membro-modal-close" onClick={() => setModalOpen(false)}>
-                <X size={20} />
+      <Modal
+        open={!!checkInMember}
+        onClose={closeCheckIn}
+        title={checkInMember ? `Check-in · ${checkInMember.name}` : 'Check-in'}
+        size="compact"
+        dismissLocked={checkInSaving || checkInSuccess}
+      >
+        {checkInSuccess ? (
+          <div className="membro-modal-success" role="status">
+            <span className="membro-modal-success-icon" aria-hidden>
+              <CheckCircle2 size={40} />
+            </span>
+            <p className="membro-modal-success-title">Check-in registrado</p>
+            <p className="membro-modal-success-copy">
+              A evolução foi salva e comparada com o último registro.
+            </p>
+          </div>
+        ) : (
+          <form
+            className="membro-modal-form membro-modal-form--checkin"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveCheckIn();
+            }}
+          >
+            <p className="membro-modal-hint">
+              Registre a nota atual e observações. O sistema compara com o último check-in e indica se o membro
+              melhorou, piorou ou manteve o ritmo.
+            </p>
+            {checkInError && (
+              <p className="membro-field-error" role="alert">
+                {checkInError}
+              </p>
+            )}
+            <div className="membro-form-field">
+              <label htmlFor="checkin-score">Nota de desempenho (%)</label>
+              <input
+                id="checkin-score"
+                type="number"
+                min={0}
+                max={100}
+                inputMode="numeric"
+                value={checkInScore}
+                onChange={(e) => setCheckInScore(e.target.value)}
+                disabled={checkInSaving}
+              />
+            </div>
+            <div className="membro-form-field">
+              <label htmlFor="checkin-notes">Observações</label>
+              <textarea
+                id="checkin-notes"
+                rows={3}
+                value={checkInNotes}
+                onChange={(e) => setCheckInNotes(e.target.value)}
+                placeholder="Destaques, pontos de atenção, próximos passos..."
+                disabled={checkInSaving}
+              />
+            </div>
+            <div className="membro-modal-actions">
+              <button
+                type="button"
+                className="membro-button-secondary"
+                onClick={closeCheckIn}
+                disabled={checkInSaving}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="membro-button-primary membro-button-primary--bronze"
+                disabled={checkInSaving}
+              >
+                {checkInSaving ? (
+                  <>
+                    <Loader2 size={16} className="spinner" aria-hidden />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar check-in'
+                )}
               </button>
             </div>
-            <form
-              className="membro-modal-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                save();
-              }}
-            >
+          </form>
+        )}
+      </Modal>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar membro' : 'Adicionar membro'}
+        dismissLocked={saving}
+      >
+        <form
+          className="membro-modal-shell"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save();
+          }}
+        >
+          <div className="membro-modal-form">
               {formErrors.submit && <p className="field-error">{formErrors.submit}</p>}
               <p className="membro-modal-hint">
                 O e-mail é usado para enviar o resumo de desenvolvimento ligado ao ciclo ativo.
@@ -599,18 +880,33 @@ export function MinhaEquipePage() {
                   />
                 </div>
               </div>
-              <div className="membro-modal-actions">
-                <button type="button" className="membro-button-secondary" onClick={() => setModalOpen(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="membro-button-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+          <div className="membro-modal-actions">
+            <button
+              type="button"
+              className="membro-button-secondary"
+              onClick={() => setModalOpen(false)}
+              disabled={saving}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="membro-button-primary membro-button-primary--bronze"
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={16} className="spinner" aria-hidden />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

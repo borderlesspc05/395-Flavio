@@ -136,9 +136,11 @@ export async function updateDiagnosticCycle(
       | 'gatePath'
       | 'gateRationale'
       | 'formData'
-      | 'completedAt'
     >
-  > & { archivedAt?: string | true }
+  > & {
+    archivedAt?: string | true;
+    completedAt?: string | null;
+  },
 ): Promise<void> {
   const { archivedAt, ...rest } = patch;
   const data = withoutUndefined({ ...rest, ...(archivedAt ? { archivedAt: true } : {}) });

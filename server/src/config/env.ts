@@ -133,7 +133,9 @@ export const env = {
     'http://localhost:5173',
   email: {
     from: process.env.EMAIL_FROM?.trim() || 'Magnus Mind <onboarding@resend.dev>',
-    resendApiKey: process.env.RESEND_API_KEY?.trim() || undefined,
+    resendApiKey: normalizeApiKey(process.env.RESEND_API_KEY),
+    /** Em dev com EMAIL_FROM sandbox: redireciona envios para este e-mail (conta Resend). */
+    testRecipient: process.env.RESEND_TEST_RECIPIENT?.trim() || undefined,
     smtpHost: process.env.SMTP_HOST?.trim() || undefined,
   },
   adminEmails: (process.env.ADMIN_EMAILS ?? 'admin@gmail.com')
@@ -152,6 +154,7 @@ export const COLLECTIONS = {
   actionCanvases: 'actionCanvases',
   objectives: 'objectives',
   teamMembers: 'teamMembers',
+  teamMemberDevelopment: 'teamMemberDevelopment',
   conversations: 'conversations',
   reports: 'reports',
   activities: 'activities',

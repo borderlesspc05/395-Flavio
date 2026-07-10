@@ -20,9 +20,10 @@ interface ScanFieldControlProps {
   value: DiagnosticFieldValue | undefined;
   error?: string;
   onChange: (value: DiagnosticFieldValue) => void;
+  readOnly?: boolean;
 }
 
-export function ScanFieldControl({ field, value, error, onChange }: ScanFieldControlProps) {
+export function ScanFieldControl({ field, value, error, onChange, readOnly = false }: ScanFieldControlProps) {
   const fieldKey = field.id;
   const label = (
     <label className="diagnostic-field-label" htmlFor={fieldKey}>
@@ -43,8 +44,9 @@ export function ScanFieldControl({ field, value, error, onChange }: ScanFieldCon
                 key={option}
                 type="button"
                 className={`diagnostic-choice ${checked ? 'is-selected' : ''}`}
-                onClick={() => onChange(option)}
+                onClick={() => !readOnly && onChange(option)}
                 aria-pressed={checked}
+                disabled={readOnly}
               >
                 <span className="diagnostic-choice-dot" aria-hidden />
                 <span>{option}</span>
@@ -83,9 +85,9 @@ export function ScanFieldControl({ field, value, error, onChange }: ScanFieldCon
                 key={option}
                 type="button"
                 className={`diagnostic-choice ${checked ? 'is-selected' : ''}`}
-                onClick={() => !disabled && onChange(next)}
+                onClick={() => !readOnly && !disabled && onChange(next)}
                 aria-pressed={checked}
-                disabled={disabled}
+                disabled={readOnly || disabled}
               >
                 <span className="diagnostic-choice-check" aria-hidden>
                   {checked && <Check size={13} />}
@@ -123,6 +125,7 @@ export function ScanFieldControl({ field, value, error, onChange }: ScanFieldCon
             aria-valuemin={min}
             aria-valuemax={max}
             aria-valuenow={safeValue}
+            disabled={readOnly}
           />
           <output className="scan-scale-output" htmlFor={fieldKey}>
             {safeValue}
@@ -152,6 +155,8 @@ export function ScanFieldControl({ field, value, error, onChange }: ScanFieldCon
             value={valueAsText(value)}
             placeholder={field.placeholder}
             onChange={(event) => onChange(event.target.value)}
+            disabled={readOnly}
+            readOnly={readOnly}
           />
           {field.type === 'percent' ? <span className="scan-number-suffix">%</span> : null}
         </div>
@@ -191,6 +196,8 @@ export function ScanFieldControl({ field, value, error, onChange }: ScanFieldCon
                 inputMode="numeric"
                 value={current[option] ?? ''}
                 onChange={(event) => updateItem(option, Number(event.target.value))}
+                disabled={readOnly}
+                readOnly={readOnly}
               />
             </div>
           ))}
@@ -210,6 +217,8 @@ export function ScanFieldControl({ field, value, error, onChange }: ScanFieldCon
         value={valueAsText(value)}
         placeholder={field.placeholder}
         onChange={(event) => onChange(event.target.value)}
+        disabled={readOnly}
+        readOnly={readOnly}
       />
       {error && <span className="diagnostic-error">{error}</span>}
     </div>

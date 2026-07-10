@@ -87,10 +87,6 @@ export function OrganizationalScansHubPage() {
             Canvas Sprint Waves e <strong>Solution Pick</strong>, com resumo executivo e planos
             priorizados.
           </p>
-          <ul className="diagnostic-path-features">
-            <li>Múltiplas lentes e profundidade máxima</li>
-            <li>Laudo e resumo após o diagnóstico</li>
-          </ul>
           <button
             type="button"
             className="diagnostic-primary-button"
@@ -109,7 +105,6 @@ export function OrganizationalScansHubPage() {
           <p>
             Scan temático, mais rápido. Ao concluir, siga para o <strong>Solution Pick</strong>.
           </p>
-          <p className="diagnostic-path-card-note">Não precisa responder todos os scans.</p>
           {solutionPickReady ? (
             <button
               type="button"
