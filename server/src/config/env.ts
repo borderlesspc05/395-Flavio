@@ -138,6 +138,8 @@ export const env = {
     testRecipient: process.env.RESEND_TEST_RECIPIENT?.trim() || undefined,
     smtpHost: process.env.SMTP_HOST?.trim() || undefined,
   },
+  /** Segredo para jobs agendados (ex.: Sprint Weekly Brief às segundas). */
+  cronSecret: process.env.CRON_SECRET?.trim() || undefined,
   adminEmails: (process.env.ADMIN_EMAILS ?? 'admin@gmail.com')
     .split(',')
     .map((e) => e.trim().toLowerCase())

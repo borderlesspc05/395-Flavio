@@ -26,6 +26,7 @@ import meRouter from './routes/me';
 import ragRouter from './routes/rag';
 import cyclesRouter from './routes/cycles';
 import authRouter from './routes/auth';
+import cronRouter from './routes/cron';
 import { requestLogger } from './middleware/requestLogger';
 import { securityHeaders } from './middleware/securityHeaders';
 import { getLlmStatus } from './services/llm';
@@ -86,6 +87,7 @@ app.use(requestLogger);
 
 app.use('/api/plans', publicPlansRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/cron', cronRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/objectives', requireUser, objectivesRouter);

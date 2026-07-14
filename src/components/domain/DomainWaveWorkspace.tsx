@@ -314,7 +314,7 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
             <h1 className="domain-wave-question sprint-wave-title">Domínio</h1>
             <p className="domain-wave-lead sprint-wave-subtitle">
               Transforme execução em inteligência organizacional. Registre impacto, aprendizados e
-              sustentação para alimentar o MID e o próximo ciclo.
+              sustentação para alimentar o Intelligence Dashboard e o próximo ciclo.
             </p>
           </div>
         </div>
@@ -637,7 +637,7 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
             <div>
               <strong>Sustainability Score · {sustainabilityScore.label}</strong>
               <span className="domain-sustain-result-meta">
-                Média {sustainabilityScore.average}/5 · {sustainabilityScore.score} pts no MID
+                Média {sustainabilityScore.average}/5 · {sustainabilityScore.score} pts no ID
               </span>
             </div>
             <span className={`domain-sustain-badge domain-sustain-badge--${sustainabilityScore.band}`}>

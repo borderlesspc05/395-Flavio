@@ -3,6 +3,7 @@ import { AppError } from '../utils/errors';
 import { getById, COLLECTIONS } from '../services/storage';
 import { parseProfilePhotoDataUrl, saveUserProfilePhoto } from '../services/profilePhoto';
 import type { UserProfile } from '../services/users';
+import { sendWeeklyBriefForUser } from '../services/weeklyBrief';
 
 const router = Router();
 
@@ -37,6 +38,29 @@ router.post('/photo', async (req: Request, res: Response, next: NextFunction) =>
     const photoURL = await saveUserProfilePhoto(userId, buffer, contentType, req.userEmail);
 
     res.json({ ok: true, photoURL });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Envia o Sprint Weekly Brief imediatamente para o líder logado (teste / on-demand). */
+router.post('/weekly-brief', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId;
+    if (!userId) throw new AppError(400, 'userId é obrigatório.');
+
+    const profile = await getById<UserProfile>(COLLECTIONS.userProfiles, userId);
+    const email = (profile?.email || req.userEmail || '').trim();
+    if (!email) {
+      throw new AppError(400, 'Seu perfil não tem e-mail para receber o Weekly Brief.');
+    }
+
+    const result = await sendWeeklyBriefForUser(
+      userId,
+      email,
+      profile?.displayName || req.userDisplayName
+    );
+    res.json(result);
   } catch (err) {
     next(err);
   }

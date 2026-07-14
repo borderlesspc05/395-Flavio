@@ -4,7 +4,6 @@
   MAGNUS_WAVES,
   type SprintProgress,
 } from '../constants/magnusWaves';
-import { getDiagnosticCompletion } from '../constants/diagnosticFlow';
 import { buildExecutiveKpis } from './midExecutiveKpis';
 import type {
   ActionCanvas,
@@ -12,10 +11,17 @@ import type {
   Objective,
   TeamMember,
 } from '../types';
+import {
+  buildBriefing,
+  buildNowActions,
+  buildSprintTimeline,
+  computeProjectHealthScore,
+  type MemberCheckInSummary,
+  type MidIntelligenceInput,
+} from './midIntelligence';
 import type {
   MidDashboardData,
   MidExecutionRow,
-  MidHealth,
   MidOverview,
 } from '../types/mid';
 
@@ -27,13 +33,18 @@ interface ReportLike {
     totalObjectives?: number;
     teamSize?: number;
   };
+  createdAt?: string;
 }
 
-interface BuildMidInput {
+export interface BuildMidInput {
   formData: InitialFormData | null;
   formComplete: boolean;
+  formCompletedAt?: string | Date | null;
   cycleId?: string | null;
   cycleLabel?: string | null;
+  cycleCreatedAt?: string | Date | null;
+  userDisplayName?: string | null;
+  memberCheckIns?: MemberCheckInSummary[];
   objectives: Objective[];
   canvases: ActionCanvas[];
   team: TeamMember[];
@@ -45,36 +56,6 @@ function statusLabel(progress: SprintProgress): string {
   if (progress.reportsCount > 0) return 'Domínio ativo — evolução contínua';
   if (progress.objectivesTotal > 0) return 'Difusão em execução';
   return 'Design — definição de caminho';
-}
-
-function computeHealth(
-  diagnosticPercent: number,
-  objectiveRate: number,
-  deliveryGreenRate: number,
-  formComplete: boolean
-): { health: MidHealth; label: string; progress: number } {
-  if (!formComplete) {
-    const p = Math.round(diagnosticPercent * 0.6);
-    return { health: p >= 50 ? 'yellow' : 'red', label: 'Diagnóstico incompleto', progress: p };
-  }
-
-  const progress = Math.round(
-    diagnosticPercent * 0.2 + objectiveRate * 0.35 + deliveryGreenRate * 0.35 + 10
-  );
-  const clamped = Math.min(100, Math.max(0, progress));
-
-  let health: MidHealth = 'yellow';
-  let label = 'Evolução em curso';
-
-  if (clamped >= 72 && deliveryGreenRate >= 55) {
-    health = 'green';
-    label = 'Execução saudável';
-  } else if (clamped < 45 || deliveryGreenRate < 25) {
-    health = 'red';
-    label = 'Atenção — fricção na execução';
-  }
-
-  return { health, label, progress: clamped };
 }
 
 function pickOwner(canvases: ActionCanvas[], team: TeamMember[]): string {
@@ -94,7 +75,12 @@ function pickSponsor(canvases: ActionCanvas[], team: TeamMember[]): string {
 function buildOverview(
   input: BuildMidInput,
   progress: SprintProgress,
-  healthPack: ReturnType<typeof computeHealth>
+  health: {
+    score: number;
+    health: MidOverview['health'];
+    label: string;
+    factors: MidOverview['healthFactors'];
+  }
 ): MidOverview {
   const waveId = getActiveWaveId(progress);
   const wave = MAGNUS_WAVES.find((w) => w.id === waveId)!;
@@ -107,9 +93,10 @@ function buildOverview(
     statusLabel: statusLabel(progress),
     currentWave: waveId,
     currentWaveLabel: `Onda ${wave.number} · ${wave.label}`,
-    progressPercent: healthPack.progress,
-    health: healthPack.health,
-    healthLabel: healthPack.label,
+    progressPercent: health.score,
+    health: health.health,
+    healthLabel: health.label,
+    healthFactors: health.factors,
   };
 }
 
@@ -174,26 +161,24 @@ function buildExecution(input: BuildMidInput): MidExecutionRow[] {
   return rows.slice(0, 12);
 }
 
+function toIntelligenceInput(input: BuildMidInput): MidIntelligenceInput {
+  return {
+    projectName: input.cycleLabel?.trim() || 'People Sprint',
+    userDisplayName: input.userDisplayName,
+    cycleCreatedAt: input.cycleCreatedAt,
+    formComplete: input.formComplete,
+    formCompletedAt: input.formCompletedAt,
+    objectives: input.objectives,
+    canvases: input.canvases,
+    team: input.team,
+    memberCheckIns: input.memberCheckIns,
+    reportsCount: input.reports.length,
+  };
+}
+
 export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
   const objectives = input.objectives;
   const total = objectives.length;
-  const done = objectives.filter((o) => o.status === 'concluido').length;
-  const objectiveRate = total ? Math.round((done / total) * 100) : 0;
-
-  const allDeliveries = input.canvases.flatMap((c) =>
-    c.entregas.filter((e) => e.entrega?.trim())
-  );
-  const greenCount = allDeliveries.filter((e) => e.status === 'verde').length;
-  const deliveryGreenRate = allDeliveries.length
-    ? Math.round((greenCount / allDeliveries.length) * 100)
-    : 0;
-
-  const diagnostic = input.formData
-    ? getDiagnosticCompletion(input.formData)
-    : { percent: 0, requiredPercent: 0 };
-  const diagnosticPercent = input.formComplete
-    ? diagnostic.requiredPercent || diagnostic.percent
-    : diagnostic.percent;
 
   const progress: SprintProgress = {
     formComplete: input.formComplete,
@@ -201,12 +186,11 @@ export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
     reportsCount: input.reports.length,
   };
 
-  const healthPack = computeHealth(
-    diagnosticPercent,
-    objectiveRate,
-    deliveryGreenRate,
-    input.formComplete
-  );
+  const intel = toIntelligenceInput(input);
+  const healthPack = computeProjectHealthScore(intel);
+  const briefing = buildBriefing(intel, healthPack.score, healthPack.label);
+  const nowActions = buildNowActions(intel);
+  const timeline = buildSprintTimeline(intel, healthPack.health);
 
   const executiveKpis = buildExecutiveKpis({
     formData: input.formData,
@@ -222,6 +206,9 @@ export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
     overview: buildOverview(input, progress, healthPack),
     executiveKpis,
     execution: buildExecution(input),
+    timeline,
+    briefing,
+    nowActions,
     hasData: input.formComplete || total > 0 || input.canvases.length > 0,
   };
 }

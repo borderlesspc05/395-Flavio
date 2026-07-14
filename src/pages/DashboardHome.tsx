@@ -5,12 +5,55 @@ import { ArrowRight, CheckCircle, X } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { getInitialForm } from '../services/initialForm';
-import { actionCanvasesApi, objectivesApi, teamApi, reportsApi } from '../services/api';
-import type { ActionCanvas, InitialFormData, Objective, TeamMember } from '../types';
+import { actionCanvasesApi, objectivesApi, teamApi, reportsApi, api } from '../services/api';
+import type {
+  ActionCanvas,
+  InitialFormData,
+  Objective,
+  TeamMember,
+  TeamMemberDevelopmentEntry,
+} from '../types';
 import { MidDashboard } from '../components/mid/MidDashboard';
 import { useCycle } from '../context/CycleContext';
 import { buildMidDashboard, getWaveProgressForMid } from '../services/midDashboard';
+import type { MemberCheckInSummary } from '../services/midIntelligence';
 import type { MidDashboardData } from '../types/mid';
+
+function mapTeamMember(raw: Record<string, unknown>): TeamMember {
+  return {
+    id: String(raw.id ?? ''),
+    name: String(raw.name ?? raw.nome ?? ''),
+    email: String(raw.email ?? ''),
+    role: String(raw.role ?? raw.cargo ?? ''),
+    department: String(raw.department ?? raw.departamento ?? '') || undefined,
+    phone: String(raw.phone ?? raw.telefone ?? '') || undefined,
+    location: String(raw.location ?? raw.localizacao ?? '') || undefined,
+    hireDate: String(raw.hireDate ?? raw.dataContratacao ?? '') || undefined,
+    status: (raw.status as TeamMember['status']) || 'active',
+    skills: Array.isArray(raw.skills) ? (raw.skills as string[]) : undefined,
+    performance: typeof raw.performance === 'number' ? raw.performance : undefined,
+    projectsCompleted:
+      typeof raw.projectsCompleted === 'number' ? raw.projectsCompleted : undefined,
+    userId: raw.userId ? String(raw.userId) : undefined,
+  };
+}
+
+function summarizeCheckIns(
+  member: TeamMember,
+  entries: TeamMemberDevelopmentEntry[]
+): MemberCheckInSummary {
+  const sorted = [...entries].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  const latest = sorted[0];
+  return {
+    memberId: member.id,
+    memberName: member.name,
+    lastAt: latest?.createdAt ?? null,
+    latestScore: latest?.score,
+    trend: latest?.trend,
+  };
+}
 
 export function DashboardHome() {
   const { activeCycle } = useCycle();
@@ -28,6 +71,7 @@ export function DashboardHome() {
     | undefined;
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
   const [postDiagnosticNotice, setPostDiagnosticNotice] = useState(
     () => locationState?.postDiagnosticNotice ?? null
   );
@@ -37,6 +81,7 @@ export function DashboardHome() {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [canvases, setCanvases] = useState<ActionCanvas[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [memberCheckIns, setMemberCheckIns] = useState<MemberCheckInSummary[]>([]);
   const [reports, setReports] = useState<
     Array<{
       resumo?: string;
@@ -50,7 +95,10 @@ export function DashboardHome() {
   >([]);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUserId(u?.uid ?? null));
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUserId(u?.uid ?? null);
+      setUserDisplayName(u?.displayName ?? null);
+    });
     return unsub;
   }, []);
 
@@ -71,14 +119,35 @@ export function DashboardHome() {
       teamApi.list(),
       reportsApi.list(),
       actionCanvasesApi.list().catch(() => []),
+      api.get('/api/me').then((r) => r.data).catch(() => null),
     ])
-      .then(([form, objs, teamRes, reportsRes, canvasRes]) => {
+      .then(async ([form, objs, teamRes, reportsRes, canvasRes, me]) => {
         if (cancelled) return;
         setFormData(form.data);
         setFormCompletedAt(form.completedAt);
         const objList = Array.isArray(objs) ? objs : objs?.items ?? [];
         setObjectives(objList);
-        setTeam(Array.isArray(teamRes) ? teamRes : teamRes?.items ?? []);
+
+        const rawTeam = Array.isArray(teamRes) ? teamRes : teamRes?.items ?? [];
+        const mappedTeam = (rawTeam as Record<string, unknown>[]).map(mapTeamMember);
+        setTeam(mappedTeam);
+
+        if (me?.displayName) {
+          setUserDisplayName(String(me.displayName));
+        }
+
+        const checkIns = await Promise.all(
+          mappedTeam.slice(0, 40).map(async (member) => {
+            try {
+              const entries = await teamApi.listDevelopment(member.id);
+              return summarizeCheckIns(member, Array.isArray(entries) ? entries : []);
+            } catch {
+              return summarizeCheckIns(member, []);
+            }
+          })
+        );
+        if (!cancelled) setMemberCheckIns(checkIns);
+
         const reportList = Array.isArray(reportsRes) ? reportsRes : [];
         setReports(
           reportList.map((r) => ({
@@ -100,14 +169,30 @@ export function DashboardHome() {
       buildMidDashboard({
         formData,
         formComplete: !!formCompletedAt,
+        formCompletedAt,
         cycleId: activeCycle?.id,
         cycleLabel: activeCycle?.label,
+        cycleCreatedAt: activeCycle?.createdAt,
+        userDisplayName,
+        memberCheckIns,
         objectives,
         canvases,
         team,
         reports,
       }),
-    [formData, formCompletedAt, activeCycle?.id, activeCycle?.label, objectives, canvases, team, reports]
+    [
+      formData,
+      formCompletedAt,
+      activeCycle?.id,
+      activeCycle?.label,
+      activeCycle?.createdAt,
+      userDisplayName,
+      memberCheckIns,
+      objectives,
+      canvases,
+      team,
+      reports,
+    ]
   );
 
   const waveChips = useMemo(

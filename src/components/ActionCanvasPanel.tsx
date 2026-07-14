@@ -35,7 +35,7 @@ const STEPS = [
   { id: 1, title: 'A mudança', hint: 'Defina a iniciativa e quem lidera' },
   { id: 2, title: 'Execução', hint: 'Distribua entregas com dono e prazo' },
   { id: 3, title: 'Riscos', hint: 'Antecipe e defina ações' },
-  { id: 4, title: 'Sign-off', hint: 'Encerre e envie ao MID' },
+  { id: 4, title: 'Sign-off', hint: 'Encerre e envie ao Intelligence Dashboard' },
 ] as const;
 
 const STATUS_OPTIONS: { value: DeliveryStatus; label: string }[] = [
@@ -230,12 +230,12 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
           state: {
             autoGenerate: true,
             midConcludeNotice:
-              'Action Canvas encerrado com sign-off positivo. Gerando relatório Domínio (MID)...',
+              'Action Canvas encerrado com sign-off positivo. Gerando relatório Domínio (ID)...',
           },
         });
         return;
       }
-      setNotice('Action Canvas encerrado. Resultados disponíveis no MID.');
+      setNotice('Action Canvas encerrado. Resultados disponíveis no Intelligence Dashboard.');
     } catch {
       setError('Erro ao registrar sign-off.');
     } finally {
@@ -593,7 +593,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                 {readOnly && (
                   <div className="action-canvas-readonly-banner">
                     <Lock size={16} />
-                    <span>Encerrado e salvo no MID.</span>
+                    <span>Encerrado e salvo no Intelligence Dashboard.</span>
                     <button
                       type="button"
                       className="action-canvas-reopen-button"
@@ -850,7 +850,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                   {currentStep === 4 && (
                     <div className="action-canvas-section action-canvas-signoff">
                       <p className="action-canvas-section-lead">
-                        Encerra este Action Canvas? Os resultados vão para o MID.
+                        Encerra este Action Canvas? Os resultados vão para o Intelligence Dashboard.
                       </p>
                       {readOnly ? (
                         <div className="action-canvas-signoff-result-card">
@@ -869,7 +869,7 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
                           >
                             <span className="signoff-emoji">✓</span>
                             <strong>SIM</strong>
-                            <small>Encerrar e publicar no MID</small>
+                            <small>Encerrar e publicar no ID</small>
                           </button>
                           <button
                             type="button"

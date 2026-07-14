@@ -31,24 +31,35 @@ export interface MidOverview {
   progressPercent: number;
   health: MidHealth;
   healthLabel: string;
+  healthFactors: MidHealthFactor[];
 }
 
-export interface MidMetricRow {
+export interface MidHealthFactor {
   id: string;
   label: string;
-  before: string;
-  current: string;
-  variation: string;
-  signal: MidSignal;
-  isPrimary?: boolean;
+  score: number;
 }
 
-export interface MidHumanRow {
+export interface MidBriefingSignal {
   id: string;
-  label: string;
-  before: string;
-  current: string;
-  satisfaction: MidSignal;
+  tone: 'risk' | 'attention' | 'positive';
+  text: string;
+}
+
+export interface MidBriefing {
+  greeting: string;
+  summaryLabel: string;
+  signals: MidBriefingSignal[];
+  recommendation: string;
+  healthScore: number;
+  healthLabel: string;
+}
+
+export interface MidNowAction {
+  id: string;
+  title: string;
+  reason: string;
+  route?: string;
 }
 
 export interface MidExecutionRow {
@@ -62,21 +73,20 @@ export interface MidExecutionRow {
   source: string;
 }
 
-export interface MidInsightBlock {
-  question: string;
-  answer: string;
-}
-
-export interface MidEvolutionItem {
-  label: string;
-  priority: 'alta' | 'media' | 'baixa';
-  description: string;
-  route?: string;
+export interface MidTimelineEvent {
+  id: string;
+  isoDate: string;
+  dateLabel: string;
+  title: string;
+  tone: 'neutral' | 'positive' | 'attention' | 'risk' | 'ai';
 }
 
 export interface MidDashboardData {
   overview: MidOverview;
   executiveKpis: MidExecutiveKpi[];
   execution: MidExecutionRow[];
+  timeline: MidTimelineEvent[];
+  briefing: MidBriefing;
+  nowActions: MidNowAction[];
   hasData: boolean;
 }

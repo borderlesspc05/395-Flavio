@@ -68,11 +68,11 @@ export const MAGNUS_WAVES: MagnusWave[] = [
     id: 'dominio',
     number: 4,
     label: 'Domínio',
-    subtitle: 'Sprint Intelligence Dashboard (MID)',
+    subtitle: 'Intelligence Dashboard (ID)',
     miroRef: 'Kirkpatrick 4 + loop contínuo',
     route: '/dashboard/relatorios',
     steps: [
-      { id: '4.0', label: 'MID', description: 'Dashboard de inteligência' },
+      { id: '4.0', label: 'ID', description: 'Intelligence Dashboard' },
       { id: '4.1', label: 'Dashboard', description: 'Avaliação Kirkpatrick nível 4' },
       { id: '4.2', label: 'Continuous Loop', description: 'Não satisfeito? Retomar passo 1' },
     ],

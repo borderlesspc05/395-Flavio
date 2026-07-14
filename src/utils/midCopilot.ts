@@ -36,16 +36,16 @@ function firstUsefulAction(execution: MidExecutionRow[]): MidExecutionRow | null
   return priority ?? withAction ?? null;
 }
 
-/** Gera a narrativa da IA a partir dos dados reais do MID (determinística, sempre relevante). */
+/** Gera a narrativa da IA a partir dos dados reais do ID (determinística, sempre relevante). */
 export function buildMidCopilotMessages(data: MidDashboardData): CopilotMessage[] {
-  const { overview, executiveKpis, execution } = data;
+  const { overview, executiveKpis, execution, briefing, nowActions } = data;
   const messages: CopilotMessage[] = [];
   const project = overview.projectName?.trim() || 'seu projeto';
 
   messages.push({
     id: 'intro',
     tone: 'intro',
-    text: `Olá! Acompanhei ${project} de perto. Você está em ${overview.currentWaveLabel} com ${overview.progressPercent}% de avanço — ${progressPhrase(
+    text: `${briefing?.greeting || 'Olá'}! Acompanhei ${project} de perto. Você está em ${overview.currentWaveLabel} com Health Score ${overview.progressPercent} — ${progressPhrase(
       overview.progressPercent,
     )}.`,
   });
@@ -53,8 +53,16 @@ export function buildMidCopilotMessages(data: MidDashboardData): CopilotMessage[
   messages.push({
     id: 'health',
     tone: overview.health === 'green' ? 'positive' : 'attention',
-    text: `${healthPhrase(overview.health)}. Vou te mostrar onde está o brilho e onde vale olhar com carinho.`,
+    text: `${healthPhrase(overview.health)}. ${briefing?.recommendation || 'Vou te mostrar onde está o brilho e onde vale olhar com carinho.'}`,
   });
+
+  if (nowActions?.[0]) {
+    messages.push({
+      id: 'now',
+      tone: 'action',
+      text: `Próximo movimento: ${nowActions[0].title}. ${nowActions[0].reason}`,
+    });
+  }
 
   const ranked = [...executiveKpis].sort(byScoreDesc);
   const top = ranked[0];

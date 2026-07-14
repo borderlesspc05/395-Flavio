@@ -12,9 +12,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: CORS_ORIGIN
-        value: http://localhost:5173,https://app.magnusmind.io,https://395-flavio2.netlify.app,https://395-flavio.netlify.app,https://melodic-cupcake-80e777.netlify.app
+        value: http://localhost:5173,https://sprint.magnusmind.io,https://app.magnusmind.io,https://395-flavio2.netlify.app,https://395-flavio.netlify.app,https://melodic-cupcake-80e777.netlify.app
       - key: FRONTEND_URL
-        value: https://app.magnusmind.io
+        value: https://sprint.magnusmind.io
       # IA real — cole OPENAI_API_KEY no painel (Secret); mesma chave do server/.env local
       - key: AI_PROVIDER
         value: openai
@@ -31,3 +31,18 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  # Segunda-feira 12:00 UTC (~09:00 BRT) — Sprint Weekly Brief
+  - type: cron
+    name: sprint-weekly-brief
+    runtime: node
+    schedule: "0 12 * * 1"
+    buildCommand: echo "cron ready"
+    startCommand: node -e "const u=process.env.WEEKLY_BRIEF_URL||'https://three95-flavio-fcha.onrender.com/api/cron/weekly-brief';fetch(u,{method:'POST',headers:{Authorization:'Bearer '+process.env.CRON_SECRET}}).then(async r=>{const t=await r.text();if(!r.ok)throw new Error(t);console.log(t);}).catch(e=>{console.error(e);process.exit(1);})"
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: WEEKLY_BRIEF_URL
+        value: https://three95-flavio-fcha.onrender.com/api/cron/weekly-brief

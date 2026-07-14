@@ -18,13 +18,22 @@ Com `STRIPE_SECRET_KEY` configurada, o botão da landing chama `POST /api/billin
 
 ## Coordenadas — o que pegar no Stripe Dashboard
 
+### 0. Chave publicável (frontend)
+
+**Stripe Dashboard → Developers → API keys → Publishable key**
+
+- Teste: `pk_test_...` · Produção: `pk_live_...`
+- Cole em `.env.production` / Netlify → `VITE_STRIPE_PUBLISHABLE_KEY`
+- É segura no browser. O Checkout hospedado do app **não depende** dela sozinha — o pagamento usa a chave secreta no Render.
+
 ### 1. Chave secreta
 
 **Stripe Dashboard → Developers → API keys → Secret key**
 
 - Teste: `sk_test_...`
 - Produção: `sk_live_...`
-- Cole em `server/.env` → `STRIPE_SECRET_KEY`
+- Cole em `server/.env` → `STRIPE_SECRET_KEY` (e no Render em produção)
+- **Use a mesma conta** da chave publicável (`pk_live_51Tdr5I...` ↔ `sk_live_51Tdr5I...`)
 
 ### 2. Três preços (assinatura mensal em BRL)
 
@@ -82,7 +91,15 @@ Na landing, clique em um plano → deve abrir `checkout.stripe.com` em portuguê
 
 **Cartão de teste:** `4242 4242 4242 4242` · validade futura · CVC qualquer.
 
-## Variáveis (Render / `server/.env`)
+## Variáveis
+
+### Frontend (Netlify / `.env.production`)
+
+| Variável | Descrição |
+|----------|-----------|
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Chave publicável (`pk_live_...` / `pk_test_...`) |
+
+### Backend (Render / `server/.env`)
 
 | Variável | Descrição |
 |----------|-----------|

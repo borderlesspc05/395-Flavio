@@ -4,6 +4,7 @@ import type { MidDashboardData } from '../../types/mid';
 import { useCycle } from '../../context/CycleContext';
 import { MidExecutiveKpiCard } from './MidExecutiveKpiCard';
 import { MidCopilotFeed } from './MidCopilotFeed';
+import { MidBriefingPanel } from './MidBriefingPanel';
 
 interface MidDashboardProps {
   data: MidDashboardData;
@@ -138,7 +139,7 @@ function EditableProjectName({ name }: { name: string }) {
 }
 
 export function MidDashboard({ data, loading }: MidDashboardProps) {
-  const { overview, executiveKpis, execution } = data;
+  const { overview, executiveKpis, execution, briefing } = data;
 
   if (loading) {
     return (
@@ -175,9 +176,15 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
               A inteligência impulsiona a evolução.
             </p>
             <p className="mid-subtitle">
-              O MID apresenta cinco indicadores executivos — incluindo o Sustainability Score da Onda
-              4 — para acompanhar evolução, execução e sustentação da mudança.
+              O Intelligence Dashboard (ID) apresenta cinco indicadores executivos — incluindo o
+              Sustainability Score da Onda 4 — e o Health Score do projeto para acompanhar evolução,
+              execução e sustentação da mudança.
             </p>
+            <MidBriefingPanel
+              briefing={briefing}
+              health={overview.health}
+              factors={overview.healthFactors ?? []}
+            />
           </div>
 
           <div className="mid-project-card">

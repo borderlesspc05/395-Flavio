@@ -70,7 +70,7 @@ export type TranslationTree = {
 export const translations: Record<Locale, TranslationTree> = {
   pt: {
     nav: {
-      hub: 'MID',
+      hub: 'ID',
       diagnostic: '1 · Diagnóstico',
       design: '2 · Design',
       diffusion: '3 · Difusão',
@@ -136,7 +136,7 @@ export const translations: Record<Locale, TranslationTree> = {
   },
   en: {
     nav: {
-      hub: 'MID',
+      hub: 'ID',
       diagnostic: '1 · Diagnostic',
       design: '2 · Design',
       diffusion: '3 · Diffusion',
@@ -202,7 +202,7 @@ export const translations: Record<Locale, TranslationTree> = {
   },
   es: {
     nav: {
-      hub: 'MID',
+      hub: 'ID',
       diagnostic: '1 · Diagnóstico',
       design: '2 · Diseño',
       diffusion: '3 · Difusión',
