@@ -46,7 +46,18 @@ export function enrichObjetivoEspecifico(
     'Critério de sucesso: adoção sustentada pela equipe, evidências nas entregas e validação do sponsor ao encerrar o prazo.',
   ];
 
-  return parts.filter(Boolean).join(' ');
+  return parts.filter(Boolean).join('\n\n');
+}
+
+/** Quebra textos longos (legado em bloco único) em parágrafos legíveis para edição. */
+export function ensureObjetivoParagraphs(text: string): string {
+  const t = text.trim();
+  if (!t || /\n/.test(t)) return t;
+  return t
+    .replace(/(concreto\.)\s+/i, '$1\n\n')
+    .replace(/\s+(Fundamento no diagnóstico:)/gi, '\n\n$1')
+    .replace(/\s+(Marcos principais:)/gi, '\n\n$1')
+    .replace(/\s+(Critério de sucesso:)/gi, '\n\n$1');
 }
 
 export function enrichDraftObjetivo(

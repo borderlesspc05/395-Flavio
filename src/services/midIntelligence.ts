@@ -204,12 +204,14 @@ export function buildBriefing(input: MidIntelligenceInput, healthScore: number, 
             : 'Equipe ainda não cadastrada',
     },
     {
-      id: 'momentum',
-      tone: accelerated > 0 ? 'positive' : 'attention',
+      id: 'today',
+      tone: atRisk > 0 || staleMembers > 0 ? 'attention' : accelerated > 0 ? 'positive' : 'attention',
       text:
-        accelerated > 0
-          ? `${accelerated} pessoa${accelerated > 1 ? 's' : ''} acelerou nesta semana`
-          : 'Nenhuma aceleração detectada nesta semana',
+        atRisk > 0 || staleMembers > 0
+          ? 'Recomendações de hoje pedem atenção'
+          : accelerated > 0
+            ? 'Recomendações de hoje sob controle'
+            : 'Recomendações de hoje para revisar',
     },
   ];
 

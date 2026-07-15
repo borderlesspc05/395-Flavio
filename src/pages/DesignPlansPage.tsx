@@ -20,7 +20,7 @@ import {
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 import { syncMagnusMemoryAfterCanvasChange } from '../services/magnusMemorySync';
 import { readStashedEvolution } from '../services/evolutionLoopStorage';
-import { enrichDraftObjetivo } from '../utils/enrichObjetivoEspecifico';
+import { enrichDraftObjetivo, ensureObjetivoParagraphs } from '../utils/enrichObjetivoEspecifico';
 import type { ActionCanvas, SuggestedActionCanvasDraft } from '../types';
 import { ToastStack } from '../components/ui/ToastStack';
 
@@ -72,6 +72,7 @@ function fromDraft(
     validated: Boolean(canvasId),
     canvasId,
     ...enriched,
+    objetivoEspecifico: ensureObjetivoParagraphs(enriched.objetivoEspecifico),
   };
 }
 
@@ -423,14 +424,11 @@ export function DesignPlansPage() {
 
       <div className="design-plans-workspace design-plans-workspace--single">
         <div className="design-plans-editor">
-          <div
-            className="design-plans-grid"
-            data-plan-count={Math.min(plans.length, 4)}
-          >
+          <div className="design-plans-stack">
             {plans.map((plan, index) => (
               <article
                 key={plan.localId}
-                className={`design-plan-card ${plan.validated ? 'is-validated' : ''} ${
+                className={`design-plan-card design-plan-card--wide ${plan.validated ? 'is-validated' : ''} ${
                   activePlan?.localId === plan.localId ? 'is-active' : ''
                 }`}
                 onClick={() => setActivePlanId(plan.localId)}
@@ -447,85 +445,104 @@ export function DesignPlansPage() {
                     </span>
                     <h2>Plano de ação</h2>
                   </div>
-                  {plan.validated && (
-                    <span className="design-plan-validated">
-                      <CheckCircle2 size={15} aria-hidden />
-                      Validado
-                    </span>
-                  )}
-                  {syncingId === plan.localId && (
-                    <Loader2 size={14} className="spin design-plan-sync" aria-label="Sincronizando" />
-                  )}
+                  <div className="design-plan-card-head-meta">
+                    {plan.validated && (
+                      <span className="design-plan-validated">
+                        <CheckCircle2 size={15} aria-hidden />
+                        Validado
+                      </span>
+                    )}
+                    {syncingId === plan.localId && (
+                      <Loader2 size={14} className="spin design-plan-sync" aria-label="Sincronizando" />
+                    )}
+                  </div>
                 </div>
 
-                <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
+                <label className="design-plan-field design-plan-field--initiative" onClick={(e) => e.stopPropagation()}>
                   <span>Iniciativa</span>
                   <input
                     value={plan.nomeIniciativa}
                     onChange={(e) => updatePlan(plan.localId, { nomeIniciativa: e.target.value })}
                   />
                 </label>
-                <label className="design-plan-field design-plan-field--objective" onClick={(e) => e.stopPropagation()}>
-                  <span>Objetivo específico</span>
-                  <small className="design-plan-field-hint">
-                    Resultado mensurável, contexto do diagnóstico, critério de sucesso e escopo
-                  </small>
-                  <textarea
-                    rows={5}
-                    value={plan.objetivoEspecifico}
-                    onChange={(e) => updatePlan(plan.localId, { objetivoEspecifico: e.target.value })}
-                    placeholder="Ex.: Até 30/09, reduzir em 20% o retrabalho no processo X, com piloto em 2 squads, métrica semanal validada pelo sponsor e evidências nas entregas."
-                  />
-                </label>
-                <div className="design-plan-row">
-                  <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
-                    <span>Owner</span>
-                    <input value={plan.owner} onChange={(e) => updatePlan(plan.localId, { owner: e.target.value })} />
-                  </label>
-                  <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
-                    <span>Sponsor</span>
-                    <input value={plan.sponsor} onChange={(e) => updatePlan(plan.localId, { sponsor: e.target.value })} />
-                  </label>
-                </div>
-                <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
-                  <span>Prazo final</span>
-                  <input
-                    type="date"
-                    value={plan.prazoFinal}
-                    onChange={(e) => updatePlan(plan.localId, { prazoFinal: e.target.value })}
-                  />
-                </label>
 
-                <div className="design-plan-deliveries">
-                  <h3>Sugestões personalizadas para você</h3>
-                  <ul>
-                    {plan.entregas.map((e, i) => (
-                      <li key={i}>
-                        {e.entrega} - {e.responsavel}, {e.prazo}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <div className="design-plan-card-body">
+                  <label className="design-plan-field design-plan-field--objective" onClick={(e) => e.stopPropagation()}>
+                    <span>Objetivo específico</span>
+                    <small className="design-plan-field-hint">
+                      Resultado mensurável · contexto do diagnóstico · critério de sucesso · escopo
+                    </small>
+                    <textarea
+                      rows={12}
+                      value={plan.objetivoEspecifico}
+                      onChange={(e) => updatePlan(plan.localId, { objetivoEspecifico: e.target.value })}
+                      placeholder={
+                        'Escreva em parágrafos claros, por exemplo:\n\n' +
+                        'Até 30/09, reduzir em 20% o retrabalho no processo X…\n\n' +
+                        'Fundamento no diagnóstico: …\n\n' +
+                        'Critério de sucesso: …'
+                      }
+                    />
+                  </label>
 
-                <div className="design-plan-actions" onClick={(e) => e.stopPropagation()}>
-                  {!plan.validated && (
-                    <button
-                      type="button"
-                      className="design-plan-btn is-primary"
-                      onClick={() => void validatePlan(plan.localId)}
-                      disabled={syncingId === plan.localId}
-                    >
-                      Validar plano
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="design-plan-btn is-danger"
-                    onClick={() => void removePlan(plan.localId)}
-                    aria-label="Remover plano"
-                  >
-                    <Trash2 size={16} aria-hidden />
-                  </button>
+                  <aside className="design-plan-side">
+                    <div className="design-plan-row">
+                      <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
+                        <span>Owner</span>
+                        <input
+                          value={plan.owner}
+                          onChange={(e) => updatePlan(plan.localId, { owner: e.target.value })}
+                        />
+                      </label>
+                      <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
+                        <span>Sponsor</span>
+                        <input
+                          value={plan.sponsor}
+                          onChange={(e) => updatePlan(plan.localId, { sponsor: e.target.value })}
+                        />
+                      </label>
+                    </div>
+                    <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
+                      <span>Prazo final</span>
+                      <input
+                        type="date"
+                        value={plan.prazoFinal}
+                        onChange={(e) => updatePlan(plan.localId, { prazoFinal: e.target.value })}
+                      />
+                    </label>
+
+                    <div className="design-plan-deliveries">
+                      <h3>Sugestões personalizadas para você</h3>
+                      <ul>
+                        {plan.entregas.map((e, i) => (
+                          <li key={i}>
+                            {e.entrega} — {e.responsavel}, {e.prazo}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="design-plan-actions" onClick={(e) => e.stopPropagation()}>
+                      {!plan.validated && (
+                        <button
+                          type="button"
+                          className="design-plan-btn is-primary"
+                          onClick={() => void validatePlan(plan.localId)}
+                          disabled={syncingId === plan.localId}
+                        >
+                          Validar plano
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="design-plan-btn is-danger"
+                        onClick={() => void removePlan(plan.localId)}
+                        aria-label="Remover plano"
+                      >
+                        <Trash2 size={16} aria-hidden />
+                      </button>
+                    </div>
+                  </aside>
                 </div>
               </article>
             ))}

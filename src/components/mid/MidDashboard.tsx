@@ -168,7 +168,7 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
         <div className="mid-overview-grid mid-overview-grid--slim">
           <div className="mid-overview-copy">
             <h1 id="mid-overview" className="mid-title">
-              Sprint Intelligence Dashboard
+              Intelligence Dashboard
             </h1>
             <p className="mid-mantra">
               A execução gera inteligência.
