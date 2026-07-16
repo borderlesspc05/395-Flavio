@@ -16,7 +16,6 @@ export function MidBriefingPanel({ briefing, health, factors }: MidBriefingPanel
     <div className="mid-briefing" aria-label="Intelligence Dashboard">
       <div className="mid-briefing-top">
         <div className="mid-briefing-lead">
-          <p className="mid-briefing-eyebrow">Intelligence Dashboard</p>
           <h2 className="mid-briefing-greeting">{briefing.greeting}</h2>
         </div>
 
@@ -40,7 +39,7 @@ export function MidBriefingPanel({ briefing, health, factors }: MidBriefingPanel
       </ul>
 
       <div className="mid-briefing-reco">
-        <p className="mid-briefing-reco-label">Recomendação da IA</p>
+        <p className="mid-briefing-reco-label">Recomendação de hoje</p>
         <p className="mid-briefing-reco-text">{briefing.recommendation}</p>
       </div>
 

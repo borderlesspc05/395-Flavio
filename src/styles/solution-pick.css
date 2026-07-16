@@ -26,6 +26,17 @@
   font-weight: 700;
 }
 
+.solution-pick-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.solution-pick-title-row h2 {
+  margin: 0;
+}
+
 .solution-pick-header h2 {
   margin: 0.35rem 0 0.5rem;
   font-size: 1.35rem;

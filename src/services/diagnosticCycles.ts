@@ -13,6 +13,7 @@ import { api } from './api';
 import { getBlueprintGate, saveBlueprintGateSelection, clearBlueprintGate } from './blueprintGate';
 import { clearInitialForm, getInitialForm, saveInitialFormDraft } from './initialForm';
 import type { InitialFormData } from '../types';
+import type { PhaseLocks } from '../types/phaseLock';
 
 export type CycleStatus = 'draft' | 'active' | 'archived';
 
@@ -27,6 +28,8 @@ export interface DiagnosticCycle {
   gatePath?: BlueprintPath;
   gateRationale?: string;
   formData?: InitialFormData;
+  /** Travamento das fases do Sprint Waves (persistido no ciclo) */
+  phaseLocks?: PhaseLocks;
   completedAt?: string;
   createdAt: string;
   archivedAt?: string;
@@ -53,6 +56,10 @@ function mapCycleDoc(id: string, raw: Record<string, unknown>): DiagnosticCycle 
     gatePath: raw.gatePath === 'A' || raw.gatePath === 'B' ? raw.gatePath : undefined,
     gateRationale: raw.gateRationale ? String(raw.gateRationale) : undefined,
     formData: raw.formData as InitialFormData | undefined,
+    phaseLocks:
+      raw.phaseLocks && typeof raw.phaseLocks === 'object'
+        ? (raw.phaseLocks as PhaseLocks)
+        : undefined,
     completedAt: raw.completedAt ? String(raw.completedAt) : undefined,
     createdAt: createdAt.toISOString(),
     archivedAt: archivedAt ? archivedAt.toISOString() : undefined,
@@ -136,6 +143,7 @@ export async function updateDiagnosticCycle(
       | 'gatePath'
       | 'gateRationale'
       | 'formData'
+      | 'phaseLocks'
     >
   > & {
     archivedAt?: string | true;

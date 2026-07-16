@@ -41,6 +41,10 @@ import {
 import { AiStatusAlert } from '../AiStatusAlert';
 import { useAiStatus } from '../../hooks/useAiStatus';
 import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../../utils/apiError';
+import { PhaseInfoButton } from '../ui/PhaseInfoButton';
+import { PhaseLockBanner } from '../ui/PhaseLockBanner';
+import { usePhaseLock } from '../../hooks/usePhaseLock';
+import { lockSprintPhase } from '../../services/phaseLock';
 
 const AUTO_SAVE_MS = 2500;
 
@@ -81,6 +85,7 @@ interface Props {
 
 export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
   const navigate = useViewTransitionNavigate();
+  const { locks, setLocks, locked: phaseLocked, cycle } = usePhaseLock('domain');
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -278,9 +283,13 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
     if (!domainData) return;
     const ok = await persist(domainData);
     if (ok) {
+      if (cycle) {
+        await lockSprintPhase(cycle, 'domain');
+        await lockSprintPhase(cycle, 'loopClosed');
+      }
       navigate('/dashboard/historico', { state: { cycleClosed: true } });
     }
-  }, [domainData, persist, navigate]);
+  }, [domainData, persist, navigate, cycle]);
 
   useEffect(() => {
     if (!notice) return;
@@ -295,7 +304,8 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
   const completedPlans = plans.filter((p) => p.status === 'concluido');
 
   return (
-    <div className={`domain-wave${hasEntered ? ' is-entered' : ''}`}>
+    <div className={`domain-wave phase-locked-shell${phaseLocked ? ' is-locked' : ''}${hasEntered ? ' is-entered' : ''}`}>
+      <PhaseLockBanner phase="domain" locks={locks} cycle={cycle} onLocksChange={setLocks} />
       <div className="domain-wave-bg" aria-hidden>
         <div className="domain-wave-glow domain-wave-glow--1" />
         <div className="domain-wave-glow domain-wave-glow--2" />
@@ -311,10 +321,23 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
             <p className="domain-wave-eyebrow sprint-wave-eyebrow">
               SPRINT WAVES™ · Onda 4
             </p>
-            <h1 className="domain-wave-question sprint-wave-title">Domínio</h1>
+            <div className="design-plans-title-row">
+              <h1 className="domain-wave-question sprint-wave-title">Domínio</h1>
+              <PhaseInfoButton title="Sobre o Domínio">
+                <p>
+                  Tudo nesta etapa é <strong>opcional</strong>. Use o Domínio para registrar impacto,
+                  aprendizados e sustentação — a plataforma aprende com o que você compartilha e
+                  alimenta o próximo ciclo.
+                </p>
+                <p>
+                  Não há campos obrigatórios. Quanto mais contexto você deixar, mais útil fica o
+                  Intelligence Dashboard e o Loop contínuo.
+                </p>
+              </PhaseInfoButton>
+            </div>
             <p className="domain-wave-lead sprint-wave-subtitle">
-              Transforme execução em inteligência organizacional. Registre impacto, aprendizados e
-              sustentação para alimentar o Intelligence Dashboard e o próximo ciclo.
+              Opcional: registre impacto e aprendizados. A plataforma aprende com você para o próximo
+              ciclo — sem pressão para preencher tudo.
             </p>
           </div>
         </div>

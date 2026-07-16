@@ -20,6 +20,7 @@ export interface ServerDiagnosticCycle {
   gatePath?: 'A' | 'B';
   gateRationale?: string;
   formData?: Record<string, unknown>;
+  phaseLocks?: Record<string, boolean>;
   completedAt?: string;
   createdAt: string;
   archivedAt?: string;
@@ -41,6 +42,10 @@ function mapCycleDoc(id: string, raw: Record<string, unknown>): ServerDiagnostic
     gatePath: raw.gatePath === 'A' || raw.gatePath === 'B' ? raw.gatePath : undefined,
     gateRationale: raw.gateRationale ? String(raw.gateRationale) : undefined,
     formData: raw.formData as Record<string, unknown> | undefined,
+    phaseLocks:
+      raw.phaseLocks && typeof raw.phaseLocks === 'object'
+        ? (raw.phaseLocks as Record<string, boolean>)
+        : undefined,
     completedAt: raw.completedAt ? String(raw.completedAt) : undefined,
     createdAt,
     archivedAt,
@@ -137,6 +142,7 @@ export async function updateDiagnosticCycleForUser(
     gatePath: 'A' | 'B';
     gateRationale: string;
     formData: Record<string, unknown>;
+    phaseLocks: Record<string, boolean>;
     completedAt: string | null;
     archivedAt: string | true;
   }>
@@ -161,6 +167,7 @@ export async function updateDiagnosticCycleForUser(
   if (patch.gatePath !== undefined) next.gatePath = patch.gatePath;
   if (patch.gateRationale !== undefined) next.gateRationale = patch.gateRationale.trim() || null;
   if (patch.formData !== undefined) next.formData = patch.formData;
+  if (patch.phaseLocks !== undefined) next.phaseLocks = patch.phaseLocks;
   if (patch.completedAt !== undefined) next.completedAt = patch.completedAt;
   if (patch.archivedAt || patch.status === 'archived') {
     next.archivedAt = new Date();

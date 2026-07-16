@@ -12,6 +12,8 @@ import {
   Menu,
   UserCircle,
   FolderKanban,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -51,8 +53,8 @@ export function DashboardLayout() {
     { id: 'consultoria', label: t.nav.design, icon: Bot, path: '/dashboard/design' },
     { id: 'objetivos', label: t.nav.diffusion, icon: Target, path: '/dashboard/objetivos' },
     { id: 'relatorios', label: t.nav.domain, icon: BarChart3, path: '/dashboard/relatorios' },
-    { id: 'equipe', label: t.nav.team, icon: Users, path: '/dashboard/minha-equipe' },
     { id: 'historico', label: t.nav.loop, icon: History, path: '/dashboard/historico' },
+    { id: 'equipe', label: t.nav.team, icon: Users, path: '/dashboard/minha-equipe' },
     { id: 'conta', label: t.nav.account, icon: UserCircle, path: '/dashboard/conta' },
   ];
 
@@ -149,7 +151,13 @@ export function DashboardLayout() {
               aria-label={sidebarCollapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
               aria-expanded={!sidebarCollapsed}
               title={sidebarCollapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
-            />
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen size={18} aria-hidden />
+              ) : (
+                <PanelLeftClose size={18} aria-hidden />
+              )}
+            </button>
             <img src="/icone-magnusmind.svg" alt="" className="sidebar-logo" aria-hidden />
             <p className="logo-text">Sprint</p>
           </div>

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { ArrowRight, ClipboardList, Layers3, Sparkles } from 'lucide-react';
+import { ArrowRight, ClipboardList, Clock3, Layers3, Sparkles } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ORGANIZATIONAL_SCANS } from '../constants/organizationalScans';
@@ -17,6 +17,7 @@ import {
   getScanStatus,
   getScanStatusLabel,
 } from '../utils/organizationalScans';
+import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
 import '../styles/organizational-scans.css';
 
 export function OrganizationalScansHubPage() {
@@ -73,6 +74,17 @@ export function OrganizationalScansHubPage() {
             <p className="sprint-wave-subtitle">
               Escolha o diagnóstico completo ou um scan focado para gerar o Solution Pick.
             </p>
+            <PhaseInfoButton title="Como escolher o diagnóstico">
+              <p>
+                O <strong>diagnóstico completo</strong> percorre o canvas Sprint Waves e oferece
+                profundidade máxima. O <strong>diagnóstico focado</strong> (incluindo SWOT Analysis
+                Scan) é mais rápido e pode substituir o canvas para análises estratégicas iniciais.
+              </p>
+              <p>
+                Em ambos os caminhos, ao concluir você segue para o Solution Pick, onde a plataforma
+                sugere planos de ação dentro da sua esfera de influência.
+              </p>
+            </PhaseInfoButton>
           </div>
         </div>
       </header>
@@ -161,9 +173,31 @@ export function OrganizationalScansHubPage() {
                 </div>
                 <h3>{scan.title}</h3>
                 <p>{scan.subtitle}</p>
-                {!isSoon && status === 'in_progress' ? (
-                  <span className="organizational-scan-card-meta">
-                    {completion.answered} de {completion.total} perguntas
+                <div className="organizational-scan-card-meta-row">
+                  {typeof scan.estimatedMinutes === 'number' ? (
+                    <span className="organizational-scan-card-minutes">
+                      <Clock3 size={13} aria-hidden />~{scan.estimatedMinutes} min
+                    </span>
+                  ) : null}
+                  {!isSoon && status === 'in_progress' ? (
+                    <span className="organizational-scan-card-meta">
+                      {completion.answered} de {completion.total} perguntas
+                    </span>
+                  ) : null}
+                </div>
+                {scan.guidance ? (
+                  <span
+                    className="organizational-scan-card-info"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    role="presentation"
+                  >
+                    <PhaseInfoButton title={scan.title} label="Info">
+                      <p>{scan.intro}</p>
+                      {scan.guidance.split('\n\n').map((para) => (
+                        <p key={para.slice(0, 24)}>{para}</p>
+                      ))}
+                    </PhaseInfoButton>
                   </span>
                 ) : null}
               </button>

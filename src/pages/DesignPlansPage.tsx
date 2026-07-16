@@ -23,11 +23,17 @@ import { readStashedEvolution } from '../services/evolutionLoopStorage';
 import { enrichDraftObjetivo, ensureObjetivoParagraphs } from '../utils/enrichObjetivoEspecifico';
 import type { ActionCanvas, SuggestedActionCanvasDraft } from '../types';
 import { ToastStack } from '../components/ui/ToastStack';
+import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
+import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
+import { TeamMemberCombobox } from '../components/ui/TeamMemberCombobox';
+import { usePhaseLock } from '../hooks/usePhaseLock';
 
 type EditablePlan = SuggestedActionCanvasDraft & {
   localId: string;
   validated: boolean;
   canvasId?: string;
+  successCriteria: string[];
+  inheritedFromCycle?: boolean;
 };
 
 function newId() {
@@ -40,15 +46,26 @@ function defaultPrazo(days: number): string {
   return d.toISOString().split('T')[0];
 }
 
+function emptyCriteria(): string[] {
+  return ['', '', ''];
+}
+
+function normalizeCriteria(raw?: string[] | null): string[] {
+  const list = Array.isArray(raw) ? raw.map((c) => String(c ?? '')) : [];
+  while (list.length < 3) list.push('');
+  return list.slice(0, 3);
+}
+
 function blankPlan(): EditablePlan {
   return {
     localId: newId(),
     validated: false,
     nomeIniciativa: '',
     objetivoEspecifico: '',
-    owner: 'Líder da iniciativa',
-    sponsor: 'Sponsor executivo',
+    owner: '',
+    sponsor: '',
     prazoFinal: defaultPrazo(90),
+    successCriteria: emptyCriteria(),
     entregas: [
       {
         entrega: '',
@@ -59,6 +76,16 @@ function blankPlan(): EditablePlan {
     ],
     riscos: [{ risco: '', acaoTomar: '' }],
   };
+}
+
+function suggestCriteriaLocal(plan: EditablePlan): string[] {
+  const title = plan.nomeIniciativa.trim() || 'a iniciativa';
+  const prazo = plan.prazoFinal || 'o prazo definido';
+  return [
+    `Indicador mensurável de avanço de ${title} até ${prazo}`,
+    `Evidência clara de adoção/uso pela equipe responsável`,
+    `Risco principal mitigado ou com plano de contingência ativo`,
+  ];
 }
 
 function fromDraft(
@@ -73,6 +100,31 @@ function fromDraft(
     canvasId,
     ...enriched,
     objetivoEspecifico: ensureObjetivoParagraphs(enriched.objetivoEspecifico),
+    successCriteria: normalizeCriteria(enriched.successCriteria),
+    inheritedFromCycle: Boolean(enriched.inheritedFromCycle),
+  };
+}
+
+function fromCanvas(canvas: ActionCanvas): EditablePlan {
+  return {
+    localId: newId(),
+    validated: true,
+    canvasId: canvas.id,
+    nomeIniciativa: canvas.nomeIniciativa,
+    objetivoEspecifico: ensureObjetivoParagraphs(canvas.objetivoEspecifico),
+    owner: canvas.owner,
+    sponsor: canvas.sponsor,
+    prazoFinal: canvas.prazoFinal,
+    successCriteria: normalizeCriteria(canvas.successCriteria),
+    inheritedFromCycle: Boolean(canvas.inheritedFromCycle),
+    entregas: canvas.entregas.map((e) => ({
+      entrega: e.entrega,
+      responsavel: e.responsavel,
+      prazo: e.prazo,
+      status: e.status,
+      evidencia: e.evidencia,
+    })),
+    riscos: canvas.riscos.map((r) => ({ risco: r.risco, acaoTomar: r.acaoTomar })),
   };
 }
 
@@ -96,6 +148,8 @@ function toCreateBody(plan: EditablePlan) {
     owner: plan.owner.trim() || 'A definir',
     sponsor: plan.sponsor.trim() || 'A definir',
     prazoFinal: plan.prazoFinal || defaultPrazo(90),
+    successCriteria: normalizeCriteria(plan.successCriteria).map((c) => c.trim()).filter(Boolean),
+    inheritedFromCycle: Boolean(plan.inheritedFromCycle),
     signOff: 'pendente' as const,
     fechado: false,
     entregas: plan.entregas.map((e, i) => ({
@@ -142,11 +196,18 @@ function linkPlansToCanvases(
     const match = byTitle.get(key);
     if (match && !used.has(match.id)) {
       used.add(match.id);
-      return fromDraft(item.draft, match.id, {
+      const plan = fromDraft(item.draft, match.id, {
         descricao: item.descricao,
         rationale: item.rationale,
         categoria: item.categoria,
       });
+      return {
+        ...plan,
+        successCriteria: normalizeCriteria(match.successCriteria ?? plan.successCriteria),
+        inheritedFromCycle: Boolean(match.inheritedFromCycle),
+        owner: match.owner || plan.owner,
+        sponsor: match.sponsor || plan.sponsor,
+      };
     }
     return fromDraft(item.draft, undefined, {
       descricao: item.descricao,
@@ -159,6 +220,7 @@ function linkPlansToCanvases(
 export function DesignPlansPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { locks, setLocks, locked: phaseLocked, cycle, lockCurrent } = usePhaseLock('design');
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<EditablePlan[]>([]);
@@ -208,12 +270,18 @@ export function DesignPlansPage() {
         actionCanvasesApi.list().catch(() => [] as ActionCanvas[]),
       ]);
       const selected = resolveSelectedActions(location.state, data);
-      if (selected.length === 0) {
-        setPlans([]);
-        setActivePlanId(null);
-        return;
+      let next =
+        selected.length > 0
+          ? linkPlansToCanvases(selected, canvases)
+          : canvases.map((c) => fromCanvas(c));
+      // Append inherited canvases not already linked
+      const linkedIds = new Set(next.map((p) => p.canvasId).filter(Boolean));
+      for (const canvas of canvases) {
+        if (canvas.inheritedFromCycle && !linkedIds.has(canvas.id)) {
+          next = [...next, fromCanvas(canvas)];
+          linkedIds.add(canvas.id);
+        }
       }
-      const next = linkPlansToCanvases(selected, canvases);
       setPlans(next);
       setActivePlanId((prev) => (prev && next.some((p) => p.localId === prev) ? prev : next[0]?.localId ?? null));
     } catch {
@@ -331,6 +399,7 @@ export function DesignPlansPage() {
         }
       }
       await syncMagnusMemoryAfterCanvasChange();
+      await lockCurrent();
       navigate('/dashboard/objetivos', {
         state: {
           postDesignNotice: {
@@ -385,7 +454,8 @@ export function DesignPlansPage() {
   const evolutionCarryOver = readStashedEvolution();
 
   return (
-    <div className="design-plans-page">
+    <div className={`design-plans-page phase-locked-shell${phaseLocked ? ' is-locked' : ''}`}>
+      <PhaseLockBanner phase="design" locks={locks} cycle={cycle} onLocksChange={setLocks} />
       {evolutionCarryOver && (
         <div className="design-evolution-banner">
           <p className="design-evolution-banner__eyebrow">Nova onda · Evolution Loop</p>
@@ -400,9 +470,22 @@ export function DesignPlansPage() {
           </div>
           <div className="sprint-wave-title-copy">
             <span className="design-plans-kicker sprint-wave-eyebrow">SPRINT WAVES™ · Onda 2</span>
-            <h1 className="sprint-wave-title">Design</h1>
+            <div className="design-plans-title-row">
+              <h1 className="sprint-wave-title">Design</h1>
+              <PhaseInfoButton title="Como usar o Design">
+                <p>
+                  Transforme as ações escolhidas no Solution Pick em planos claros: o que a iniciativa
+                  pretende alcançar, como saberão que deu certo e quem lidera.
+                </p>
+                <p>
+                  Detalhes operacionais (entregas, riscos e sign-off) ficam para a Difusão. Aqui o
+                  foco é clareza de intenção e critérios de sucesso.
+                </p>
+              </PhaseInfoButton>
+            </div>
             <p className="sprint-wave-subtitle">
-              Valide seus planos de ação e confirme apenas o que estiver pronto para ser publicado na Difusão.
+              Defina iniciativa, resultado esperado e critérios de sucesso. Owner e Sponsor vêm da
+              equipe — valide só o que estiver pronto para a Difusão.
             </p>
           </div>
         </div>
@@ -430,7 +513,7 @@ export function DesignPlansPage() {
                 key={plan.localId}
                 className={`design-plan-card design-plan-card--wide ${plan.validated ? 'is-validated' : ''} ${
                   activePlan?.localId === plan.localId ? 'is-active' : ''
-                }`}
+                } ${plan.inheritedFromCycle ? 'is-inherited' : ''}`}
                 onClick={() => setActivePlanId(plan.localId)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') setActivePlanId(plan.localId);
@@ -444,6 +527,9 @@ export function DesignPlansPage() {
                       {index + 1}
                     </span>
                     <h2>Plano de ação</h2>
+                    {plan.inheritedFromCycle ? (
+                      <span className="design-plan-inherited-badge">Herdado do ciclo anterior</span>
+                    ) : null}
                   </div>
                   <div className="design-plan-card-head-meta">
                     {plan.validated && (
@@ -468,39 +554,60 @@ export function DesignPlansPage() {
 
                 <div className="design-plan-card-body">
                   <label className="design-plan-field design-plan-field--objective" onClick={(e) => e.stopPropagation()}>
-                    <span>Objetivo específico</span>
+                    <span>O que esta iniciativa pretende alcançar?</span>
                     <small className="design-plan-field-hint">
-                      Resultado mensurável · contexto do diagnóstico · critério de sucesso · escopo
+                      Descreva o resultado desejado em linguagem clara — detalhes operacionais ficam na Difusão.
                     </small>
                     <textarea
-                      rows={12}
+                      rows={8}
                       value={plan.objetivoEspecifico}
                       onChange={(e) => updatePlan(plan.localId, { objetivoEspecifico: e.target.value })}
-                      placeholder={
-                        'Escreva em parágrafos claros, por exemplo:\n\n' +
-                        'Até 30/09, reduzir em 20% o retrabalho no processo X…\n\n' +
-                        'Fundamento no diagnóstico: …\n\n' +
-                        'Critério de sucesso: …'
-                      }
+                      placeholder="Ex.: Reduzir retrabalho no processo X e alinhar a equipe em um ritmo semanal claro…"
                     />
                   </label>
 
+                  <div className="design-plan-criteria" onClick={(e) => e.stopPropagation()}>
+                    <div className="design-plan-criteria-head">
+                      <span>Como saberemos que deu certo?</span>
+                      <button
+                        type="button"
+                        className="design-plan-btn is-ghost"
+                        onClick={() =>
+                          updatePlan(plan.localId, { successCriteria: suggestCriteriaLocal(plan) })
+                        }
+                      >
+                        <Sparkles size={14} aria-hidden />
+                        Sugerir critérios
+                      </button>
+                    </div>
+                    {normalizeCriteria(plan.successCriteria).map((criterion, ci) => (
+                      <label key={ci} className="design-plan-field">
+                        <span>Critério {ci + 1}</span>
+                        <input
+                          value={criterion}
+                          onChange={(e) => {
+                            const next = normalizeCriteria(plan.successCriteria);
+                            next[ci] = e.target.value;
+                            updatePlan(plan.localId, { successCriteria: next });
+                          }}
+                          placeholder={`Indicador observável ${ci + 1}`}
+                        />
+                      </label>
+                    ))}
+                  </div>
+
                   <aside className="design-plan-side">
-                    <div className="design-plan-row">
-                      <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
-                        <span>Owner</span>
-                        <input
-                          value={plan.owner}
-                          onChange={(e) => updatePlan(plan.localId, { owner: e.target.value })}
-                        />
-                      </label>
-                      <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
-                        <span>Sponsor</span>
-                        <input
-                          value={plan.sponsor}
-                          onChange={(e) => updatePlan(plan.localId, { sponsor: e.target.value })}
-                        />
-                      </label>
+                    <div className="design-plan-row" onClick={(e) => e.stopPropagation()}>
+                      <TeamMemberCombobox
+                        label="Owner"
+                        value={plan.owner}
+                        onChange={(owner) => updatePlan(plan.localId, { owner })}
+                      />
+                      <TeamMemberCombobox
+                        label="Sponsor"
+                        value={plan.sponsor}
+                        onChange={(sponsor) => updatePlan(plan.localId, { sponsor })}
+                      />
                     </div>
                     <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
                       <span>Prazo final</span>

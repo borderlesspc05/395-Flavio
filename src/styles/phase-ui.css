@@ -1,0 +1,190 @@
+/* Phase Info + Phase Lock shared UI */
+
+.phase-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(175, 146, 112, 0.1);
+  color: #ffbc7d;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.phase-info-btn:hover {
+  background: rgba(175, 146, 112, 0.18);
+  border-color: rgba(255, 188, 125, 0.5);
+}
+
+.phase-info-btn__text {
+  letter-spacing: 0.02em;
+}
+
+.phase-info-body {
+  color: rgba(241, 235, 224, 0.88);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.phase-info-body p {
+  margin: 0 0 0.85rem;
+}
+
+.phase-info-body p:last-child {
+  margin-bottom: 0;
+}
+
+.phase-info-body ul {
+  margin: 0 0 0.85rem;
+  padding-left: 1.2rem;
+}
+
+.phase-info-body li {
+  margin-bottom: 0.35rem;
+}
+
+.phase-info-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.phase-info-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #af9270, #8a7358);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.phase-info-close.is-ghost {
+  background: transparent;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  color: #f3ead8;
+}
+
+.phase-info-close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.phase-lock-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: linear-gradient(160deg, rgba(28, 22, 18, 0.92), rgba(14, 18, 24, 0.9));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.phase-lock-banner__copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: #ffbc7d;
+  min-width: 0;
+  flex: 1;
+}
+
+.phase-lock-banner__copy strong {
+  display: block;
+  color: #f3ead8;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.phase-lock-banner__copy p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(241, 235, 224, 0.7);
+}
+
+.phase-lock-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 188, 125, 0.45);
+  background: rgba(255, 188, 125, 0.12);
+  color: #ffbc7d;
+  font-weight: 700;
+  font-size: 0.84rem;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.phase-lock-banner__hint {
+  font-size: 0.75rem;
+  color: rgba(241, 235, 224, 0.5);
+  max-width: 12rem;
+  text-align: right;
+}
+
+.phase-lock-confirm-text {
+  margin: 0;
+  color: rgba(241, 235, 224, 0.88);
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.phase-lock-confirm-error {
+  margin: 0.75rem 0 0;
+  color: #f0c4bf;
+  font-size: 0.85rem;
+}
+
+.phase-locked-shell {
+  position: relative;
+}
+
+.phase-locked-shell.is-locked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: rgba(8, 10, 14, 0.45);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.phase-locked-shell.is-locked {
+  filter: saturate(0.85);
+}
+
+.phase-locked-shell.is-locked .phase-lock-banner {
+  position: relative;
+  z-index: 3;
+  filter: none;
+}
+
+.phase-locked-shell.is-locked input,
+.phase-locked-shell.is-locked textarea,
+.phase-locked-shell.is-locked select,
+.phase-locked-shell.is-locked button:not(.phase-lock-banner__btn):not(.phase-info-btn):not(.phase-info-close):not(.menu-toggle) {
+  pointer-events: none;
+}

@@ -79,6 +79,10 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
         req.body?.formData && typeof req.body.formData === 'object'
           ? (req.body.formData as Record<string, unknown>)
           : undefined,
+      phaseLocks:
+        req.body?.phaseLocks && typeof req.body.phaseLocks === 'object'
+          ? (req.body.phaseLocks as Record<string, boolean>)
+          : undefined,
       completedAt:
         req.body?.completedAt === null
           ? null

@@ -452,16 +452,23 @@ ${ragResult.context}`
     ragChunkCount: ragResult.vectorChunkCount,
   });
 
-  const prompt = `Voce e o motor de Solution Pick do Magnus Mind (etapa 1.5).
+  const prompt = `Voce e o motor de Solution Pick do Magnus Mind / Sprint (etapa 1.5).
 
-Leia o diagnostico da empresa abaixo. Quando houver contexto RAG, use como complemento.
+Leia o diagnostico da empresa abaixo (pode incluir SWOT Analysis Scan ou canvas completo). Quando houver contexto RAG, use como complemento.
+
+REGRA CRITICA — ESFERA DE INFLUENCIA:
+Todas as recomendacoes devem estar dentro da esfera de influencia e controle do usuario.
+Nunca proponha acoes para fatores fora da capacidade de decisao ou execucao dele.
+Exemplo: se a ameaca/fraqueza for variacao do cambio do dolar, NAO sugira "alterar a cotacao do dolar".
+Em vez disso, sugira estrategias ao alcance do usuario: revisar politicas de precos, renegociar contratos, diversificar fornecedores, ajustar planejamento financeiro ou mitigar impactos.
+O principio: transformar problemas em acoes concretas, realistas e executaveis pelo usuario.
 
 PRIMEIRO sintetize em portugues do Brasil, com profundidade consultiva e sem frases genericas:
 1) companySummary: exatamente 2 paragrafos. Cada paragrafo deve ter 3 a 4 frases, trazendo leitura executiva, dores reais, prioridades e implicacoes para o negocio. Separe os dois paragrafos com "\\n\\n".
 2) companySituation: exatamente 2 paragrafos. Cada paragrafo deve ter 3 a 4 frases, descrevendo o que a empresa esta vivendo agora, tensoes organizacionais, sintomas do dia a dia e riscos se nada mudar. Separe os dois paragrafos com "\\n\\n".
 
-DEPOIS proponha exatamente 10 acoes de plano de mudanca concretas.
-Cada acao deve nascer das evidencias do diagnostico.
+DEPOIS proponha exatamente 10 acoes de plano de mudanca concretas e EXECUTAVEIS pelo usuario.
+Cada acao deve nascer das evidencias do diagnostico (incluindo SWOT quando houver).
 Atribua score de 0 a 100 = probabilidade de impacto real.
 Ordene do maior para o menor score.
 
@@ -489,7 +496,7 @@ Responda APENAS com JSON valido (sem markdown):
         {
           role: 'system',
           content:
-            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). companySummary e companySituation devem ter exatamente 2 paragrafos cada, separados por duas quebras de linha.',
+            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). companySummary e companySituation devem ter exatamente 2 paragrafos cada, separados por duas quebras de linha. Toda acao sugerida deve estar na esfera de influencia do usuario — nunca proponha mudar fatores externos incontrolaveis (ex.: cotacao do dolar); proponha mitigacoes executaveis.',
         },
         { role: 'user', content: prompt },
       ],

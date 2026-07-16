@@ -22,7 +22,11 @@ import {
   X,
 } from 'lucide-react';
 import { auth } from '../config/firebase';
-import { ActionCanvasPanel } from '../components/ActionCanvasPanel';
+import { DiffusionWorkspace } from '../components/diffusion/DiffusionWorkspace';
+import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
+import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
+import { usePhaseLock } from '../hooks/usePhaseLock';
+import { lockSprintPhase } from '../services/phaseLock';
 import { objectivesApi } from '../services/api';
 import { loadDesignDiffusionContext, type DesignDiffusionContext } from '../services/designDiffusionContext';
 import {
@@ -131,6 +135,7 @@ function defaultDueDate(horizon?: ObjectiveHorizon) {
 
 export function ObjetivosPage() {
   const navigate = useNavigate();
+  const { locks, setLocks, locked: phaseLocked, cycle } = usePhaseLock('diffusion');
   const location = useLocation();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
@@ -459,7 +464,13 @@ export function ObjetivosPage() {
   };
 
   return (
-    <div className="objetivos-page">
+    <div className={`objetivos-page phase-locked-shell${phaseLocked ? ' is-locked' : ''}`}>
+      <PhaseLockBanner
+        phase="diffusion"
+        locks={locks}
+        cycle={cycle}
+        onLocksChange={setLocks}
+      />
       <header className="objetivos-header difusao-wave-header sprint-wave-header">
         <div className="objetivos-title-group sprint-wave-title-group">
           <div className="objetivos-icon-wrapper sprint-wave-icon-wrapper" aria-hidden>
@@ -467,7 +478,15 @@ export function ObjetivosPage() {
           </div>
           <div className="objetivos-title-copy sprint-wave-title-copy">
             <span className="difusao-header-eyebrow sprint-wave-eyebrow">SPRINT WAVES™ · Onda 3</span>
-            <h1 className="objetivos-title sprint-wave-title">Difusão</h1>
+            <div className="design-plans-title-row">
+              <h1 className="objetivos-title sprint-wave-title">Difusão</h1>
+              <PhaseInfoButton title="Sobre a Difusão">
+                <p>
+                  Dados importados do Design — refine e incremente. Percorra Mobilização, Execução,
+                  Riscos e Sign-off por iniciativa.
+                </p>
+              </PhaseInfoButton>
+            </div>
             <p className="objetivos-subtitle sprint-wave-subtitle">
               Execute planos, monitore riscos e acompanhe o progresso até a entrega final.
             </p>
@@ -475,10 +494,7 @@ export function ObjetivosPage() {
         </div>
       </header>
 
-      <ActionCanvasPanel
-        canUseAi={Boolean(designContext?.diagnosticComplete)}
-        onCanvasClosed={() => reloadDesignContext()}
-      />
+      <DiffusionWorkspace onCanvasClosed={() => reloadDesignContext()} />
 
       {false && difusaoTab === 'objetivos' && (
         <>
@@ -932,14 +948,17 @@ export function ObjetivosPage() {
         <button
           type="button"
           className="mid-diffusion-conclude"
-          onClick={() =>
-            navigate('/dashboard/relatorios', {
-              state: {
-                autoGenerate: true,
-                midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio...',
-              },
-            })
-          }
+          onClick={() => {
+            void (async () => {
+              if (cycle) await lockSprintPhase(cycle, 'diffusion');
+              navigate('/dashboard/relatorios', {
+                state: {
+                  autoGenerate: true,
+                  midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio...',
+                },
+              });
+            })();
+          }}
         >
           <BarChart3 size={18} aria-hidden />
           Concluir Difusão

@@ -9,6 +9,7 @@ import { buildDiagnosticContext, createEmptyDiagnosticData } from '../constants/
 import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
+import { lockSprintPhase } from '../services/phaseLock';
 import { getInitialForm, reopenInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
 import { syncMagnusMemoryToServer } from '../services/magnusMemorySync';
 import {
@@ -177,6 +178,7 @@ export function OrganizationalScanRunnerPage() {
           formData,
         });
         await persistActiveCycleSnapshot();
+        await lockSprintPhase(activeCycle, 'diagnostic');
         await refreshCycles();
         clearNeedsDiagnosis();
       }

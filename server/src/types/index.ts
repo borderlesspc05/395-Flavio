@@ -8,6 +8,7 @@ export interface ActionCanvasDelivery {
   prazo: string;
   status: DeliveryStatus;
   evidencia: string;
+  checklist?: string[];
 }
 
 export interface ActionCanvasRisk {
@@ -25,6 +26,9 @@ export interface ActionCanvas {
   owner: string;
   sponsor: string;
   prazoFinal: string;
+  successCriteria?: string[];
+  inheritedFromCycle?: boolean;
+  mobilizationNotes?: string;
   entregas: ActionCanvasDelivery[];
   riscos: ActionCanvasRisk[];
   signOff: ActionCanvasSignOff;

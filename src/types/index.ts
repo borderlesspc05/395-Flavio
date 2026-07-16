@@ -37,6 +37,8 @@ export interface ActionCanvasDelivery {
   prazo: string;
   status: DeliveryStatus;
   evidencia: string;
+  /** Checklist editável na Difusão (etapa Execução) */
+  checklist?: string[];
 }
 
 export interface ActionCanvasRisk {
@@ -52,12 +54,17 @@ export interface SuggestedActionCanvasDraft {
   owner: string;
   sponsor: string;
   prazoFinal: string;
+  /** Até 3 critérios de sucesso (“Como saberemos que deu certo?”) */
+  successCriteria?: string[];
+  inheritedFromCycle?: boolean;
+  mobilizationNotes?: string;
   entregas: Array<{
     entrega: string;
     responsavel: string;
     prazo: string;
     status?: DeliveryStatus;
     evidencia?: string;
+    checklist?: string[];
   }>;
   riscos: Array<{ risco: string; acaoTomar: string }>;
   insightOrigem?: string;
@@ -70,6 +77,9 @@ export interface ActionCanvas {
   owner: string;
   sponsor: string;
   prazoFinal: string;
+  successCriteria?: string[];
+  inheritedFromCycle?: boolean;
+  mobilizationNotes?: string;
   entregas: ActionCanvasDelivery[];
   riscos: ActionCanvasRisk[];
   signOff: ActionCanvasSignOff;

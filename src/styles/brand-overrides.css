@@ -148,21 +148,38 @@
 
 .dashboard-sidebar .sidebar-collapse-toggle {
   position: absolute;
-  top: 0.35rem;
-  right: 0;
+  top: 0.45rem;
+  right: 0.15rem;
   z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 2rem;
   height: 2rem;
   padding: 0;
   margin: 0;
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  border-radius: 8px;
+  background: rgba(12, 16, 24, 0.72);
+  color: #ffbc7d;
   cursor: pointer;
-  opacity: 0;
+  opacity: 1;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.dashboard-sidebar .sidebar-collapse-toggle:hover {
+  background: rgba(175, 146, 112, 0.18);
+  border-color: rgba(255, 188, 125, 0.55);
+  color: #ffe0bd;
 }
 
 .dashboard-sidebar.collapsed .sidebar-collapse-toggle {
+  top: 0.35rem;
   right: 50%;
+  transform: translateX(50%);
+}
+
+.dashboard-sidebar.collapsed .sidebar-collapse-toggle:hover {
   transform: translateX(50%);
 }
 

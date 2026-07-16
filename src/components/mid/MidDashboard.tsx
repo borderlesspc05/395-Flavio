@@ -170,16 +170,6 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
             <h1 id="mid-overview" className="mid-title">
               Intelligence Dashboard
             </h1>
-            <p className="mid-mantra">
-              A execução gera inteligência.
-              <br />
-              A inteligência impulsiona a evolução.
-            </p>
-            <p className="mid-subtitle">
-              O Intelligence Dashboard (ID) apresenta cinco indicadores executivos — incluindo o
-              Sustainability Score da Onda 4 — e o Health Score do projeto para acompanhar evolução,
-              execução e sustentação da mudança.
-            </p>
             <MidBriefingPanel
               briefing={briefing}
               health={overview.health}

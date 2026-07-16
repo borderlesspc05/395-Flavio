@@ -13,6 +13,7 @@ import { logActivity } from '../services/activities';
 import { suggestActionCanvases } from '../services/actionCanvasSuggest';
 import { indexActionCanvasAfterSave } from '../services/ragHooks';
 import { withConcurrencyLimit } from '../services/concurrency';
+import { notifyAssignmentIfNeeded } from '../services/assignmentEmail';
 
 const router = Router();
 const MAX_CANVASES = 5;
@@ -26,6 +27,9 @@ function withoutUndefined<T extends Record<string, unknown>>(data: T): T {
 function normalizeDelivery(raw: unknown, index: number): ActionCanvasDelivery {
   const d = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const status = d.status === 'verde' || d.status === 'amarelo' || d.status === 'vermelho' ? d.status : 'amarelo';
+  const checklist = Array.isArray(d.checklist)
+    ? d.checklist.map((item) => String(item ?? '').trim()).filter(Boolean)
+    : undefined;
   return {
     id: typeof d.id === 'string' && d.id ? d.id : `del-${index}-${generateId()}`,
     entrega: String(d.entrega ?? ''),
@@ -33,6 +37,7 @@ function normalizeDelivery(raw: unknown, index: number): ActionCanvasDelivery {
     prazo: String(d.prazo ?? ''),
     status: status as DeliveryStatus,
     evidencia: String(d.evidencia ?? ''),
+    checklist,
   };
 }
 
@@ -64,6 +69,13 @@ function buildCanvasPayload(
 
   const cycleId = body.cycleId ? String(body.cycleId) : existing?.cycleId;
 
+  const successCriteriaRaw = Array.isArray(body.successCriteria)
+    ? body.successCriteria
+    : existing?.successCriteria;
+  const successCriteria = Array.isArray(successCriteriaRaw)
+    ? successCriteriaRaw.map((c) => String(c ?? '').trim()).filter(Boolean).slice(0, 3)
+    : undefined;
+
   return {
     id: existing?.id ?? generateId(),
     userId,
@@ -73,6 +85,15 @@ function buildCanvasPayload(
     owner: String(body.owner ?? existing?.owner ?? ''),
     sponsor: String(body.sponsor ?? existing?.sponsor ?? ''),
     prazoFinal: String(body.prazoFinal ?? existing?.prazoFinal ?? ''),
+    successCriteria,
+    inheritedFromCycle:
+      body.inheritedFromCycle !== undefined
+        ? Boolean(body.inheritedFromCycle)
+        : existing?.inheritedFromCycle,
+    mobilizationNotes:
+      body.mobilizationNotes !== undefined
+        ? String(body.mobilizationNotes ?? '')
+        : existing?.mobilizationNotes,
     entregas,
     riscos,
     signOff,
@@ -148,6 +169,22 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
       id,
       withoutUndefined(canvas as unknown as Record<string, unknown>)
     );
+
+    // E-mail ao responsável quando o campo muda (não a cada keystroke — só no save/PATCH)
+    for (const delivery of canvas.entregas) {
+      const prev = existing.entregas.find((e) => e.id === delivery.id);
+      if (prev && prev.responsavel !== delivery.responsavel) {
+        try {
+          await notifyAssignmentIfNeeded({
+            canvas,
+            previous: existing,
+            deliveryId: delivery.id,
+          });
+        } catch {
+          // não falha o PATCH por erro de e-mail
+        }
+      }
+    }
 
     if (canvas.signOff !== existing.signOff && canvas.signOff !== 'pendente') {
       await logActivity(

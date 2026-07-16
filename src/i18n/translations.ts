@@ -142,7 +142,7 @@ export const translations: Record<Locale, TranslationTree> = {
       diffusion: '3 · Diffusion',
       team: 'Team',
       domain: '4 · Domain',
-      loop: 'Continuous loop',
+      loop: 'Continuous Loop',
       account: 'Account',
       projects: 'Projects',
       logout: 'Sign out',

@@ -16,7 +16,7 @@ import './styles/brand-overrides.css';
 import './styles/layout-system.css';
 import './styles/magnus-waves.css';
 import './styles/action-canvas.css';
-import './styles/plans-landing.css';
+import './styles/sprint-landing.css';
 import './styles/admin-panel.css';
 import './styles/mid-dashboard.css';
 import './styles/account-page.css';
@@ -38,6 +38,8 @@ import './styles/auth-refined.css';
 import './styles/view-transitions.css';
 import './styles/premium-shell.css';
 import './styles/domain-wave.css';
+import './styles/phase-ui.css';
+import './styles/diffusion-v2.css';
 
 void initFirebaseAnalytics();
 

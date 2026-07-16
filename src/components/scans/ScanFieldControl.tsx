@@ -207,13 +207,16 @@ export function ScanFieldControl({ field, value, error, onChange, readOnly = fal
     );
   }
 
+  const rows = field.rows && field.rows > 0 ? field.rows : 4;
+  const isLong = rows >= 8;
+
   return (
     <div className={`diagnostic-field scan-field ${error ? 'has-error' : ''}`}>
       {label}
       <textarea
         id={fieldKey}
-        className="diagnostic-textarea"
-        rows={4}
+        className={`diagnostic-textarea${isLong ? ' scan-textarea--long' : ''}`}
+        rows={rows}
         value={valueAsText(value)}
         placeholder={field.placeholder}
         onChange={(event) => onChange(event.target.value)}

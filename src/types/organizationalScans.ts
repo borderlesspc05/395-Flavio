@@ -8,7 +8,8 @@ export type OrganizationalScanId =
   | 'employeeExperience'
   | 'strategicAlignment'
   | 'communication'
-  | 'turnover';
+  | 'turnover'
+  | 'swot';
 
 export type ScanFieldType =
   | 'single'
@@ -30,6 +31,8 @@ export interface ScanField {
   max?: number;
   maxSelections?: number;
   distributionTotal?: number;
+  /** Altura sugerida do textarea (type text) */
+  rows?: number;
 }
 
 export interface ScanBlock {
@@ -47,6 +50,8 @@ export interface OrganizationalScanDefinition {
   guidance?: string;
   blocks: ScanBlock[];
   comingSoon?: boolean;
+  /** Estimativa média de preenchimento (hub) */
+  estimatedMinutes?: number;
 }
 
 export type OrganizationalScanAnswers = Record<OrganizationalScanId, Record<string, DiagnosticFieldValue>>;
@@ -61,5 +66,6 @@ export function createEmptyOrganizationalScanAnswers(): OrganizationalScanAnswer
     strategicAlignment: {},
     communication: {},
     turnover: {},
+    swot: {},
   };
 }

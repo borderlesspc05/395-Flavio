@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { History } from 'lucide-react';
 import { useCycle } from '../context/CycleContext';
 import { ActivityTimeline } from '../components/ActivityTimeline';
 import { CycleCloseOut } from '../components/CycleCloseOut';
 import { EvolutionLoopPanel } from '../components/EvolutionLoopPanel';
 import { LoopWorkspacePanel } from '../components/LoopWorkspacePanel';
-import { History } from 'lucide-react';
+import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
+import { Modal } from '../components/ui/Modal';
 
 export function HistoricoPage() {
   const location = useLocation();
   const { activeCycle } = useCycle();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const cycleClosed = Boolean((location.state as { cycleClosed?: boolean } | null)?.cycleClosed);
 
   useEffect(() => {
@@ -27,10 +31,23 @@ export function HistoricoPage() {
             <History size={28} aria-hidden />
           </div>
           <div>
-            <h1 className="historico-title">Loop contínuo · Evolution Loop</h1>
+            <div className="design-plans-title-row">
+              <h1 className="historico-title">Loop contínuo</h1>
+              <PhaseInfoButton title="Sobre o Loop contínuo">
+                <p>
+                  Aqui o ciclo se fecha: avalie o que viveu, veja as recomendações da plataforma e
+                  decida o próximo movimento. Insights podem virar cards herdados no Design do novo
+                  ciclo.
+                </p>
+                <p>
+                  Ao iniciar um novo ciclo, você escolhe no hub de Scans entre diagnóstico completo
+                  ou focado (incluindo SWOT).
+                </p>
+              </PhaseInfoButton>
+            </div>
             <p className="historico-subtitle">
-              O ciclo se fecha aqui: avalie o que viveu, veja as recomendações da IA e decida o
-              próximo movimento. Ciclo ativo: <strong>{activeCycle?.label ?? '—'}</strong>.
+              Avalie o ciclo com a plataforma, capture aprendizados e inicie o próximo movimento.
+              Ciclo ativo: <strong>{activeCycle?.label ?? '—'}</strong>.
             </p>
           </div>
         </div>
@@ -40,18 +57,31 @@ export function HistoricoPage() {
 
       <EvolutionLoopPanel onWaveCreated={() => setRefreshKey((k) => k + 1)} />
 
-      <div className="historico-layout">
-        <aside className="historico-loop-column" aria-label="Controle de ciclos">
-          <LoopWorkspacePanel variant="full" onReset={() => setRefreshKey((k) => k + 1)} />
-        </aside>
+      <div className="historico-loop-actions">
+        <button type="button" className="phase-info-close" onClick={() => setWorkspaceOpen(true)}>
+          Gerenciar ciclos
+        </button>
+        <button
+          type="button"
+          className="phase-info-close is-ghost"
+          onClick={() => setTimelineOpen(true)}
+        >
+          Ver linha do tempo
+        </button>
+      </div>
 
+      <Modal open={workspaceOpen} onClose={() => setWorkspaceOpen(false)} title="Gerenciar ciclos">
+        <LoopWorkspacePanel variant="full" onReset={() => setRefreshKey((k) => k + 1)} />
+      </Modal>
+
+      <Modal open={timelineOpen} onClose={() => setTimelineOpen(false)} title="Linha do tempo">
         <ActivityTimeline
           className="historico-feed-column"
           title="Linha do tempo"
           showFilters
           refreshKey={refreshKey}
         />
-      </div>
+      </Modal>
     </div>
   );
 }

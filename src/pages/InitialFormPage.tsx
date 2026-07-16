@@ -37,6 +37,9 @@ import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
 import { getInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
+import { lockSprintPhase } from '../services/phaseLock';
+import { usePhaseLock } from '../hooks/usePhaseLock';
+import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
 import {
   scheduleMagnusMemorySyncFromForm,
   syncMagnusMemoryToServer,
@@ -401,6 +404,7 @@ export function InitialFormPage() {
   const [cycleNameError, setCycleNameError] = useState<string | null>(null);
   const { activeCycle, needsDiagnosis, clearNeedsDiagnosis, persistActiveCycleSnapshot, refreshCycles, switching } =
     useCycle();
+  const { locks, setLocks, locked: phaseLocked } = usePhaseLock('diagnostic');
 
   const activePhase = useMemo(
     () => DIAGNOSTIC_PHASES.find((phase) => phase.id === activePhaseId) ?? DIAGNOSTIC_PHASES[0],
@@ -548,6 +552,7 @@ export function InitialFormPage() {
           formData: data,
         });
         await persistActiveCycleSnapshot();
+        await lockSprintPhase(activeCycle, 'diagnostic');
         await refreshCycles();
         clearNeedsDiagnosis();
       }
@@ -582,7 +587,16 @@ export function InitialFormPage() {
   }
 
   return (
-    <form className="diagnostic-page" onSubmit={handleSubmit}>
+    <form
+      className={`diagnostic-page phase-locked-shell${phaseLocked ? ' is-locked' : ''}`}
+      onSubmit={handleSubmit}
+    >
+      <PhaseLockBanner
+        phase="diagnostic"
+        locks={locks}
+        cycle={activeCycle}
+        onLocksChange={setLocks}
+      />
       <section className="diagnostic-topbar">
         <div className="diagnostic-brand">
           <img src="/icone-magnusmind.svg" alt="" aria-hidden />

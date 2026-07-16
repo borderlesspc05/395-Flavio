@@ -35,6 +35,10 @@ import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../utils/apiErr
 import { getSolutionActionDetails } from '../utils/solutionActionDetails';
 import { fixMojibakeText } from '../utils/textEncoding';
 import { ToastStack } from './ui/ToastStack';
+import { PhaseInfoButton } from './ui/PhaseInfoButton';
+import { PhaseLockBanner } from './ui/PhaseLockBanner';
+import { usePhaseLock } from '../hooks/usePhaseLock';
+import { lockSprintPhase } from '../services/phaseLock';
 import type { InitialFormData } from '../types';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 
@@ -143,6 +147,7 @@ export function SolutionPickPanel({
   onSaveDraft,
 }: Props) {
   const navigate = useNavigate();
+  const { locks, setLocks, locked: phaseLocked, cycle } = usePhaseLock('solutionPick');
   const [suggestions, setSuggestions] = useState<SuggestedSolutionAction[]>([]);
   const [companySummary, setCompanySummary] = useState<string | null>(null);
   const [companySituation, setCompanySituation] = useState<string | null>(null);
@@ -388,6 +393,10 @@ export function SolutionPickPanel({
       onDataChange(payload);
       stashSelectedSolutionActions(currentSelected);
       await onSaveDraft(payload);
+      if (cycle) {
+        await lockSprintPhase(cycle, 'diagnostic');
+        await lockSprintPhase(cycle, 'solutionPick');
+      }
       navigate('/dashboard/design', { state: { selectedActions: currentSelected } });
     } catch {
       setError('Não foi possível salvar suas escolhas. Tente novamente.');
@@ -397,16 +406,42 @@ export function SolutionPickPanel({
   };
 
   return (
-    <section className="solution-pick-panel" aria-label="Solution Pick — sugestões de ação">
+    <section
+      className={`solution-pick-panel phase-locked-shell${phaseLocked ? ' is-locked' : ''}`}
+      aria-label="Solution Pick — sugestões de ação"
+    >
+      <PhaseLockBanner
+        phase="solutionPick"
+        locks={locks}
+        cycle={cycle}
+        onLocksChange={setLocks}
+      />
       <header className="solution-pick-header">
         <div>
           <span className="solution-pick-kicker">
             <Sparkles size={16} aria-hidden />
-            Sugestões com base no seu diagnóstico
+            Solution Pick
           </span>
-          <h2>Escolha as ações para o Design</h2>
+          <div className="solution-pick-title-row">
+            <h2>Escolha as ações para o Design</h2>
+            <PhaseInfoButton title="O que é o Solution Pick?">
+              <p>
+                Aqui a plataforma traduz o diagnóstico em planos de ação concretos. Leia o resumo da
+                situação, compare as sugestões e selecione até {MAX_SELECT} frentes para levar ao Design.
+              </p>
+              <p>
+                Owner e Sponsor serão definidos na próxima etapa. Foque no que faz sentido para o
+                desafio atual — as recomendações priorizam o que está sob sua esfera de influência.
+              </p>
+              <ul>
+                <li>Revise o resumo executivo da empresa</li>
+                <li>Escolha planos alinhados às dores do diagnóstico</li>
+                <li>Avance para o Design para detalhar critérios e responsáveis</li>
+              </ul>
+            </PhaseInfoButton>
+          </div>
           <p>
-            O Sprint pesquisou planos de ação com base no diagnóstico. Selecione as que fazem sentido — quanto
+            A plataforma sugeriu planos com base no seu diagnóstico. Selecione os que fazem sentido — quanto
             maior o score, maior a probabilidade de impacto segundo o que você reportou.
           </p>
         </div>
@@ -588,28 +623,6 @@ export function SolutionPickPanel({
                           <p>{details.objetivo}</p>
                         </div>
                       </div>
-                      {(details.owner || details.sponsor) && (
-                        <div className="solution-pick-detail-people">
-                          {details.owner && (
-                            <span className="solution-pick-people-chip">
-                              <UserRound size={13} aria-hidden />
-                              <span>
-                                <em>Owner</em>
-                                {details.owner}
-                              </span>
-                            </span>
-                          )}
-                          {details.sponsor && (
-                            <span className="solution-pick-people-chip">
-                              <ClipboardCheck size={13} aria-hidden />
-                              <span>
-                                <em>Sponsor</em>
-                                {details.sponsor}
-                              </span>
-                            </span>
-                          )}
-                        </div>
-                      )}
                       {details.entregas.length > 0 ? (
                         <div className="solution-pick-detail-block solution-pick-delivery-block">
                           <div className="solution-pick-delivery-head">
@@ -646,7 +659,7 @@ export function SolutionPickPanel({
                                       <span className="solution-pick-delivery-meta">
                                         <span className="solution-pick-delivery-chip">
                                           <UserRound size={12} aria-hidden />
-                                          {entrega.responsavel || 'A definir'}
+                                          Responsável no Design
                                         </span>
                                         <span className="solution-pick-delivery-chip">
                                           <CalendarDays size={12} aria-hidden />

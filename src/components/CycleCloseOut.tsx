@@ -131,7 +131,7 @@ export function CycleCloseOut({ highlight = false }: Props) {
       <header className="cycle-closeout__head">
         <p className="cycle-closeout__eyebrow">
           <Sparkles size={14} aria-hidden />
-          Evolution Loop · Próximo movimento
+          Loop contínuo · Próximo movimento
         </p>
         <h2 id="cycle-closeout-title">
           {highlight ? 'Domínio salvo. O ciclo se fecha aqui.' : 'Feche o ciclo e evolua'}

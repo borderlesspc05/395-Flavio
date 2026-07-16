@@ -1,5 +1,26 @@
 /* Loop contínuo · 4.2 — editorial control room */
 
+.historico-loop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.evo-loop-include-btn {
+  display: inline-flex;
+  margin-top: 0.45rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 160, 220, 0.4);
+  background: rgba(120, 160, 220, 0.12);
+  color: #b8d4ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .historico-page--refined {
   --hl-gold: #c9a87c;
   --hl-gold-dim: rgba(201, 168, 124, 0.35);

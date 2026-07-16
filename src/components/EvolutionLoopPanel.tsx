@@ -22,6 +22,7 @@ import {
   readCachedEvolution,
 } from '../services/evolutionLoopStorage';
 import { startDesignWaveFromEvolution } from '../services/evolutionLoopWave';
+import { actionCanvasesApi } from '../services/api';
 import type { EvolutionLoopResult } from '../types/evolutionLoop';
 import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../utils/apiError';
 
@@ -32,9 +33,11 @@ type Props = {
 function PracticeList({
   items,
   emptyLabel,
+  onInclude,
 }: {
   items: EvolutionLoopResult['continuar'];
   emptyLabel: string;
+  onInclude?: (practice: string, rationale?: string) => void;
 }) {
   if (items.length === 0) {
     return <p className="evo-loop-empty">{emptyLabel}</p>;
@@ -45,6 +48,15 @@ function PracticeList({
         <li key={`${item.practice}-${index}`}>
           <strong>{item.practice}</strong>
           {item.rationale ? <span>{item.rationale}</span> : null}
+          {onInclude ? (
+            <button
+              type="button"
+              className="evo-loop-include-btn"
+              onClick={() => onInclude(item.practice, item.rationale)}
+            >
+              Incluir no novo ciclo
+            </button>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -107,7 +119,7 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
   const handleCreateWave = async () => {
     if (!userId || !result) return;
     const focus = result.nextWave.focus.trim() || 'nova onda';
-    const confirmMsg = `Criar nova onda focada em "${focus}"?\n\nO ciclo atual será arquivado. Action Canvas e objetivos serão reiniciados; o diagnóstico será mantido. Você irá direto para Onda 2 · Design.`;
+    const confirmMsg = `Criar nova onda focada em "${focus}"?\n\nO ciclo atual será arquivado. Action Canvas e objetivos serão reiniciados; o diagnóstico será mantido. Em seguida você escolhe o diagnóstico no hub de Scans.`;
     if (!window.confirm(confirmMsg)) return;
 
     setCreatingWave(true);
@@ -120,11 +132,33 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
       }
       await refreshCycles();
       onWaveCreated?.();
-      navigate('/dashboard/design');
+      navigate('/dashboard/scans');
     } catch (err) {
       setNotice(readApiErrorMessage(err, 'Erro ao criar nova onda.'));
     } finally {
       setCreatingWave(false);
+    }
+  };
+
+  const includePracticeInDesign = async (practice: string, rationale?: string) => {
+    if (!userId) return;
+    try {
+      await actionCanvasesApi.create({
+        nomeIniciativa: practice,
+        objetivoEspecifico: rationale || `Insight herdado do Loop contínuo: ${practice}`,
+        owner: '',
+        sponsor: '',
+        prazoFinal: '',
+        successCriteria: [],
+        inheritedFromCycle: true,
+        entregas: [],
+        riscos: [],
+        signOff: 'pendente',
+        fechado: false,
+      });
+      setNotice(`“${practice}” incluído como card herdado no Design.`);
+    } catch {
+      setNotice('Não foi possível incluir no Design. Tente novamente.');
     }
   };
 
@@ -138,8 +172,9 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
           </p>
           <h2 id="evo-loop-title">Aqui o Sprint fecha o ciclo</h2>
           <p className="evo-loop__lede">
-            A IA analisa diagnóstico original, blueprint, difusão e resultados obtidos — e
-            recomenda o que continuar, ajustar ou abandonar antes da próxima onda.
+            A plataforma analisa diagnóstico, difusão e resultados — e recomenda o que continuar,
+            ajustar ou abandonar antes da próxima onda. Inclua insights no Design como cards
+            herdados.
           </p>
         </div>
         <div className="evo-loop__hero-actions">
@@ -194,7 +229,11 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
                 <h3>Continuar</h3>
                 <p>Práticas que deram certo</p>
               </header>
-              <PracticeList items={result.continuar} emptyLabel="Nenhuma prática sólida identificada ainda." />
+              <PracticeList
+                items={result.continuar}
+                emptyLabel="Nenhuma prática sólida identificada ainda."
+                onInclude={(practice, rationale) => void includePracticeInDesign(practice, rationale)}
+              />
             </article>
 
             <article className="evo-loop__card evo-loop__card--adjust">
@@ -203,7 +242,11 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
                 <h3>Ajustar</h3>
                 <p>Impacto parcial — refine antes de escalar</p>
               </header>
-              <PracticeList items={result.ajustar} emptyLabel="Nenhum ajuste prioritário identificado." />
+              <PracticeList
+                items={result.ajustar}
+                emptyLabel="Nenhum ajuste prioritário identificado."
+                onInclude={(practice, rationale) => void includePracticeInDesign(practice, rationale)}
+              />
             </article>
 
             <article className="evo-loop__card evo-loop__card--drop">

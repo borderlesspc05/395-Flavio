@@ -6,12 +6,14 @@ import { employeeExperienceScan } from './employeeExperienceScan';
 import { strategicAlignmentScan } from './strategicAlignmentScan';
 import { communicationScan } from './communicationScan';
 import { turnoverScan } from './turnoverScan';
+import { swotAnalysisScan } from './swotAnalysisScan';
 
 export const fullScanIntro: OrganizationalScanDefinition = {
   id: 'fullScan',
   step: 'Visão integrada',
   title: 'Full Scan',
   subtitle: 'Diagnóstico completo da organização',
+  estimatedMinutes: 45,
   intro:
     'Diagnostique a organização pelo canvas completo Sprint Waves (1.1–1.5, com Solution Pick e resumo executivo) ou por um scan temático mais rápido. As duas vias levam ao mesmo Solution Pick para escolher planos de ação.',
   guidance:
@@ -19,15 +21,24 @@ export const fullScanIntro: OrganizationalScanDefinition = {
   blocks: [],
 };
 
+const withMinutes = (
+  scan: OrganizationalScanDefinition,
+  minutes: number
+): OrganizationalScanDefinition => ({
+  ...scan,
+  estimatedMinutes: scan.estimatedMinutes ?? minutes,
+});
+
 export const ORGANIZATIONAL_SCANS: OrganizationalScanDefinition[] = [
   fullScanIntro,
-  cultureScan,
-  leadershipScan,
-  customerExperienceScan,
-  employeeExperienceScan,
-  strategicAlignmentScan,
-  communicationScan,
-  turnoverScan,
+  withMinutes(swotAnalysisScan, 15),
+  withMinutes(cultureScan, 20),
+  withMinutes(leadershipScan, 20),
+  withMinutes(customerExperienceScan, 18),
+  withMinutes(employeeExperienceScan, 18),
+  withMinutes(strategicAlignmentScan, 18),
+  withMinutes(communicationScan, 16),
+  withMinutes(turnoverScan, 22),
 ];
 
 export const ORGANIZATIONAL_SCAN_MAP = Object.fromEntries(
@@ -46,4 +57,5 @@ export {
   strategicAlignmentScan,
   communicationScan,
   turnoverScan,
+  swotAnalysisScan,
 };

@@ -347,6 +347,39 @@
   color: var(--mm-fg-3, rgba(241, 235, 224, 0.58));
 }
 
+.scan-textarea--long {
+  min-height: 14rem;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.organizational-scan-card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.organizational-scan-card-minutes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: rgba(255, 188, 125, 0.85);
+  letter-spacing: 0.02em;
+}
+
+.organizational-scan-card-info {
+  display: block;
+  margin-top: 0.65rem;
+}
+
+.organizational-scan-card-info .phase-info-btn {
+  pointer-events: auto;
+}
+
 .scan-scale-wrap {
   display: grid;
   grid-template-columns: 1fr auto;
