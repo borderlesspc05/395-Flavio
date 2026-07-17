@@ -9,6 +9,7 @@ const PRESERVED_EXTENSION_KEYS = [
   'solucaoSelecionadaDesign',
   'solucoesPrioritarias',
   'organizationalScanData',
+  'organizationalScanCompleted',
   'domainWaveData',
 ] as const;
 

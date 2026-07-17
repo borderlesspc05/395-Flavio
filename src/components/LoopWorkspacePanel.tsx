@@ -116,7 +116,7 @@ export function LoopWorkspacePanel({ variant = 'full', userId: userIdProp, onRes
           'Novo ciclo criado. Escolha diagnóstico completo ou focado no hub de Scans.'
       );
       await onReset?.();
-      navigate('/dashboard/scans');
+      navigate('/dashboard/scans', { state: { fromNewCycle: true } });
     } catch (err) {
       const detail = err instanceof Error ? err.message : '';
       setMessage(detail ? `Erro: ${detail}` : 'Erro ao iniciar novo ciclo.');

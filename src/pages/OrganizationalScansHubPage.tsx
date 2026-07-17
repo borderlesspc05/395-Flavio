@@ -1,7 +1,17 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { ArrowRight, ClipboardList, Clock3, Layers3, Sparkles } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import {
+  ArrowRight,
+  ClipboardList,
+  Clock3,
+  Download,
+  Layers3,
+  Sparkles,
+  Waves,
+} from 'lucide-react';
 import { auth } from '../config/firebase';
+import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ORGANIZATIONAL_SCANS } from '../constants/organizationalScans';
 import { createEmptyDiagnosticData, isSolutionPickReady } from '../constants/diagnosticFlow';
@@ -10,7 +20,14 @@ import {
   ORGANIZATIONAL_SCAN_DATA_KEY,
   parseOrganizationalScanData,
 } from '../services/organizationalScanStorage';
+import { readStashedEvolution } from '../services/evolutionLoopStorage';
 import type { InitialFormData } from '../types';
+import type { EvolutionLoopResult } from '../types/evolutionLoop';
+import {
+  buildCycleBriefingText,
+  downloadTextFile,
+  suggestScansForFocus,
+} from '../utils/cycleBriefing';
 import {
   getActiveFocusedScans,
   getScanCompletion,
@@ -20,11 +37,24 @@ import {
 import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
 import '../styles/organizational-scans.css';
 
+type ScansLocationState = {
+  fromEvolutionLoop?: boolean;
+  fromNewCycle?: boolean;
+} | null;
+
 export function OrganizationalScansHubPage() {
   const navigate = useViewTransitionNavigate();
+  const location = useLocation();
+  const { activeCycle } = useCycle();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<InitialFormData>(createEmptyDiagnosticData());
+  const [evolution, setEvolution] = useState<EvolutionLoopResult | null>(null);
+
+  const locationState = location.state as ScansLocationState;
+  const cycleNumber = activeCycle?.cycleNumber ?? 1;
+  const previousCycleNumber = Math.max(1, cycleNumber - 1);
+  const isVersionTwoPlus = cycleNumber >= 2 || Boolean(locationState?.fromEvolutionLoop) || Boolean(evolution);
 
   const scanAnswers = useMemo(
     () => parseOrganizationalScanData(formData[ORGANIZATIONAL_SCAN_DATA_KEY]),
@@ -35,11 +65,19 @@ export function OrganizationalScansHubPage() {
     [scanAnswers],
   );
   const solutionPickReady = useMemo(() => isSolutionPickReady(formData), [formData]);
+  const scanSuggestions = useMemo(
+    () => (evolution ? suggestScansForFocus(evolution.nextWave.focus) : []),
+    [evolution],
+  );
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null));
     return unsub;
   }, []);
+
+  useEffect(() => {
+    setEvolution(readStashedEvolution());
+  }, [activeCycle?.id, location.key]);
 
   useEffect(() => {
     if (!userId) return;
@@ -57,6 +95,12 @@ export function OrganizationalScansHubPage() {
     };
   }, [userId]);
 
+  const handleDownloadBriefing = () => {
+    if (!evolution) return;
+    const text = buildCycleBriefingText(evolution, previousCycleNumber, cycleNumber);
+    downloadTextFile(`sprint-briefing-ciclo-${cycleNumber}.txt`, text);
+  };
+
   if (loading) {
     return <p className="form-loading">Carregando opções de diagnóstico...</p>;
   }
@@ -69,10 +113,14 @@ export function OrganizationalScansHubPage() {
             <ClipboardList size={26} />
           </div>
           <div className="sprint-wave-title-copy">
-            <span className="organizational-scan-card-step sprint-wave-eyebrow">SPRINT WAVES™ · Onda 1</span>
+            <span className="organizational-scan-card-step sprint-wave-eyebrow">
+              SPRINT WAVES™ · Onda {cycleNumber}
+            </span>
             <h1 className="premium-display sprint-wave-title">Diagnóstico</h1>
             <p className="sprint-wave-subtitle">
-              Escolha o diagnóstico completo ou um scan focado para gerar o Solution Pick.
+              {isVersionTwoPlus
+                ? 'Use os aprendizados do ciclo anterior para escolher o diagnóstico completo ou um scan focado.'
+                : 'Escolha o diagnóstico completo ou um scan focado para gerar o Solution Pick.'}
             </p>
             <PhaseInfoButton title="Como escolher o diagnóstico">
               <p>
@@ -88,6 +136,113 @@ export function OrganizationalScansHubPage() {
           </div>
         </div>
       </header>
+
+      {evolution && isVersionTwoPlus ? (
+        <section className="cycle-briefing" aria-labelledby="cycle-briefing-title">
+          <div className="cycle-briefing-head">
+            <div>
+              <p className="cycle-briefing-eyebrow">
+                <Waves size={14} aria-hidden />
+                Versão {cycleNumber}.0 · Loop contínuo
+              </p>
+              <h2 id="cycle-briefing-title">
+                O que aprendemos no ciclo {previousCycleNumber}.0
+              </h2>
+            </div>
+            <button
+              type="button"
+              className="cycle-briefing-download"
+              onClick={handleDownloadBriefing}
+            >
+              <Download size={16} aria-hidden />
+              Baixar resumo
+            </button>
+          </div>
+
+          <p className="cycle-briefing-summary">{evolution.summary}</p>
+
+          <div className="cycle-briefing-focus">
+            <p className="cycle-briefing-focus-label">Foco sugerido para este ciclo</p>
+            <h3>{evolution.nextWave.title}</h3>
+            <p>
+              <strong>{evolution.nextWave.focus}</strong>
+            </p>
+            <p>{evolution.nextWave.rationale}</p>
+          </div>
+
+          <div className="cycle-briefing-columns">
+            <article>
+              <h3>Continuar</h3>
+              <ul>
+                {evolution.continuar.length > 0 ? (
+                  evolution.continuar.map((item) => (
+                    <li key={`keep-${item.practice}`}>
+                      <strong>{item.practice}</strong>
+                      {item.rationale ? <span>{item.rationale}</span> : null}
+                    </li>
+                  ))
+                ) : (
+                  <li className="is-empty">Nenhuma prática destacada.</li>
+                )}
+              </ul>
+            </article>
+            <article>
+              <h3>Ajustar</h3>
+              <ul>
+                {evolution.ajustar.length > 0 ? (
+                  evolution.ajustar.map((item) => (
+                    <li key={`adj-${item.practice}`}>
+                      <strong>{item.practice}</strong>
+                      {item.rationale ? <span>{item.rationale}</span> : null}
+                    </li>
+                  ))
+                ) : (
+                  <li className="is-empty">Nenhum ajuste prioritário.</li>
+                )}
+              </ul>
+            </article>
+            <article>
+              <h3>Abandonar</h3>
+              <ul>
+                {evolution.abandonar.length > 0 ? (
+                  evolution.abandonar.map((item) => (
+                    <li key={`drop-${item.practice}`}>
+                      <strong>{item.practice}</strong>
+                      {item.rationale ? <span>{item.rationale}</span> : null}
+                    </li>
+                  ))
+                ) : (
+                  <li className="is-empty">Nenhuma prática para encerrar.</li>
+                )}
+              </ul>
+            </article>
+          </div>
+
+          {scanSuggestions.length > 0 ? (
+            <div className="cycle-briefing-suggestions">
+              <h3>Diagnósticos sugeridos agora</h3>
+              <ul>
+                {scanSuggestions.map((suggestion) => (
+                  <li key={suggestion.id}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/dashboard/scans/${suggestion.id}`)}
+                    >
+                      {suggestion.title}
+                      <ArrowRight size={14} aria-hidden />
+                    </button>
+                    <span>{suggestion.reason}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="cycle-briefing-rag-note">
+                A memória RAG do projeto permanece ativa: o Solution Pick e a IA usam o contexto
+                acumulado dos ciclos anteriores para personalizar recomendações.
+              </p>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="diagnostic-path-grid" role="list">
         <article className="diagnostic-path-card is-primary">
@@ -150,6 +305,7 @@ export function OrganizationalScansHubPage() {
             const status = getScanStatus(scan, answers);
             const completion = getScanCompletion(scan, answers);
             const isSoon = Boolean(scan.comingSoon);
+            const isSuggested = scanSuggestions.some((s) => s.id === scan.id);
 
             return (
               <button
@@ -157,7 +313,7 @@ export function OrganizationalScansHubPage() {
                 type="button"
                 className={`organizational-scan-card ${status === 'complete' ? 'is-complete' : ''} ${
                   status === 'in_progress' ? 'is-active' : ''
-                } ${isSoon ? 'is-soon' : ''}`}
+                } ${isSoon ? 'is-soon' : ''} ${isSuggested ? 'is-suggested' : ''}`}
                 onClick={() => !isSoon && navigate(`/dashboard/scans/${scan.id}`)}
                 disabled={isSoon}
               >
@@ -168,7 +324,7 @@ export function OrganizationalScansHubPage() {
                       status === 'complete' ? 'complete' : status === 'in_progress' ? 'active' : ''
                     }`}
                   >
-                    {isSoon ? 'Em breve' : getScanStatusLabel(status)}
+                    {isSoon ? 'Em breve' : isSuggested ? 'Sugerido' : getScanStatusLabel(status)}
                   </span>
                 </div>
                 <h3>{scan.title}</h3>

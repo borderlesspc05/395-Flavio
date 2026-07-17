@@ -16,6 +16,7 @@ import './styles/brand-overrides.css';
 import './styles/layout-system.css';
 import './styles/magnus-waves.css';
 import './styles/action-canvas.css';
+import './styles/plans-landing.css';
 import './styles/sprint-landing.css';
 import './styles/admin-panel.css';
 import './styles/mid-dashboard.css';

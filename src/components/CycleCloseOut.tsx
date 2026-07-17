@@ -115,7 +115,7 @@ export function CycleCloseOut({ highlight = false }: Props) {
         return;
       }
       await refreshCycles();
-      navigate('/dashboard/initial-form');
+      navigate('/dashboard/scans', { state: { fromNewCycle: true } });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Não foi possível iniciar um novo ciclo.');
     } finally {

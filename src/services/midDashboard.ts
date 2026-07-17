@@ -179,6 +179,13 @@ function toIntelligenceInput(input: BuildMidInput): MidIntelligenceInput {
 export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
   const objectives = input.objectives;
   const total = objectives.length;
+  const hasData =
+    input.formComplete ||
+    total > 0 ||
+    input.canvases.length > 0 ||
+    input.team.length > 0 ||
+    input.reports.length > 0 ||
+    (input.memberCheckIns?.length ?? 0) > 0;
 
   const progress: SprintProgress = {
     formComplete: input.formComplete,
@@ -187,20 +194,29 @@ export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
   };
 
   const intel = toIntelligenceInput(input);
-  const healthPack = computeProjectHealthScore(intel);
+  const healthPack = hasData
+    ? computeProjectHealthScore(intel)
+    : {
+        score: 0,
+        health: 'yellow' as const,
+        label: 'Aguardando dados',
+        factors: [],
+      };
   const briefing = buildBriefing(intel, healthPack.score, healthPack.label);
-  const nowActions = buildNowActions(intel);
-  const timeline = buildSprintTimeline(intel, healthPack.health);
+  const nowActions = hasData ? buildNowActions(intel) : [];
+  const timeline = hasData ? buildSprintTimeline(intel, healthPack.health) : [];
 
-  const executiveKpis = buildExecutiveKpis({
-    formData: input.formData,
-    formComplete: input.formComplete,
-    cycleId: input.cycleId ?? undefined,
-    objectives,
-    canvases: input.canvases,
-    team: input.team,
-    reports: input.reports,
-  });
+  const executiveKpis = hasData
+    ? buildExecutiveKpis({
+        formData: input.formData,
+        formComplete: input.formComplete,
+        cycleId: input.cycleId ?? undefined,
+        objectives,
+        canvases: input.canvases,
+        team: input.team,
+        reports: input.reports,
+      })
+    : [];
 
   return {
     overview: buildOverview(input, progress, healthPack),
@@ -209,7 +225,7 @@ export function buildMidDashboard(input: BuildMidInput): MidDashboardData {
     timeline,
     briefing,
     nowActions,
-    hasData: input.formComplete || total > 0 || input.canvases.length > 0,
+    hasData,
   };
 }
 

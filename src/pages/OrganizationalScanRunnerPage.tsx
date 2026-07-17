@@ -4,7 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowLeft, CircleAlert, ClipboardCheck, Lock, RotateCcw, Save } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { ScanFieldControl } from '../components/scans/ScanFieldControl';
-import { ORGANIZATIONAL_SCAN_MAP } from '../constants/organizationalScans';
+import { ORGANIZATIONAL_SCANS, ORGANIZATIONAL_SCAN_MAP } from '../constants/organizationalScans';
 import { buildDiagnosticContext, createEmptyDiagnosticData } from '../constants/diagnosticFlow';
 import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
@@ -13,7 +13,11 @@ import { lockSprintPhase } from '../services/phaseLock';
 import { getInitialForm, reopenInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
 import { syncMagnusMemoryToServer } from '../services/magnusMemorySync';
 import {
+  clearScanCompleted,
+  getCompletedScans,
   getScanAnswersFromForm,
+  isScanMarkedCompleted,
+  markScanCompleted,
   mergeScanAnswer,
 } from '../services/organizationalScanStorage';
 import type { DiagnosticFieldValue, InitialFormData } from '../types';
@@ -42,7 +46,6 @@ export function OrganizationalScanRunnerPage() {
   const [savingDraft, setSavingDraft] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<InitialFormData>(createEmptyDiagnosticData());
-  const [formCompletedAt, setFormCompletedAt] = useState<Date | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
   const [showCycleNameModal, setShowCycleNameModal] = useState(false);
@@ -62,7 +65,8 @@ export function OrganizationalScanRunnerPage() {
     [scan, answers],
   );
   const status = useMemo(() => (scan ? getScanStatus(scan, answers) : 'not_started'), [scan, answers]);
-  const isLocked = Boolean(formCompletedAt);
+  /** Only the scan the user explicitly concluded is frozen; other themes stay editable. */
+  const isLocked = Boolean(scan && isScanMarkedCompleted(formData, scan.id));
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null));
@@ -75,10 +79,20 @@ export function OrganizationalScanRunnerPage() {
     setLoading(true);
     getInitialForm(userId)
       .then(({ data, completedAt }) => {
-        if (!cancelled) {
-          setFormData(data);
-          setFormCompletedAt(completedAt);
+        if (cancelled) return;
+        let nextData = data;
+        // One-time migration for accounts concluded before per-scan tracking:
+        // freeze only scans that were already 100% answered when the page loaded.
+        if (completedAt && Object.keys(getCompletedScans(data)).length === 0) {
+          for (const item of ORGANIZATIONAL_SCANS) {
+            if (item.comingSoon || item.id === 'fullScan') continue;
+            const itemAnswers = getScanAnswersFromForm(data, item.id);
+            if (getScanStatus(item, itemAnswers) === 'complete') {
+              nextData = markScanCompleted(nextData, item.id, completedAt);
+            }
+          }
         }
+        setFormData(nextData);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -165,9 +179,11 @@ export function OrganizationalScanRunnerPage() {
     setFeedback(null);
     setCycleNameError(null);
     try {
-      const at = await saveInitialForm(userId, formData);
-      setFormCompletedAt(at);
-      const diagnosticContext = buildDiagnosticContext(formData);
+      const at = new Date();
+      const nextForm = markScanCompleted(formData, scan.id, at);
+      setFormData(nextForm);
+      await saveInitialForm(userId, nextForm);
+      const diagnosticContext = buildDiagnosticContext(nextForm);
       await syncMagnusMemoryToServer({ diagnosticContext });
       if (activeCycle) {
         await updateDiagnosticCycle(activeCycle.id, {
@@ -175,7 +191,7 @@ export function OrganizationalScanRunnerPage() {
           status: 'active',
           completedAt: at.toISOString(),
           diagnosticContext,
-          formData,
+          formData: nextForm,
         });
         await persistActiveCycleSnapshot();
         await lockSprintPhase(activeCycle, 'diagnostic');
@@ -187,8 +203,8 @@ export function OrganizationalScanRunnerPage() {
         state: {
           postDiagnosticNotice: {
             title: `Projeto "${trimmedName}" iniciado`,
-            message: `Diagnóstico focado (${scan.title}) salvo. Revise o resumo da empresa e escolha os planos no Solution Pick.`,
-            nextStepLabel: 'Próximo passo: Solution Pick â†’ Design',
+            message: `Diagnóstico focado (${scan.title}) salvo. Os outros temas continuam disponíveis para complementar o Solution Pick.`,
+            nextStepLabel: 'Próximo passo: Solution Pick → Design',
             completedAt: at.toISOString(),
           },
         },
@@ -207,21 +223,30 @@ export function OrganizationalScanRunnerPage() {
   };
 
   const handleRedoConfirm = async () => {
-    if (!userId) return;
+    if (!userId || !scan) return;
     setRedoing(true);
     setFeedback(null);
     try {
-      await reopenInitialForm(userId);
-      setFormCompletedAt(null);
-      if (activeCycle) {
-        await updateDiagnosticCycle(activeCycle.id, {
-          status: 'draft',
-          completedAt: null,
-        });
-        await refreshCycles();
+      const next = clearScanCompleted(formData, scan.id);
+      const stillHaveCompleted = Object.keys(getCompletedScans(next)).length > 0;
+      setFormData(next);
+      await saveInitialFormDraft(userId, next);
+
+      if (stillHaveCompleted) {
+        setShowRedoConfirm(false);
+        setFeedback('Este scan foi reaberto. Os outros diagnósticos concluídos permanecem bloqueados.');
+      } else {
+        await reopenInitialForm(userId);
+        if (activeCycle) {
+          await updateDiagnosticCycle(activeCycle.id, {
+            status: 'draft',
+            completedAt: null,
+          });
+          await refreshCycles();
+        }
+        setShowRedoConfirm(false);
+        setFeedback('Este scan foi reaberto para edição.');
       }
-      setShowRedoConfirm(false);
-      setFeedback('Diagnóstico reaberto para edição.');
     } catch {
       setFeedback('Não foi possível refazer o diagnóstico. Tente novamente.');
     } finally {
@@ -262,7 +287,7 @@ export function OrganizationalScanRunnerPage() {
           {scan.guidance ? <p className="organizational-scan-guidance">{scan.guidance}</p> : null}
           <p className="organizational-scan-runner-note">
             Este scan pode substituir o canvas completo. Responda no seu ritmo e conclua quando estiver pronto.
-            Não é necessário preencher os outros scans.
+            Os outros temas continuam disponíveis para complementar o Solution Pick.
           </p>
           <div className="organizational-scans-progress" aria-label="Progresso deste scan">
             <div>
@@ -278,7 +303,7 @@ export function OrganizationalScanRunnerPage() {
         {isLocked ? (
           <div className="organizational-scan-readonly-banner" role="status">
             <Lock size={16} aria-hidden />
-            <span>Diagnóstico concluído e bloqueado para edição.</span>
+            <span>Este scan está concluído e bloqueado para edição. Os outros temas seguem liberados.</span>
           </div>
         ) : null}
 
@@ -317,7 +342,7 @@ export function OrganizationalScanRunnerPage() {
               role="alertdialog"
               aria-labelledby="scan-redo-title"
             >
-              <p id="scan-redo-title">Tem certeza que quer refazer?</p>
+              <p id="scan-redo-title">Tem certeza que quer refazer este scan?</p>
               <div className="organizational-scan-redo-confirm-actions">
                 <button
                   type="button"
@@ -355,7 +380,7 @@ export function OrganizationalScanRunnerPage() {
                     disabled={redoing}
                   >
                     <RotateCcw size={16} aria-hidden />
-                    Refazer diagnóstico
+                    Refazer este scan
                   </button>
                 </>
               ) : (

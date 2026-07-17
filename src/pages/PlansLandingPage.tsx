@@ -9,70 +9,14 @@
   Sparkles,
 } from 'lucide-react';
 import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
+import { PlanCheckoutButton } from '../components/PlanCheckoutButton';
 import { useLocale } from '../context/LocaleContext';
 import type { Locale } from '../constants/locales';
+import type { PlanId } from '../constants/plans';
+import { landingTranslations } from '../i18n/landingTranslations';
 
-const CONTACT_EMAIL = 'hello@magnusmind.io';
-
-const METHOD_STEPS = [
-  { step: '01', icon: Compass, title: 'Diagnóstico', text: 'Compreenda a realidade da organização antes de decidir.' },
-  { step: '02', icon: LayoutGrid, title: 'Design', text: 'Transforme prioridades em um plano claro de execução.' },
-  { step: '03', icon: Radio, title: 'Difusão', text: 'Mobilize pessoas, acompanhe iniciativas e fortaleça a adoção.' },
-  { step: '04', icon: Sparkles, title: 'Domínio', text: 'Consolide aprendizados e acelere a evolução.' },
-] as const;
-
-const FEATURES = [
-  'Estratégia e execução conectadas',
-  'Memória organizacional entre ciclos',
-  'Conhecimento estruturado via RAG',
-  'Tecnologia apoiando decisões, não substituindo pessoas',
-  'Especialistas humanos desenvolvendo curadoria',
-  'Segurança da informação',
-  'Accountability distribuída',
-  'Evolução mensurável',
-] as const;
-
-const PLANS = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    title: 'Ideal para validar o método',
-    description:
-      'Conduza sua primeira Sprint Wave e estabeleça uma nova forma de transformar estratégia em execução.',
-    features: ['1 Sprint Wave ativa', 'Intelligence Dashboard', 'Curadoria de especialistas'],
-    featured: false,
-  },
-  {
-    id: 'advanced',
-    name: 'Advanced',
-    title: 'Várias iniciativas em paralelo',
-    description: 'Mais velocidade. Mais colaboração. Mais capacidade de execução.',
-    features: [
-      'Múltiplas Sprint Waves simultâneas',
-      'Colaboração ampliada',
-      'Memória organizacional avançada',
-    ],
-    featured: true,
-  },
-  {
-    id: 'premium',
-    name: 'Premium',
-    title: 'Transformação como prática contínua',
-    description:
-      'Criado para empresas e consultorias que fazem da transformação uma prática contínua. Sem limites para crescer.',
-    features: ['Sprint Waves ilimitadas', 'Suporte dedicado', 'Integrações personalizadas'],
-    featured: false,
-  },
-] as const;
-
-function SprintLogoIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="sw-logo-icon-svg" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <path d="M4 20c4-8 12-8 16 0" strokeLinecap="round" />
-      <path d="M4 14c4-8 12-8 16 0" strokeLinecap="round" opacity={0.6} />
-    </svg>
-  );
-}
+const METHOD_ICONS = [Compass, LayoutGrid, Radio, Sparkles] as const;
+const FEATURED_PLAN_ID = 'advanced';
 
 function LocaleSwitcher() {
   const { locale, setLocale } = useLocale();
@@ -97,31 +41,34 @@ function LocaleSwitcher() {
 }
 
 export function PlansLandingPage() {
+  const { locale } = useLocale();
+  const copy = landingTranslations[locale];
+
   return (
     <div id="top" className="sw-landing">
       <header className="sw-header">
         <div className="sw-container sw-header-inner">
           <a href="#top" className="sw-logo">
             <span className="sw-logo-icon">
-              <SprintLogoIcon />
+              <img src="/icone-magnusmind.svg" alt="" width={24} height={22} aria-hidden />
             </span>
             <span>Sprint</span>
           </a>
 
           <nav className="sw-nav" aria-label="Principal">
-            <a href="#about">O Sprint</a>
-            <a href="#method">Metodologia</a>
-            <a href="#pricing">Planos</a>
+            <a href="#about">{copy.nav.about}</a>
+            <a href="#method">{copy.nav.method}</a>
+            <a href="#pricing">{copy.nav.pricing}</a>
           </nav>
 
           <div className="sw-header-actions">
             <LocaleSwitcher />
             <ViewTransitionLink to="/login" className="sw-link-ghost">
-              Entrar
+              {copy.nav.signIn}
             </ViewTransitionLink>
-            <ViewTransitionLink to="/register" className="sw-btn sw-btn--gold">
-              Começar
-            </ViewTransitionLink>
+            <a href="#pricing" className="sw-btn sw-btn--gold">
+              {copy.nav.start}
+            </a>
           </div>
         </div>
       </header>
@@ -129,24 +76,20 @@ export function PlansLandingPage() {
       <section className="sw-hero sw-hero-radial" aria-label="Sprint">
         <div className="sw-container sw-hero-grid">
           <div>
-            <p className="sw-eyebrow">Magnus Mind · Sprint</p>
+            <p className="sw-eyebrow">{copy.hero.eyebrow}</p>
             <h1>
-              Toda organização sabe o que precisa fazer.
+              {copy.hero.title}
               <br />
-              <span className="sw-serif">Poucas conseguem executar.</span>
+              <span className="sw-serif">{copy.hero.titleSerif}</span>
             </h1>
-            <p className="sw-hero-lead">
-              O Sprint é uma plataforma de execução organizacional. Transforma prioridades em planos de
-              ação, conecta equipes, acompanha a evolução da mudança e ajuda sua organização a executar
-              com mais clareza, velocidade e consistência.
-            </p>
+            <p className="sw-hero-lead">{copy.hero.lead}</p>
             <div className="sw-hero-actions">
-              <ViewTransitionLink to="/register" className="sw-btn sw-btn--gold sw-btn--gold-lg">
-                Começar minha primeira Sprint Wave
+              <a href="#pricing" className="sw-btn sw-btn--gold sw-btn--gold-lg">
+                {copy.hero.ctaPrimary}
                 <ArrowRight size={16} aria-hidden />
-              </ViewTransitionLink>
+              </a>
               <a href="#method" className="sw-btn sw-btn--outline">
-                Conhecer a metodologia
+                {copy.hero.ctaSecondary}
               </a>
             </div>
           </div>
@@ -158,8 +101,8 @@ export function PlansLandingPage() {
               <img src="/landing/hero.png" alt="Sprint execution" width={640} height={520} />
             </div>
             <div className="sw-hero-badge">
-              <p className="sw-hero-badge-label">Sprint Wave</p>
-              <p className="sw-hero-badge-text">Diagnóstico → Design → Difusão → Domínio</p>
+              <p className="sw-hero-badge-label">{copy.hero.badgeLabel}</p>
+              <p className="sw-hero-badge-text">{copy.hero.badgeText}</p>
             </div>
           </div>
         </div>
@@ -167,25 +110,16 @@ export function PlansLandingPage() {
 
       <section id="about" className="sw-section sw-section--border-top sw-about">
         <div className="sw-container">
-          <p className="sw-eyebrow">O problema</p>
+          <p className="sw-eyebrow">{copy.about.eyebrow}</p>
           <h2>
-            A estratégia não falha no planejamento.
+            {copy.about.title}
             <br />
-            <span className="sw-serif">Ela falha na execução.</span>
+            <span className="sw-serif">{copy.about.titleSerif}</span>
           </h2>
           <div className="sw-about-copy">
-            <p>
-              Todos os dias, organizações definem prioridades, iniciam projetos e lançam iniciativas
-              importantes.
-            </p>
-            <p>
-              Mas, ao longo do caminho, surgem novos desafios, prioridades mudam, equipes perdem
-              alinhamento e o conhecimento construído em um ciclo acaba se perdendo no seguinte.
-            </p>
-            <p>
-              O Sprint foi criado para resolver exatamente esse problema: transformar estratégia em
-              execução contínua.
-            </p>
+            {copy.about.paragraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 32)}>{paragraph}</p>
+            ))}
           </div>
         </div>
       </section>
@@ -193,30 +127,32 @@ export function PlansLandingPage() {
       <section id="method" className="sw-section sw-navy-section">
         <div className="sw-container">
           <div className="sw-section-head">
-            <p className="sw-eyebrow">Sprint Wave</p>
+            <p className="sw-eyebrow">{copy.method.eyebrow}</p>
             <h2>
-              Um ciclo <span className="sw-serif">contínuo</span> de evolução organizacional
+              {copy.method.titlePre}
+              <span className="sw-serif">{copy.method.titleSerif}</span>
+              {copy.method.titlePost}
             </h2>
-            <p className="sw-section-lead">
-              Cada Sprint Wave transforma aprendizado em ação. O conhecimento gerado em uma etapa
-              alimenta a próxima, criando um processo contínuo de melhoria — não projetos isolados que
-              começam do zero.
-            </p>
+            <p className="sw-section-lead">{copy.method.lead}</p>
           </div>
 
           <div className="sw-method-grid">
-            {METHOD_STEPS.map((item) => (
-              <article key={item.step} className="sw-method-card">
-                <div className="sw-method-card-top">
-                  <div className="sw-method-icon">
-                    <item.icon size={20} aria-hidden />
+            {copy.method.steps.map((item, index) => {
+              const Icon = METHOD_ICONS[index] ?? Sparkles;
+              const step = `0${index + 1}`;
+              return (
+                <article key={item.title} className="sw-method-card">
+                  <div className="sw-method-card-top">
+                    <div className="sw-method-icon">
+                      <Icon size={20} aria-hidden />
+                    </div>
+                    <span className="sw-method-step">{step}</span>
                   </div>
-                  <span className="sw-method-step">{item.step}</span>
-                </div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </article>
-            ))}
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
+              );
+            })}
           </div>
 
           <div className="sw-id-banner">
@@ -224,11 +160,8 @@ export function PlansLandingPage() {
               <ChartLine size={24} aria-hidden />
             </div>
             <div>
-              <h3>Intelligence Dashboard</h3>
-              <p>
-                Monitore indicadores, receba recomendações inteligentes e acompanhe o progresso da
-                transformação com total clareza.
-              </p>
+              <h3>{copy.method.idTitle}</h3>
+              <p>{copy.method.idText}</p>
             </div>
           </div>
         </div>
@@ -241,24 +174,20 @@ export function PlansLandingPage() {
               <img src="/landing/team.png" alt="Team collaborating" width={640} height={520} />
             </div>
             <div className="sw-float-badge">
-              <p className="sw-float-badge-label">RAG</p>
-              <p className="sw-float-badge-text">Memória organizacional entre ciclos</p>
+              <p className="sw-float-badge-label">{copy.learn.badgeLabel}</p>
+              <p className="sw-float-badge-text">{copy.learn.badgeText}</p>
             </div>
           </div>
 
           <div className="sw-split-copy">
             <h2>
-              Execute melhor.
+              {copy.learn.title}
               <br />
-              <span className="sw-serif">Aprenda continuamente.</span>
+              <span className="sw-serif">{copy.learn.titleSerif}</span>
             </h2>
-            <p className="sw-section-lead">
-              Enquanto ferramentas tradicionais organizam tarefas, o Sprint ajuda organizações a
-              transformar decisões em resultados. Cada Sprint Wave preserva o contexto, registra
-              aprendizados e fortalece a capacidade da organização de evoluir continuamente.
-            </p>
+            <p className="sw-section-lead">{copy.learn.lead}</p>
             <ul className="sw-checklist">
-              {FEATURES.map((feature) => (
+              {copy.learn.features.map((feature) => (
                 <li key={feature}>
                   <span className="sw-check-icon">
                     <Check size={12} aria-hidden />
@@ -274,23 +203,16 @@ export function PlansLandingPage() {
       <section className="sw-section sw-navy-section">
         <div className="sw-container sw-decisions-grid">
           <div>
-            <p className="sw-eyebrow">Além do dashboard</p>
+            <p className="sw-eyebrow">{copy.decisions.eyebrow}</p>
             <h2>
-              As empresas não precisam de mais dashboards.
+              {copy.decisions.title}
               <br />
-              <span className="sw-serif">Precisam tomar decisões melhores.</span>
+              <span className="sw-serif">{copy.decisions.titleSerif}</span>
             </h2>
             <div className="sw-decisions-copy">
-              <p>Decisões melhores geram organizações melhores.</p>
-              <p>
-                O Sprint não existe apenas para acompanhar projetos. Ele existe para ajudar líderes e
-                equipes a decidir com mais clareza, agir com mais rapidez e aprender continuamente com
-                cada ciclo realizado.
-              </p>
-              <p>
-                Porque executar bem nunca depende apenas do plano. Depende da qualidade das decisões
-                tomadas todos os dias.
-              </p>
+              {copy.decisions.paragraphs.map((paragraph) => (
+                <p key={paragraph.slice(0, 32)}>{paragraph}</p>
+              ))}
             </div>
           </div>
           <div className="sw-image-card sw-decisions-image">
@@ -302,40 +224,40 @@ export function PlansLandingPage() {
       <section id="pricing" className="sw-section">
         <div className="sw-container">
           <div className="sw-section-head">
-            <h2>Escolha a capacidade que acompanha o crescimento da sua organização.</h2>
-            <p className="sw-section-lead">
-              Todos os planos incluem a experiência completa do Sprint. A diferença está apenas na
-              quantidade de Sprint Waves que sua organização pode conduzir simultaneamente.
-            </p>
-            <p className="sw-pricing-tagline">Você cresce no seu ritmo, sem mudar de plataforma.</p>
+            <h2>{copy.pricing.title}</h2>
+            <p className="sw-section-lead">{copy.pricing.lead}</p>
+            <p className="sw-pricing-tagline">{copy.pricing.tagline}</p>
           </div>
 
           <div className="sw-pricing-grid">
-            {PLANS.map((plan) => (
-              <article
-                key={plan.id}
-                className={`sw-pricing-card ${plan.featured ? 'sw-pricing-card--featured' : ''}`}
-              >
-                {plan.featured ? <span className="sw-pricing-star" aria-hidden>★</span> : null}
-                <p className="sw-eyebrow">{plan.name}</p>
-                <h3>{plan.title}</h3>
-                <p className="sw-pricing-desc">{plan.description}</p>
-                <ul className="sw-pricing-features">
-                  {plan.features.map((feature) => (
-                    <li key={feature}>
-                      <Check size={16} aria-hidden />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href={`mailto:${CONTACT_EMAIL}?subject=Sprint%20%E2%80%94%20Plano%20${plan.name}`}
-                  className={`sw-btn ${plan.featured ? 'sw-btn--gold' : 'sw-btn--outline-card'}`}
+            {copy.pricing.plans.map((plan) => {
+              const featured = plan.id === FEATURED_PLAN_ID;
+              return (
+                <article
+                  key={plan.id}
+                  className={`sw-pricing-card ${featured ? 'sw-pricing-card--featured' : ''}`}
                 >
-                  Falar com o time
-                </a>
-              </article>
-            ))}
+                  {featured ? <span className="sw-pricing-star" aria-hidden>★</span> : null}
+                  <p className="sw-eyebrow">{plan.name}</p>
+                  <h3>{plan.title}</h3>
+                  <p className="sw-pricing-desc">{plan.description}</p>
+                  <ul className="sw-pricing-features">
+                    {plan.features.map((feature) => (
+                      <li key={feature}>
+                        <Check size={16} aria-hidden />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <PlanCheckoutButton
+                    planId={plan.id as PlanId}
+                    className={`sw-btn ${featured ? 'sw-btn--gold' : 'sw-btn--outline-card'} sw-btn--block`}
+                  >
+                    {copy.pricing.contact}
+                  </PlanCheckoutButton>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -343,17 +265,14 @@ export function PlansLandingPage() {
       <section id="cta" className="sw-section sw-cta sw-hero-radial sw-section--border-top">
         <div className="sw-container" style={{ maxWidth: '56rem' }}>
           <h2>
-            Sua estratégia <span className="sw-serif">merece sair do papel.</span>
+            {copy.cta.title} <span className="sw-serif">{copy.cta.titleSerif}</span>
           </h2>
-          <p className="sw-cta-lead">
-            Comece a construir uma organização que aprende continuamente, executa com consistência e
-            evolui a cada novo ciclo.
-          </p>
+          <p className="sw-cta-lead">{copy.cta.lead}</p>
           <div className="sw-cta-actions">
-            <ViewTransitionLink to="/register" className="sw-btn sw-btn--gold sw-btn--gold-xl">
-              Começar minha primeira Sprint Wave
+            <a href="#pricing" className="sw-btn sw-btn--gold sw-btn--gold-xl">
+              {copy.cta.button}
               <ArrowRight size={16} aria-hidden />
-            </ViewTransitionLink>
+            </a>
           </div>
         </div>
       </section>
@@ -364,15 +283,15 @@ export function PlansLandingPage() {
             <div className="sw-footer-brand">
               <div className="sw-logo">
                 <span className="sw-logo-icon">
-                  <SprintLogoIcon />
+                  <img src="/icone-magnusmind.svg" alt="" width={24} height={22} aria-hidden />
                 </span>
                 <span>Sprint</span>
               </div>
-              <p>Plataforma de execução organizacional.</p>
+              <p>{copy.footer.tagline}</p>
             </div>
 
             <div>
-              <h4>Ecossistema Magnus Mind</h4>
+              <h4>{copy.footer.ecosystem}</h4>
               <ul className="sw-footer-links">
                 <li>
                   <a href="https://connect.magnusmind.io/" target="_blank" rel="noreferrer">
@@ -391,23 +310,25 @@ export function PlansLandingPage() {
             </div>
 
             <div>
-              <h4>Sprint</h4>
+              <h4>{copy.footer.sprintColumn}</h4>
               <ul className="sw-footer-links">
                 <li>
-                  <a href="#method">Metodologia</a>
+                  <a href="#method">{copy.footer.method}</a>
                 </li>
                 <li>
-                  <a href="#pricing">Planos</a>
+                  <a href="#pricing">{copy.footer.pricing}</a>
                 </li>
                 <li>
-                  <a href="#cta">Começar</a>
+                  <a href="#cta">{copy.footer.start}</a>
                 </li>
               </ul>
             </div>
           </div>
 
           <div className="sw-footer-bottom">
-            <span>© {new Date().getFullYear()} Magnus Mind. Todos os direitos reservados.</span>
+            <span>
+              © {new Date().getFullYear()} Magnus Mind. {copy.footer.rights}
+            </span>
             <span className="sw-footer-mark">MAGNUS MIND · SPRINT</span>
           </div>
         </div>

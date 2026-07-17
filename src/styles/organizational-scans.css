@@ -255,6 +255,219 @@
   font-size: 0.86rem;
 }
 
+/* —— Cycle briefing (Versão 2.0+ after Evolution Loop) —— */
+
+.cycle-briefing {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.35rem 1.4rem;
+  border-radius: 18px;
+  border: 1px solid rgba(201, 168, 106, 0.32);
+  background:
+    linear-gradient(165deg, rgba(201, 168, 106, 0.1), rgba(21, 29, 44, 0.72)),
+    rgba(21, 29, 44, 0.62);
+}
+
+.cycle-briefing-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cycle-briefing-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(201, 168, 106, 0.9);
+}
+
+.cycle-briefing-head h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 600;
+  color: var(--mm-fg-0, #f8f4ee);
+  line-height: 1.2;
+}
+
+.cycle-briefing-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 188, 125, 0.35);
+  background: rgba(255, 188, 125, 0.08);
+  color: #ffbc7d;
+  font-size: 0.84rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.cycle-briefing-download:hover {
+  background: rgba(255, 188, 125, 0.16);
+  border-color: rgba(255, 188, 125, 0.55);
+}
+
+.cycle-briefing-summary {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(243, 236, 226, 0.88);
+  max-width: 78ch;
+}
+
+.cycle-briefing-focus {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cycle-briefing-focus-label {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(201, 168, 106, 0.85);
+}
+
+.cycle-briefing-focus h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--mm-fg-0, #f8f4ee);
+}
+
+.cycle-briefing-focus p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(243, 236, 226, 0.78);
+}
+
+.cycle-briefing-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.cycle-briefing-columns article {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(21, 29, 44, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cycle-briefing-columns h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(201, 168, 106, 0.9);
+}
+
+.cycle-briefing-columns ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.cycle-briefing-columns li {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.86rem;
+  color: rgba(243, 236, 226, 0.88);
+}
+
+.cycle-briefing-columns li span {
+  font-size: 0.8rem;
+  color: rgba(243, 236, 226, 0.62);
+  line-height: 1.45;
+}
+
+.cycle-briefing-columns li.is-empty {
+  color: rgba(243, 236, 226, 0.45);
+  font-style: italic;
+}
+
+.cycle-briefing-suggestions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cycle-briefing-suggestions h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--mm-fg-0, #f8f4ee);
+}
+
+.cycle-briefing-suggestions ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.cycle-briefing-suggestions li {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.cycle-briefing-suggestions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #ffbc7d;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cycle-briefing-suggestions button:hover {
+  text-decoration: underline;
+}
+
+.cycle-briefing-suggestions span {
+  font-size: 0.82rem;
+  color: rgba(243, 236, 226, 0.65);
+  line-height: 1.45;
+}
+
+.cycle-briefing-rag-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(201, 168, 106, 0.78);
+}
+
+.organizational-scan-card.is-suggested {
+  border-color: rgba(255, 188, 125, 0.4);
+  box-shadow: 0 0 0 1px rgba(255, 188, 125, 0.12);
+}
+
+@media (max-width: 900px) {
+  .cycle-briefing-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 .organizational-scans-picker {
   display: grid;
   gap: 0.85rem;

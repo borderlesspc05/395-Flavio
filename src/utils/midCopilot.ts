@@ -39,6 +39,16 @@ function firstUsefulAction(execution: MidExecutionRow[]): MidExecutionRow | null
 /** Gera a narrativa da IA a partir dos dados reais do ID (determinística, sempre relevante). */
 export function buildMidCopilotMessages(data: MidDashboardData): CopilotMessage[] {
   const { overview, executiveKpis, execution, briefing, nowActions } = data;
+  if (!data.hasData) {
+    return [
+      {
+        id: 'waiting-for-data',
+        tone: 'intro',
+        text: `${briefing?.greeting || 'Olá'}! Ainda não há informações suficientes para analisar este projeto. Conforme você preencher o diagnóstico e registrar ações, eu vou acompanhar os dados e trazer recomendações baseadas no que realmente aconteceu.`,
+      },
+    ];
+  }
+
   const messages: CopilotMessage[] = [];
   const project = overview.projectName?.trim() || 'seu projeto';
 

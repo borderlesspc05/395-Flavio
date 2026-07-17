@@ -135,15 +135,19 @@ html {
 }
 
 .sw-logo-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.375rem;
-  background: oklch(76% 0.09 75 / 0.15);
-  border: 1px solid oklch(76% 0.09 75 / 0.3);
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--sw-gold);
+  flex-shrink: 0;
+}
+
+.sw-logo-icon img {
+  width: 2.5rem;
+  height: 2.25rem;
+  object-fit: contain;
+  display: block;
 }
 
 .sw-nav {
@@ -820,6 +824,30 @@ html {
 
 .sw-pricing-card .sw-btn {
   margin-top: 2rem;
+}
+
+.sw-btn--block {
+  width: 100%;
+}
+
+.sw-pricing-card .plan-checkout-wrap {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.sw-pricing-card .plan-checkout-wrap .sw-btn {
+  margin-top: 0;
+  width: 100%;
+  padding-block: 0.75rem;
+}
+
+.sw-pricing-card .plan-checkout-error {
+  font-size: 0.8rem;
+  color: #f2a6a6;
+  line-height: 1.4;
 }
 
 .sw-pricing-tagline {

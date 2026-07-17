@@ -132,7 +132,7 @@ export function EvolutionLoopPanel({ onWaveCreated }: Props) {
       }
       await refreshCycles();
       onWaveCreated?.();
-      navigate('/dashboard/scans');
+      navigate('/dashboard/scans', { state: { fromEvolutionLoop: true } });
     } catch (err) {
       setNotice(readApiErrorMessage(err, 'Erro ao criar nova onda.'));
     } finally {

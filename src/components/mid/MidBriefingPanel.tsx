@@ -4,9 +4,29 @@ interface MidBriefingPanelProps {
   briefing: MidBriefing;
   health: MidHealth;
   factors: MidHealthFactor[];
+  hasData: boolean;
 }
 
-export function MidBriefingPanel({ briefing, health, factors }: MidBriefingPanelProps) {
+export function MidBriefingPanel({ briefing, health, factors, hasData }: MidBriefingPanelProps) {
+  if (!hasData) {
+    return (
+      <div className="mid-briefing" aria-label="Intelligence Dashboard">
+        <div className="mid-briefing-top">
+          <div className="mid-briefing-lead">
+            <h2 className="mid-briefing-greeting">{briefing.greeting}</h2>
+          </div>
+        </div>
+        <div className="mid-briefing-reco">
+          <p className="mid-briefing-reco-label">Análise ainda não iniciada</p>
+          <p className="mid-briefing-reco-text">
+            Preencha o diagnóstico ou registre uma ação. Os indicadores e recomendações aparecerão
+            somente quando houver dados reais do projeto.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const factorsLine =
     factors.length > 0
       ? `Baseado em ${factors.map((f) => f.label.toLowerCase()).join(' · ')}`

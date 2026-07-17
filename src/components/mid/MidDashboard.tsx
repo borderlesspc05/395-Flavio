@@ -174,6 +174,7 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
               briefing={briefing}
               health={overview.health}
               factors={overview.healthFactors ?? []}
+              hasData={data.hasData}
             />
           </div>
 
@@ -185,27 +186,34 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
 
             <MidCopilotFeed data={data} />
 
-            <div className="mid-project-card-progress">
-              <div className="mid-project-card-progress-head">
-                <span className="mid-project-card-label">Progresso</span>
-                <strong>{overview.progressPercent}%</strong>
+            {data.hasData ? (
+              <div className="mid-project-card-progress">
+                <div className="mid-project-card-progress-head">
+                  <span className="mid-project-card-label">Progresso</span>
+                  <strong>{overview.progressPercent}%</strong>
+                </div>
+                <div className="mid-progress">
+                  <div
+                    className="mid-progress-fill"
+                    style={{ width: `${overview.progressPercent}%` }}
+                  />
+                </div>
               </div>
-              <div className="mid-progress">
-                <div
-                  className="mid-progress-fill"
-                  style={{ width: `${overview.progressPercent}%` }}
-                />
-              </div>
-            </div>
+            ) : null}
           </div>
         </div>
       </section>
 
-      <section className="mid-exec-kpi-grid mid-reveal mid-reveal--1" aria-label="Indicadores executivos">
-        {executiveKpis.map((kpi, index) => (
-          <MidExecutiveKpiCard key={kpi.id} kpi={kpi} index={index} />
-        ))}
-      </section>
+      {data.hasData ? (
+        <section
+          className="mid-exec-kpi-grid mid-reveal mid-reveal--1"
+          aria-label="Indicadores executivos"
+        >
+          {executiveKpis.map((kpi, index) => (
+            <MidExecutiveKpiCard key={kpi.id} kpi={kpi} index={index} />
+          ))}
+        </section>
+      ) : null}
 
       <section className="mid-block mid-reveal mid-reveal--2" aria-labelledby="mid-execution">
         <SectionTitle
