@@ -12,6 +12,7 @@ import type {
   MidNowAction,
   MidTimelineEvent,
 } from '../types/mid';
+import { pickDaily, rotateDaily } from '../utils/dailyInsight';
 
 const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const;
 const CHECKIN_STALE_DAYS = 15;
@@ -173,6 +174,7 @@ export function computeProjectHealthScore(input: MidIntelligenceInput): {
 export function buildBriefing(input: MidIntelligenceInput, healthScore: number, healthLabel: string): MidBriefing {
   const deliveries = input.canvases.flatMap((c) => c.entregas.filter((e) => e.entrega?.trim()));
   const atRisk = deliveries.filter((e) => e.status === 'vermelho').length;
+  const yellow = deliveries.filter((e) => e.status === 'amarelo').length;
   const checkIns = input.memberCheckIns ?? [];
   const staleMembers = input.team.length
     ? checkIns.length
@@ -183,8 +185,10 @@ export function buildBriefing(input: MidIntelligenceInput, healthScore: number, 
       : input.team.length
     : 0;
   const accelerated = checkIns.filter((c) => c.trend === 'improved').length;
+  const openObjectives = input.objectives.filter((o) => o.status !== 'concluido').length;
+  const doneObjectives = input.objectives.filter((o) => o.status === 'concluido').length;
 
-  const signals: MidBriefingSignal[] = [
+  const signalPool: MidBriefingSignal[] = [
     {
       id: 'risk',
       tone: atRisk > 0 ? 'risk' : 'positive',
@@ -203,38 +207,125 @@ export function buildBriefing(input: MidIntelligenceInput, healthScore: number, 
             ? 'Check-ins da equipe em dia'
             : 'Equipe ainda não cadastrada',
     },
-    {
-      id: 'today',
-      tone: atRisk > 0 || staleMembers > 0 ? 'attention' : accelerated > 0 ? 'positive' : 'attention',
-      text:
-        atRisk > 0 || staleMembers > 0
-          ? 'Recomendações de hoje pedem atenção'
-          : accelerated > 0
-            ? 'Recomendações de hoje sob controle'
-            : 'Recomendações de hoje para revisar',
-    },
   ];
 
+  if (yellow > 0) {
+    signalPool.push({
+      id: 'yellow',
+      tone: 'attention',
+      text: `${yellow} entrega${yellow > 1 ? 's' : ''} em atenção no Action Canvas`,
+    });
+  }
+  if (openObjectives > 0) {
+    signalPool.push({
+      id: 'objectives',
+      tone: openObjectives > doneObjectives ? 'attention' : 'positive',
+      text: `${openObjectives} objetivo${openObjectives > 1 ? 's' : ''} em aberto no ciclo`,
+    });
+  }
+  if (accelerated > 0) {
+    signalPool.push({
+      id: 'growth',
+      tone: 'positive',
+      text: `${accelerated} pessoa${accelerated > 1 ? 's' : ''} com tendência de evolução`,
+    });
+  }
+
+  signalPool.push({
+    id: 'today',
+    tone: atRisk > 0 || staleMembers > 0 ? 'attention' : accelerated > 0 ? 'positive' : 'attention',
+    text: pickDaily(
+      atRisk > 0 || staleMembers > 0
+        ? [
+            'Recomendações de hoje pedem atenção',
+            'Hoje o ciclo pede prioridade clara',
+            'Sinais de hoje pedem foco imediato',
+          ]
+        : accelerated > 0
+          ? [
+              'Recomendações de hoje sob controle',
+              'Hoje o ritmo está favorável',
+              'Sinais de hoje apontam evolução',
+            ]
+          : [
+              'Recomendações de hoje para revisar',
+              'Hoje vale revisar o próximo movimento',
+              'Há espaço para avançar no ciclo hoje',
+            ],
+      `briefing-today-${input.projectName}`,
+    ),
+  });
+
+  const signals = rotateDaily(signalPool, `briefing-signals-${input.projectName}`).slice(0, 3);
+
   const commercial = input.team.find((m) =>
-    /comercial|vendas|sales/i.test(`${m.role ?? ''} ${m.department ?? ''} ${m.name ?? ''}`)
+    /comercial|vendas|sales/i.test(`${m.role ?? ''} ${m.department ?? ''} ${m.name ?? ''}`),
   );
   const weakest = [...(input.memberCheckIns ?? [])]
     .filter((c) => typeof c.latestScore === 'number')
     .sort((a, b) => (a.latestScore ?? 100) - (b.latestScore ?? 100))[0];
 
-  let recommendation =
-    'Revise o Health Score e priorize o próximo movimento do ciclo.';
+  const recommendations: string[] = [];
+
   if (atRisk > 0) {
-    recommendation = `Priorize desbloquear ${atRisk} entrega${atRisk > 1 ? 's' : ''} em risco no Action Canvas.`;
-  } else if (staleMembers > 0) {
-    recommendation = `Agende check-ins com quem está há mais de ${CHECKIN_STALE_DAYS} dias sem registro.`;
-  } else if (commercial) {
-    recommendation = `Priorize reunião com ${commercial.name || 'Equipe Comercial'}.`;
-  } else if (weakest) {
-    recommendation = `Reforce acompanhamento com ${weakest.memberName}.`;
-  } else if (!input.formComplete) {
-    recommendation = 'Conclua o diagnóstico para liberar o restante das ondas.';
+    recommendations.push(
+      `Priorize desbloquear ${atRisk} entrega${atRisk > 1 ? 's' : ''} em risco no Action Canvas.`,
+      `Hoje: trate primeiro o que está em vermelho — ${atRisk} item${atRisk > 1 ? 's' : ''} pedem desbloqueio.`,
+      `Chame o responsável das entregas críticas antes de avançar novas frentes.`,
+    );
   }
+  if (staleMembers > 0) {
+    recommendations.push(
+      `Agende check-ins com quem está há mais de ${CHECKIN_STALE_DAYS} dias sem registro.`,
+      `Hoje: reative ${staleMembers} pessoa${staleMembers > 1 ? 's' : ''} sem check-in recente.`,
+      `Um ritual curto de acompanhamento reduz o gap de participação da equipe.`,
+    );
+  }
+  if (yellow > 0) {
+    recommendations.push(
+      `Reforce evidência e prazo nas ${yellow} entrega${yellow > 1 ? 's' : ''} em amarelo.`,
+      `Hoje: converta atenção em progresso nas entregas amarelas do canvas.`,
+    );
+  }
+  if (openObjectives > 0) {
+    recommendations.push(
+      `Avance pelo menos 1 dos ${openObjectives} objetivos ainda abertos.`,
+      `Escolha um objetivo crítico e defina a próxima evidência até o fim do dia.`,
+    );
+  }
+  if (commercial) {
+    recommendations.push(`Priorize reunião com ${commercial.name || 'Equipe Comercial'}.`);
+  }
+  if (weakest) {
+    recommendations.push(
+      `Reforce acompanhamento com ${weakest.memberName}.`,
+      `Hoje: um check-in rápido com ${weakest.memberName} pode destravar evolução.`,
+    );
+  }
+  if (!input.formComplete) {
+    recommendations.push('Conclua o diagnóstico para liberar o restante das ondas.');
+  }
+  if (healthScore < 50) {
+    recommendations.push(
+      `Health Score em ${healthScore}: foque no fator mais fraco antes de abrir novas iniciativas.`,
+      `Hoje o projeto pede contenção — estabilize ritmo antes de acelerar.`,
+    );
+  } else if (healthScore >= 70) {
+    recommendations.push(
+      `Health Score ${healthScore}: consolide o que está funcionando e documente o padrão.`,
+      `Bom momento para registrar aprendizados e replicar o que gerou tração.`,
+    );
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push(
+      'Revise o Health Score e priorize o próximo movimento do ciclo.',
+      'Escolha uma ação curta e visível para manter o ritmo do projeto hoje.',
+      'Olhe o Execution Tracker e avance a entrega mais sensível do ciclo.',
+    );
+  }
+
+  const recommendation = pickDaily(recommendations, `briefing-reco-${input.projectName}-${healthScore}`);
 
   return {
     greeting: greetingFor(input.userDisplayName),

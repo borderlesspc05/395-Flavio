@@ -8,6 +8,8 @@
   Radio,
   Sparkles,
 } from 'lucide-react';
+import type { ComponentProps } from 'react';
+import { ScrollReveal as ScrollRevealBase } from '../components/ScrollReveal';
 import { ViewTransitionLink } from '../components/navigation/ViewTransitionLink';
 import { PlanCheckoutButton } from '../components/PlanCheckoutButton';
 import { useLocale } from '../context/LocaleContext';
@@ -17,6 +19,10 @@ import { landingTranslations } from '../i18n/landingTranslations';
 
 const METHOD_ICONS = [Compass, LayoutGrid, Radio, Sparkles] as const;
 const FEATURED_PLAN_ID = 'advanced';
+
+function ScrollReveal(props: ComponentProps<typeof ScrollRevealBase>) {
+  return <ScrollRevealBase once={false} {...props} />;
+}
 
 function LocaleSwitcher() {
   const { locale, setLocale } = useLocale();
@@ -75,7 +81,7 @@ export function PlansLandingPage() {
 
       <section className="sw-hero sw-hero-radial" aria-label="Sprint">
         <div className="sw-container sw-hero-grid">
-          <div>
+          <div className="sw-hero-copy sw-hero-enter">
             <p className="sw-eyebrow">{copy.hero.eyebrow}</p>
             <h1>
               {copy.hero.title}
@@ -94,7 +100,7 @@ export function PlansLandingPage() {
             </div>
           </div>
 
-          <div className="sw-hero-visual">
+          <div className="sw-hero-visual sw-hero-enter sw-hero-enter--late">
             <div className="sw-hero-glow-1" aria-hidden />
             <div className="sw-hero-glow-2" aria-hidden />
             <div className="sw-hero-image-wrap">
@@ -110,15 +116,19 @@ export function PlansLandingPage() {
 
       <section id="about" className="sw-section sw-section--border-top sw-about">
         <div className="sw-container">
-          <p className="sw-eyebrow">{copy.about.eyebrow}</p>
-          <h2>
-            {copy.about.title}
-            <br />
-            <span className="sw-serif">{copy.about.titleSerif}</span>
-          </h2>
+          <ScrollReveal>
+            <p className="sw-eyebrow">{copy.about.eyebrow}</p>
+            <h2>
+              {copy.about.title}
+              <br />
+              <span className="sw-serif">{copy.about.titleSerif}</span>
+            </h2>
+          </ScrollReveal>
           <div className="sw-about-copy">
-            {copy.about.paragraphs.map((paragraph) => (
-              <p key={paragraph.slice(0, 32)}>{paragraph}</p>
+            {copy.about.paragraphs.map((paragraph, index) => (
+              <ScrollReveal key={paragraph.slice(0, 32)} delay={80 + index * 90}>
+                <p>{paragraph}</p>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -126,7 +136,7 @@ export function PlansLandingPage() {
 
       <section id="method" className="sw-section sw-navy-section">
         <div className="sw-container">
-          <div className="sw-section-head">
+          <ScrollReveal className="sw-section-head">
             <p className="sw-eyebrow">{copy.method.eyebrow}</p>
             <h2>
               {copy.method.titlePre}
@@ -134,28 +144,30 @@ export function PlansLandingPage() {
               {copy.method.titlePost}
             </h2>
             <p className="sw-section-lead">{copy.method.lead}</p>
-          </div>
+          </ScrollReveal>
 
           <div className="sw-method-grid">
             {copy.method.steps.map((item, index) => {
               const Icon = METHOD_ICONS[index] ?? Sparkles;
               const step = `0${index + 1}`;
               return (
-                <article key={item.title} className="sw-method-card">
-                  <div className="sw-method-card-top">
-                    <div className="sw-method-icon">
-                      <Icon size={20} aria-hidden />
+                <ScrollReveal key={item.title} delay={index * 100} variant="scale">
+                  <article className="sw-method-card">
+                    <div className="sw-method-card-top">
+                      <div className="sw-method-icon">
+                        <Icon size={20} aria-hidden />
+                      </div>
+                      <span className="sw-method-step">{step}</span>
                     </div>
-                    <span className="sw-method-step">{step}</span>
-                  </div>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
-                </article>
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                  </article>
+                </ScrollReveal>
               );
             })}
           </div>
 
-          <div className="sw-id-banner">
+          <ScrollReveal delay={120} className="sw-id-banner">
             <div className="sw-id-banner-icon">
               <ChartLine size={24} aria-hidden />
             </div>
@@ -163,13 +175,13 @@ export function PlansLandingPage() {
               <h3>{copy.method.idTitle}</h3>
               <p>{copy.method.idText}</p>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
       <section className="sw-section">
         <div className="sw-container sw-split sw-split--reverse">
-          <div className="sw-split-visual">
+          <ScrollReveal variant="left" className="sw-split-visual">
             <div className="sw-image-card">
               <img src="/landing/team.png" alt="Team collaborating" width={640} height={520} />
             </div>
@@ -177,9 +189,9 @@ export function PlansLandingPage() {
               <p className="sw-float-badge-label">{copy.learn.badgeLabel}</p>
               <p className="sw-float-badge-text">{copy.learn.badgeText}</p>
             </div>
-          </div>
+          </ScrollReveal>
 
-          <div className="sw-split-copy">
+          <ScrollReveal variant="right" delay={100} className="sw-split-copy">
             <h2>
               {copy.learn.title}
               <br />
@@ -196,13 +208,13 @@ export function PlansLandingPage() {
                 </li>
               ))}
             </ul>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
       <section className="sw-section sw-navy-section">
         <div className="sw-container sw-decisions-grid">
-          <div>
+          <ScrollReveal variant="left">
             <p className="sw-eyebrow">{copy.decisions.eyebrow}</p>
             <h2>
               {copy.decisions.title}
@@ -214,48 +226,49 @@ export function PlansLandingPage() {
                 <p key={paragraph.slice(0, 32)}>{paragraph}</p>
               ))}
             </div>
-          </div>
-          <div className="sw-image-card sw-decisions-image">
+          </ScrollReveal>
+          <ScrollReveal variant="right" delay={120} className="sw-image-card sw-decisions-image">
             <img src="/landing/decisions.png" alt="Better decisions" width={480} height={500} />
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
       <section id="pricing" className="sw-section">
         <div className="sw-container">
-          <div className="sw-section-head">
+          <ScrollReveal className="sw-section-head">
             <h2>{copy.pricing.title}</h2>
             <p className="sw-section-lead">{copy.pricing.lead}</p>
             <p className="sw-pricing-tagline">{copy.pricing.tagline}</p>
-          </div>
+          </ScrollReveal>
 
           <div className="sw-pricing-grid">
-            {copy.pricing.plans.map((plan) => {
+            {copy.pricing.plans.map((plan, index) => {
               const featured = plan.id === FEATURED_PLAN_ID;
               return (
-                <article
-                  key={plan.id}
-                  className={`sw-pricing-card ${featured ? 'sw-pricing-card--featured' : ''}`}
-                >
-                  {featured ? <span className="sw-pricing-star" aria-hidden>★</span> : null}
-                  <p className="sw-eyebrow">{plan.name}</p>
-                  <h3>{plan.title}</h3>
-                  <p className="sw-pricing-desc">{plan.description}</p>
-                  <ul className="sw-pricing-features">
-                    {plan.features.map((feature) => (
-                      <li key={feature}>
-                        <Check size={16} aria-hidden />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <PlanCheckoutButton
-                    planId={plan.id as PlanId}
-                    className={`sw-btn ${featured ? 'sw-btn--gold' : 'sw-btn--outline-card'} sw-btn--block`}
+                <ScrollReveal key={plan.id} delay={index * 110} variant="scale">
+                  <article
+                    className={`sw-pricing-card ${featured ? 'sw-pricing-card--featured' : ''}`}
                   >
-                    {copy.pricing.contact}
-                  </PlanCheckoutButton>
-                </article>
+                    {featured ? <span className="sw-pricing-star" aria-hidden>★</span> : null}
+                    <p className="sw-eyebrow">{plan.name}</p>
+                    <h3>{plan.title}</h3>
+                    <p className="sw-pricing-desc">{plan.description}</p>
+                    <ul className="sw-pricing-features">
+                      {plan.features.map((feature) => (
+                        <li key={feature}>
+                          <Check size={16} aria-hidden />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <PlanCheckoutButton
+                      planId={plan.id as PlanId}
+                      className={`sw-btn ${featured ? 'sw-btn--gold' : 'sw-btn--outline-card'} sw-btn--block`}
+                    >
+                      {copy.pricing.contact}
+                    </PlanCheckoutButton>
+                  </article>
+                </ScrollReveal>
               );
             })}
           </div>
@@ -264,21 +277,23 @@ export function PlansLandingPage() {
 
       <section id="cta" className="sw-section sw-cta sw-hero-radial sw-section--border-top">
         <div className="sw-container" style={{ maxWidth: '56rem' }}>
-          <h2>
-            {copy.cta.title} <span className="sw-serif">{copy.cta.titleSerif}</span>
-          </h2>
-          <p className="sw-cta-lead">{copy.cta.lead}</p>
-          <div className="sw-cta-actions">
-            <a href="#pricing" className="sw-btn sw-btn--gold sw-btn--gold-xl">
-              {copy.cta.button}
-              <ArrowRight size={16} aria-hidden />
-            </a>
-          </div>
+          <ScrollReveal>
+            <h2>
+              {copy.cta.title} <span className="sw-serif">{copy.cta.titleSerif}</span>
+            </h2>
+            <p className="sw-cta-lead">{copy.cta.lead}</p>
+            <div className="sw-cta-actions">
+              <a href="#pricing" className="sw-btn sw-btn--gold sw-btn--gold-xl">
+                {copy.cta.button}
+                <ArrowRight size={16} aria-hidden />
+              </a>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
       <footer className="sw-footer">
-        <div className="sw-container sw-footer-inner">
+        <ScrollReveal className="sw-container sw-footer-inner">
           <div className="sw-footer-grid">
             <div className="sw-footer-brand">
               <div className="sw-logo">
@@ -331,7 +346,7 @@ export function PlansLandingPage() {
             </span>
             <span className="sw-footer-mark">MAGNUS MIND · SPRINT</span>
           </div>
-        </div>
+        </ScrollReveal>
       </footer>
     </div>
   );

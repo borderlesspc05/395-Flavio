@@ -961,3 +961,83 @@ html {
 .sw-footer-mark {
   letter-spacing: 0.1em;
 }
+
+/* —— Scroll reveal —— */
+.sw-landing {
+  --sw-reveal-duration: 0.75s;
+  --sw-reveal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sw-landing .scroll-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity var(--sw-reveal-duration) var(--sw-reveal-ease),
+    transform var(--sw-reveal-duration) var(--sw-reveal-ease);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.sw-landing .scroll-reveal--left {
+  transform: translateX(-36px);
+}
+
+.sw-landing .scroll-reveal--right {
+  transform: translateX(36px);
+}
+
+.sw-landing .scroll-reveal--scale {
+  transform: translateY(28px) scale(0.96);
+}
+
+.sw-landing .scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translate(0) scale(1);
+}
+
+/* When leaving viewport while scrolling up, ease back out without delayed exit */
+.sw-landing .scroll-reveal:not(.is-visible) {
+  transition-delay: 0ms;
+}
+
+.sw-landing .sw-method-grid > .scroll-reveal,
+.sw-landing .sw-pricing-grid > .scroll-reveal {
+  height: 100%;
+}
+
+.sw-landing .sw-method-grid > .scroll-reveal > .sw-method-card,
+.sw-landing .sw-pricing-grid > .scroll-reveal > .sw-pricing-card {
+  height: 100%;
+}
+
+.sw-hero-enter {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: sw-hero-enter 0.85s var(--sw-reveal-ease) forwards;
+}
+
+.sw-hero-enter--late {
+  animation-delay: 0.16s;
+}
+
+@keyframes sw-hero-enter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-landing .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .sw-hero-enter,
+  .sw-hero-enter--late {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

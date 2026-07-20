@@ -2,7 +2,9 @@
 import { Check, ListChecks, Pencil, X } from 'lucide-react';
 import type { MidDashboardData } from '../../types/mid';
 import { useCycle } from '../../context/CycleContext';
-import { MidExecutiveKpiCard } from './MidExecutiveKpiCard';
+import { ragApi } from '../../services/api';
+import { dayKey } from '../../utils/dailyInsight';
+import { MidExecutiveKpiCard, type MidKpiRagInsightView } from './MidExecutiveKpiCard';
 import { MidCopilotFeed } from './MidCopilotFeed';
 import { MidBriefingPanel } from './MidBriefingPanel';
 
@@ -140,6 +142,62 @@ function EditableProjectName({ name }: { name: string }) {
 
 export function MidDashboard({ data, loading }: MidDashboardProps) {
   const { overview, executiveKpis, execution, briefing } = data;
+  const [ragByKpi, setRagByKpi] = useState<Record<string, MidKpiRagInsightView>>({});
+  const [ragLoading, setRagLoading] = useState(false);
+  const ragRequestKey = `${dayKey()}::${data.hasData ? '1' : '0'}::${executiveKpis.map((k) => k.id).join(',')}`;
+
+  useEffect(() => {
+    if (!data.hasData || executiveKpis.length === 0) {
+      setRagByKpi({});
+      return;
+    }
+
+    let cancelled = false;
+    const cacheKey = `mm.mid.kpiRag.${ragRequestKey}`;
+
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Record<string, MidKpiRagInsightView>;
+        setRagByKpi(parsed);
+        return;
+      }
+    } catch {
+      // ignore cache parse errors
+    }
+
+    setRagLoading(true);
+    ragApi
+      .kpiInsights(executiveKpis.map((kpi) => kpi.id))
+      .then((response) => {
+        if (cancelled) return;
+        const map: Record<string, MidKpiRagInsightView> = {};
+        for (const insight of response.insights ?? []) {
+          map[insight.kpiId] = {
+            detail: insight.detail,
+            bullets: insight.bullets,
+            sources: insight.sources,
+            usedRag: insight.usedRag,
+          };
+        }
+        setRagByKpi(map);
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(map));
+        } catch {
+          // ignore quota
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setRagByKpi({});
+      })
+      .finally(() => {
+        if (!cancelled) setRagLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data.hasData, ragRequestKey]);
 
   if (loading) {
     return (
@@ -210,7 +268,13 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
           aria-label="Indicadores executivos"
         >
           {executiveKpis.map((kpi, index) => (
-            <MidExecutiveKpiCard key={kpi.id} kpi={kpi} index={index} />
+            <MidExecutiveKpiCard
+              key={kpi.id}
+              kpi={kpi}
+              index={index}
+              ragInsight={ragByKpi[kpi.id] ?? null}
+              ragLoading={ragLoading}
+            />
           ))}
         </section>
       ) : null}

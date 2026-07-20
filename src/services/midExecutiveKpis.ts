@@ -2,6 +2,7 @@ import type { ActionCanvas, InitialFormData, Objective, TeamMember } from '../ty
 import type { MidExecutiveKpi, MidTrend } from '../types/mid';
 import { computeEvolutionIndex, getEvolutionBand, getEvolutionLabel } from '../utils/evolutionIndex';
 import { computeSustainabilityScore } from '../utils/domainWave';
+import { pickDaily, rotateDaily } from '../utils/dailyInsight';
 import { parseDomainWaveData } from './domainWaveStorage';
 import { ensureMidScanBaseline, getMidScanBaseline } from './midBaseline';
 
@@ -256,13 +257,24 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
         trend: 'flat',
         trendValue:
           sustainability.band === 'green' ? '🟢 Forte' : sustainability.band === 'yellow' ? '🟡 Atenção' : '🔴 Risco',
-        meta: [
-          `Média ${sustainability.average}/5`,
-          'Onda 4 — Domínio',
-          'Radar de Sustentação',
-        ],
-        detail:
-          'Prevê se a transformação permanecerá viva após o projeto, com base em rotina, dono, indicadores, liderança e crença da equipe.',
+        meta: rotateDaily(
+          [
+            `Média ${sustainability.average}/5`,
+            'Onda 4 — Domínio',
+            'Radar de Sustentação',
+            `Leitura de hoje: ${sustainability.label}`,
+          ],
+          'kpi-sustainability-meta',
+        ).slice(0, 3),
+        detail: pickDaily(
+          [
+            `Score ${sustainability.score}/100 — a sustentação depende de rotina, dono e indicadores vivos.`,
+            `Hoje o radar aponta "${sustainability.label}". Reforce o que mantém a mudança viva após o ciclo.`,
+            `Média ${sustainability.average}/5 nos critérios de Domínio. Um foco diário aqui protege o resultado.`,
+            'Prevê se a transformação permanecerá viva após o projeto, com base em rotina, dono, indicadores, liderança e crença da equipe.',
+          ],
+          `kpi-sustainability-${sustainability.score}`,
+        ),
       }
     : {
         id: 'sustainability-score',
@@ -274,9 +286,18 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
         band: 'attention',
         trend: 'flat',
         trendValue: 'Onda 4',
-        meta: ['Radar de Sustentação', '5 critérios (1–5)', '/dashboard/relatorios'],
-        detail:
-          'Avalie rotina, responsável, indicadores, liderança e crença da equipe na Onda 4 para alimentar este score.',
+        meta: rotateDaily(
+          ['Radar de Sustentação', '5 critérios (1–5)', '/dashboard/relatorios', 'Ainda sem leitura de Domínio'],
+          'kpi-sustainability-empty-meta',
+        ).slice(0, 3),
+        detail: pickDaily(
+          [
+            'Ainda sem dados de Domínio. Preencha o radar para projetar se a mudança sobrevive ao ciclo.',
+            'Hoje: avance a Onda 4 e registre rotina, responsável e indicadores de sustentação.',
+            'Avalie rotina, responsável, indicadores, liderança e crença da equipe na Onda 4 para alimentar este score.',
+          ],
+          'kpi-sustainability-empty',
+        ),
       };
 
   return [
@@ -290,13 +311,26 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
       band: evolutionBand,
       trend: evolutionTrend,
       trendValue: formatTrend(evolutionDelta),
-      meta: [
-        `Baseline ${baseline}`,
-        `Atual ${currentScore}`,
-        `Evolução ${formatTrend(evolutionDelta)}`,
-      ],
-      detail:
-        'Mede o quanto a organização evoluiu em relação ao diagnóstico inicial, com base nos scans consolidados.',
+      meta: rotateDaily(
+        [
+          `Baseline ${baseline}`,
+          `Atual ${currentScore}`,
+          `Evolução ${formatTrend(evolutionDelta)}`,
+          `Leitura de hoje: ${evolution?.label ?? getEvolutionLabel(evolutionBand)}`,
+        ],
+        `kpi-evolution-meta-${currentScore}`,
+      ).slice(0, 3),
+      detail: pickDaily(
+        [
+          `De ${baseline} para ${currentScore} (${formatTrend(evolutionDelta)}). O diagnóstico mostra se o ciclo está avançando de verdade.`,
+          `Hoje o índice está em ${currentScore}/100. Compare com o baseline e escolha um movimento que aumente a tração.`,
+          currentScore < baseline
+            ? 'A leitura de hoje aponta retração frente ao baseline — revise o que travou desde o diagnóstico.'
+            : 'Há ganho frente ao baseline. Consolide o padrão que gerou essa evolução.',
+          'Mede o quanto a organização evoluiu em relação ao diagnóstico inicial, com base nos scans consolidados.',
+        ],
+        `kpi-evolution-${currentScore}-${baseline}`,
+      ),
     },
     {
       id: 'action-velocity',
@@ -308,12 +342,30 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
       band: velocityMeta.band,
       trend: trendFromDelta(velocity.score - 50),
       trendValue: `${velocity.completed}/${velocity.total} ações`,
-      meta: [
-        `${velocity.total} ações planejadas`,
-        `${velocity.completed} concluídas`,
-        'Ponderação por prazo',
-      ],
-      detail: 'Velocidade de execução dos planos criados, com peso por status e prazo.',
+      meta: rotateDaily(
+        [
+          `${velocity.total} ações planejadas`,
+          `${velocity.completed} concluídas`,
+          'Ponderação por prazo',
+          velocity.total === 0
+            ? 'Sem ações registradas ainda'
+            : `${Math.round((velocity.completed / Math.max(velocity.total, 1)) * 100)}% convertidas`,
+        ],
+        `kpi-velocity-meta-${velocity.score}`,
+      ).slice(0, 3),
+      detail: pickDaily(
+        [
+          velocity.total === 0
+            ? 'Ainda não há ações no ciclo. Crie entregas no Action Canvas para medir velocidade real.'
+            : `Hoje: ${velocity.completed} de ${velocity.total} ações avançaram. Priorize o que está perto do prazo.`,
+          `Velocidade em ${velocity.score}/100 (${velocityMeta.label}). O peso por status e prazo define este número.`,
+          velocity.score < 50
+            ? 'Execução baixa hoje — desbloqueie uma entrega amarela ou vermelha antes de abrir novas.'
+            : 'Ritmo de execução saudável. Documente o que manteve as ações no prazo.',
+          'Velocidade de execução dos planos criados, com peso por status e prazo.',
+        ],
+        `kpi-velocity-${velocity.score}-${velocity.completed}`,
+      ),
     },
     {
       id: 'momentum-score',
@@ -325,12 +377,26 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
       band: momentumMeta.band,
       trend: trendFromDelta(momentumScore - 55),
       trendValue: '🌊'.repeat(momentumMeta.waves),
-      meta: [
-        `Participação ${participation}%`,
-        `Execução ${velocity.score}%`,
-        `Consistência ${consistency}%`,
-      ],
-      detail: 'Força da transformação em andamento: participação, evolução, execução e consistência.',
+      meta: rotateDaily(
+        [
+          `Participação ${participation}%`,
+          `Execução ${velocity.score}%`,
+          `Consistência ${consistency}%`,
+          `Status de hoje: ${momentumMeta.label}`,
+        ],
+        `kpi-momentum-meta-${Math.round(momentumScore)}`,
+      ).slice(0, 3),
+      detail: pickDaily(
+        [
+          `Momentum em ${Math.round(momentumScore)}/100. Participação ${participation}%, execução ${velocity.score}%, consistência ${consistency}%.`,
+          `Leitura de hoje: "${momentumMeta.label}". Ajuste o fator mais fraco para recuperar força.`,
+          participation < 40
+            ? 'Participação baixa puxa o momentum. Ative donos e check-ins curtos esta semana.'
+            : 'A equipe está presente. Use a consistência para sustentar o ritmo sem picos.',
+          'Força da transformação em andamento: participação, evolução, execução e consistência.',
+        ],
+        `kpi-momentum-${Math.round(momentumScore)}-${participation}`,
+      ),
     },
     {
       id: 'business-impact',
@@ -342,8 +408,24 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
       band: businessMeta.band,
       trend: trendFromDelta(business.avgEvolution),
       trendValue: formatTrend(business.avgEvolution),
-      meta: business.indicators.slice(0, 3).map((i) => `${i.label} ${i.evolution}`),
-      detail: 'Média ponderada da evolução dos indicadores de negócio selecionados para o ciclo.',
+      meta: rotateDaily(
+        [
+          ...business.indicators.map((i) => `${i.label} ${i.evolution}`),
+          `Impacto de hoje: ${businessMeta.label}`,
+        ],
+        `kpi-business-meta-${business.score}`,
+      ).slice(0, 3),
+      detail: pickDaily(
+        [
+          `Impacto em ${business.score}/100 com evolução média ${formatTrend(business.avgEvolution)}. Olhe execução, transferência e aprendizagem.`,
+          `Hoje o negócio lê "${businessMeta.label}". Escolha um indicador fraco e avance evidência nele.`,
+          business.score < 60
+            ? 'Baixo impacto ainda. Conecte entregas a resultado de negócio visível nesta semana.'
+            : 'Há sinal de impacto. Consolide a evidência para o próximo checkpoint.',
+          'Média ponderada da evolução dos indicadores de negócio selecionados para o ciclo.',
+        ],
+        `kpi-business-${business.score}`,
+      ),
     },
     sustainabilityKpi,
   ];

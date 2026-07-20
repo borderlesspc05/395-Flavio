@@ -7,6 +7,8 @@ interface ScrollRevealProps {
   as?: ElementType;
   delay?: number;
   variant?: 'up' | 'left' | 'right' | 'scale';
+  /** When false, element hides again when leaving the viewport (bidirectional scroll). */
+  once?: boolean;
 }
 
 export function ScrollReveal({
@@ -15,8 +17,9 @@ export function ScrollReveal({
   as: Tag = 'div',
   delay = 0,
   variant = 'up',
+  once = true,
 }: ScrollRevealProps) {
-  const { ref, isVisible } = useScrollReveal<HTMLElement>();
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ once });
   const style: CSSProperties | undefined = delay
     ? { ['--reveal-delay' as string]: `${delay}ms` }
     : undefined;

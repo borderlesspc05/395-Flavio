@@ -395,4 +395,26 @@ export const ragApi = {
           }
       )
     ),
+  kpiInsights: (kpiIds?: string[]) =>
+    withUserId(() =>
+      api
+        .post('/api/rag/kpi-insights', kpiIds?.length ? { kpiIds } : {})
+        .then(
+          (r) =>
+            r.data as {
+              ok: boolean;
+              ragEnabled: boolean;
+              vectorConfigured: boolean;
+              generatedAt: string;
+              insights: Array<{
+                kpiId: string;
+                detail: string;
+                bullets: string[];
+                sources: string[];
+                usedRag: boolean;
+                usedFrameworkRag: boolean;
+              }>;
+            }
+        )
+    ),
 };
