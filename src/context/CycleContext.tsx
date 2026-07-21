@@ -25,8 +25,18 @@ import { getInitialForm } from '../services/initialForm';
 import { getBlueprintGate } from '../services/blueprintGate';
 import { clearActiveCycleId, resolveActiveCycleId, setActiveCycleId } from '../services/cycleWorkspace';
 import { workspaceApi } from '../services/api';
+import { getPhaseLocksFromCycle, isPhaseLocked, type PhaseLocks } from '../services/phaseLock';
 import { usePlan } from './PlanContext';
 import { canCreateMoreCycles, cycleLimitMessage } from '../utils/cycleLimits';
+
+function cycleNeedsDiagnosis(cycle: DiagnosticCycle | null | undefined): boolean {
+  if (!cycle) return false;
+  if (cycle.completedAt) return false;
+  if (cycle.status !== 'draft') return false;
+  // Se o Diagnóstico já foi travado (ex.: Design liberado), não é mais "pendente".
+  if (isPhaseLocked(getPhaseLocksFromCycle(cycle), 'diagnostic')) return false;
+  return true;
+}
 
 interface CycleContextValue {
   userId: string | null;
@@ -143,7 +153,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
 
       setCycles(list);
       setActiveCycle(active);
-      setNeedsDiagnosis(active?.status === 'draft' && !active?.completedAt);
+      setNeedsDiagnosis(cycleNeedsDiagnosis(active));
     } finally {
       setLoading(false);
     }
@@ -159,6 +169,28 @@ export function CycleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refreshCycles();
   }, [refreshCycles]);
+
+  // Mantém phaseLocks no ciclo ativo e o badge "pendente" alinhados ao trancamento.
+  useEffect(() => {
+    const onLocksChanged = (event: Event) => {
+      const detail = (event as CustomEvent<{ cycleId?: string; locks?: PhaseLocks }>).detail;
+      if (!detail?.cycleId || !detail.locks) return;
+
+      setActiveCycle((prev) => {
+        if (!prev || prev.id !== detail.cycleId) return prev;
+        const next = { ...prev, phaseLocks: detail.locks };
+        setNeedsDiagnosis(cycleNeedsDiagnosis(next));
+        return next;
+      });
+      setCycles((prev) =>
+        prev.map((cycle) =>
+          cycle.id === detail.cycleId ? { ...cycle, phaseLocks: detail.locks } : cycle,
+        ),
+      );
+    };
+    window.addEventListener('mm:phase-locks-changed', onLocksChanged);
+    return () => window.removeEventListener('mm:phase-locks-changed', onLocksChanged);
+  }, []);
 
   const persistActiveCycleSnapshot = useCallback(async () => {
     if (!userId || !activeCycle) return;
@@ -183,7 +215,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
         await loadCycleIntoWorkspace(target, userId);
         await setActiveCycleId(userId, cycleId);
         setActiveCycle(target);
-        setNeedsDiagnosis(target.status === 'draft' && !target.completedAt);
+        setNeedsDiagnosis(cycleNeedsDiagnosis(target));
 
         const list = await listDiagnosticCycles(userId);
         setCycles(list);
@@ -280,7 +312,7 @@ export function CycleProvider({ children }: { children: ReactNode }) {
             await loadCycleIntoWorkspace(next, userId);
             await setActiveCycleId(userId, next.id);
             setActiveCycle(next);
-            setNeedsDiagnosis(next.status === 'draft' && !next.completedAt);
+            setNeedsDiagnosis(cycleNeedsDiagnosis(next));
           } else {
             await clearActiveCycleId(userId);
             setActiveCycle(null);

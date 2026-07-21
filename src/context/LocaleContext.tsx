@@ -8,7 +8,8 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  DEFAULT_LOCALE,
+  detectBrowserLocale,
+  isLocale,
   LOCALE_STORAGE_KEY,
   type Locale,
 } from '../constants/locales';
@@ -22,15 +23,18 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-function readStoredLocale(): Locale {
-  if (typeof window === 'undefined') return DEFAULT_LOCALE;
-  const raw = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-  if (raw === 'en' || raw === 'es' || raw === 'pt') return raw;
-  return DEFAULT_LOCALE;
+function resolveInitialLocale(): Locale {
+  if (typeof window === 'undefined') return detectBrowserLocale();
+
+  const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+  if (isLocale(stored)) return stored;
+
+  // First visit (or cleared preference): follow the browser language.
+  return detectBrowserLocale();
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(readStoredLocale);
+  const [locale, setLocaleState] = useState<Locale>(resolveInitialLocale);
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);

@@ -65,6 +65,7 @@ export function MidExecutiveKpiCard({
     })
     .slice(0, 3);
   const showRagBadge = Boolean(ragInsight?.usedRag);
+  const sourceLabel = ragInsight?.sources?.[0]?.trim() || null;
 
   return (
     <article
@@ -114,14 +115,19 @@ export function MidExecutiveKpiCard({
 
             <p className="mid-exec-kpi-status">{kpi.label}</p>
 
-            <ul className="mid-exec-kpi-meta">
-              {kpi.meta.map((line) => (
-                <li key={line}>{line}</li>
+            <ol className="mid-exec-kpi-meta">
+              {kpi.meta.map((line, i) => (
+                <li key={line}>
+                  <span className="mid-exec-kpi-meta-num" aria-hidden>
+                    {i + 1}
+                  </span>
+                  <span>{line}</span>
+                </li>
               ))}
-            </ul>
+            </ol>
 
             <p className="mid-exec-kpi-hint">
-              {touchMode ? 'Toque para virar' : 'Passe o mouse para virar'}
+              {touchMode ? 'Toque para ver o insight' : 'Passe o mouse para ver o insight'}
             </p>
           </div>
 
@@ -133,40 +139,54 @@ export function MidExecutiveKpiCard({
                 </span>
                 <div>
                   <p className="mid-exec-kpi-question">
-                    {showRagBadge ? 'Insight RAG · hoje' : 'Leitura de hoje'}
+                    {showRagBadge ? 'Insight do ciclo · hoje' : 'Leitura de hoje'}
                   </p>
                   <h3 className="mid-exec-kpi-title">{kpi.title}</h3>
+                  <p className="mid-exec-kpi-back-question">{kpi.question}</p>
                 </div>
               </header>
 
-              <p className="mid-exec-kpi-back-score">
-                <strong>{kpi.score}</strong>
-                <span>/100 · {kpi.label}</span>
-              </p>
-
-              {ragLoading && !ragInsight ? (
-                <p className="mid-exec-kpi-back-detail">
-                  Buscando contexto relevante na memória do ciclo…
+              <div className="mid-exec-kpi-back-scorecard">
+                <p className="mid-exec-kpi-back-score">
+                  <strong>{kpi.score}</strong>
+                  <span>/100</span>
                 </p>
-              ) : (
-                <p className="mid-exec-kpi-back-detail">{backDetail}</p>
-              )}
+                <span className={`mid-exec-kpi-back-band is-${kpi.band}`}>{kpi.label}</span>
+              </div>
+
+              <div className="mid-exec-kpi-back-block">
+                <p className="mid-exec-kpi-back-label">O que isso significa</p>
+                {ragLoading && !ragInsight ? (
+                  <p className="mid-exec-kpi-back-detail">
+                    Buscando contexto relevante na memória do ciclo…
+                  </p>
+                ) : (
+                  <p className="mid-exec-kpi-back-detail">{backDetail}</p>
+                )}
+              </div>
 
               {backBullets.length > 0 ? (
-                <ul className="mid-exec-kpi-back-meta">
-                  {backBullets.map((line) => (
-                    <li key={`back-${line}`}>
-                      <span aria-hidden />
-                      {line}
-                    </li>
-                  ))}
-                </ul>
+                <div className="mid-exec-kpi-back-block">
+                  <p className="mid-exec-kpi-back-label">Próximos passos</p>
+                  <ol className="mid-exec-kpi-back-meta">
+                    {backBullets.map((line, i) => (
+                      <li key={`back-${line}`}>
+                        <span className="mid-exec-kpi-meta-num" aria-hidden>
+                          {i + 1}
+                        </span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               ) : null}
 
               {showRagBadge ? (
-                <p className="mid-exec-kpi-rag-source" title={ragInsight?.sources?.[0]}>
-                  Memória do ciclo
-                  {ragInsight?.sources?.[0] ? ` · ${ragInsight.sources[0]}` : ''}
+                <p className="mid-exec-kpi-rag-source">
+                  <span>Fonte</span>
+                  <strong title={sourceLabel ?? undefined}>
+                    {sourceLabel || 'Memória do ciclo'}
+                  </strong>
                 </p>
               ) : null}
 

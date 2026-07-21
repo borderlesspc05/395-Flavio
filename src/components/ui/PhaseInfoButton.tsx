@@ -29,12 +29,14 @@ export function PhaseInfoButton({
         <Info size={16} aria-hidden />
         <span className="phase-info-btn__text">{label}</span>
       </button>
-      <Modal open={open} onClose={() => setOpen(false)} title={title} size="default">
-        <div className="phase-info-body">{children}</div>
-        <div className="phase-info-actions">
-          <button type="button" className="phase-info-close" onClick={() => setOpen(false)}>
-            Entendi
-          </button>
+      <Modal open={open} onClose={() => setOpen(false)} title={title} size="info">
+        <div className="phase-info-panel">
+          <div className="phase-info-body">{children}</div>
+          <div className="phase-info-actions">
+            <button type="button" className="phase-info-close" onClick={() => setOpen(false)}>
+              Entendi
+            </button>
+          </div>
         </div>
       </Modal>
     </>

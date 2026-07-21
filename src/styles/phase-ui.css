@@ -14,6 +14,7 @@
   cursor: pointer;
   font-family: inherit;
   transition: background 0.18s ease, border-color 0.18s ease;
+  flex-shrink: 0;
 }
 
 .phase-info-btn:hover {
@@ -25,13 +26,39 @@
   letter-spacing: 0.02em;
 }
 
+.membro-modal-container--info {
+  width: min(440px, 100%);
+  max-height: min(calc(100dvh - 2rem), 560px);
+}
+
+.phase-info-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .phase-info-body {
-  color: rgba(241, 235, 224, 0.88);
+  color: rgba(241, 235, 224, 0.9);
   font-size: 0.92rem;
   line-height: 1.6;
-  max-height: min(60vh, 420px);
+  padding: 1rem 1.25rem 0.35rem;
   overflow-y: auto;
-  padding-right: 0.25rem;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(52vh, 360px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(175, 146, 112, 0.35) transparent;
+}
+
+.phase-info-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.phase-info-body::-webkit-scrollbar-thumb {
+  background: rgba(175, 146, 112, 0.35);
+  border-radius: 999px;
 }
 
 .phase-info-body p {
@@ -44,28 +71,45 @@
 
 .phase-info-body ul {
   margin: 0 0 0.85rem;
-  padding-left: 1.2rem;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .phase-info-body li {
-  margin-bottom: 0.35rem;
+  margin: 0;
+  padding-left: 0.15rem;
+}
+
+.phase-info-body li strong {
+  color: #f3ead8;
+}
+
+.phase-info-body p:last-child,
+.phase-info-body ul:last-child {
+  margin-bottom: 0;
 }
 
 .phase-info-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.65rem;
-  margin-top: 1.25rem;
   flex-wrap: wrap;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.9rem 1.25rem 1.15rem;
+  border-top: 1px solid rgba(175, 146, 112, 0.14);
+  background: linear-gradient(180deg, rgba(16, 22, 32, 0.35), rgba(16, 22, 32, 0.92));
 }
 
 .phase-info-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.55rem 1.1rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 1.2rem;
   border: none;
-  border-radius: 999px;
+  border-radius: 12px;
   background: linear-gradient(145deg, #af9270, #8a7358);
   color: #fff;
   font-weight: 700;
@@ -145,15 +189,23 @@
   text-align: right;
 }
 
+.phase-lock-confirm-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .phase-lock-confirm-text {
   margin: 0;
+  padding: 1rem 1.25rem 0.25rem;
   color: rgba(241, 235, 224, 0.88);
   line-height: 1.55;
   font-size: 0.92rem;
 }
 
 .phase-lock-confirm-error {
-  margin: 0.75rem 0 0;
+  margin: 0;
+  padding: 0.5rem 1.25rem 0;
   color: #f0c4bf;
   font-size: 0.85rem;
 }

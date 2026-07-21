@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CheckCircle2,
   ChevronRight,
@@ -11,8 +12,8 @@ import {
 } from 'lucide-react';
 import { actionCanvasesApi, teamApi } from '../../services/api';
 import { syncMagnusMemoryAfterCanvasChange } from '../../services/magnusMemorySync';
-import { PhaseInfoButton } from '../ui/PhaseInfoButton';
 import { TeamMemberCombobox } from '../ui/TeamMemberCombobox';
+import { ToastStack, type ToastItem } from '../ui/ToastStack';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import type {
   ActionCanvas,
@@ -68,12 +69,31 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [drawer, setDrawer] = useState<DrawerKind>(null);
   const [drawerDeliveryId, setDrawerDeliveryId] = useState<string | null>(null);
   const [drawerRiskId, setDrawerRiskId] = useState<string | null>(null);
   const [emailHint, setEmailHint] = useState<string | null>(null);
+  const [drawerSaved, setDrawerSaved] = useState(false);
 
   useBodyScrollLock(Boolean(drawer));
+
+  const pushToast = useCallback((tone: ToastItem['tone'], message: string, title?: string) => {
+    const id = `diffusion-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setToasts((prev) => [...prev, { id, tone, message, title }]);
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const closeDrawer = useCallback(() => {
+    setDrawer(null);
+    setDrawerDeliveryId(null);
+    setDrawerRiskId(null);
+    setDrawerSaved(false);
+    setEmailHint(null);
+  }, []);
 
   const active = useMemo(
     () => canvases.find((c) => c.id === activeId) ?? canvases[0] ?? null,
@@ -108,8 +128,24 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
     return () => window.clearTimeout(t);
   }, [notice]);
 
-  const patchActive = async (patch: Partial<ActionCanvas>, opts?: { deliveryId?: string }) => {
-    if (!active) return;
+  useEffect(() => {
+    if (!drawer) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !saving) closeDrawer();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawer, saving, closeDrawer]);
+
+  useEffect(() => {
+    setDrawerSaved(false);
+  }, [drawer, drawerDeliveryId, drawerRiskId]);
+
+  const patchActive = async (
+    patch: Partial<ActionCanvas>,
+    opts?: { deliveryId?: string; successMessage?: string },
+  ): Promise<boolean> => {
+    if (!active) return false;
     setSaving(true);
     setEmailHint(null);
     try {
@@ -121,10 +157,16 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
       if (opts?.deliveryId) {
         setEmailHint('Se o responsável for um e-mail da equipe, a plataforma enviará um aviso.');
       }
-      setNotice('Salvo.');
+      const successMessage = opts?.successMessage ?? 'Alterações salvas com sucesso.';
+      setNotice(successMessage);
+      pushToast('success', successMessage, 'Salvo');
+      setDrawerSaved(true);
       if (next.fechado) onCanvasClosed?.();
+      return true;
     } catch {
       setNotice('Erro ao salvar. Tente novamente.');
+      pushToast('error', 'Não foi possível salvar. Tente novamente.', 'Erro ao salvar');
+      return false;
     } finally {
       setSaving(false);
     }
@@ -174,17 +216,8 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
 
   return (
     <div className="diffusion-v2">
+      {createPortal(<ToastStack toasts={toasts} onDismiss={dismissToast} />, document.body)}
       <div className="diffusion-v2-toolbar">
-        <PhaseInfoButton title="Dados importados do Design">
-          <p>
-            Os campos abaixo vêm dos planos validados no Design. Refine e incremente — Mobilização,
-            Execução, Riscos e Sign-off acontecem por iniciativa.
-          </p>
-          <p>
-            Ao atribuir um responsável com e-mail (ou membro da equipe com e-mail cadastrado), a
-            plataforma pode enviar um aviso de atribuição.
-          </p>
-        </PhaseInfoButton>
         {saving ? (
           <span className="diffusion-v2-saving">
             <Loader2 size={14} className="spin" aria-hidden /> Salvando…
@@ -194,7 +227,7 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
       </div>
 
       <div className="diffusion-v2-initiatives" role="list">
-        {canvases.map((c) => (
+        {canvases.map((c, index) => (
           <button
             key={c.id}
             type="button"
@@ -208,8 +241,13 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
               setDrawer(null);
             }}
           >
-            <strong>{c.nomeIniciativa || 'Sem nome'}</strong>
-            <span>{c.fechado ? 'Encerrada' : c.owner || 'Sem owner'}</span>
+            <span className="diffusion-v2-initiative-num" aria-hidden>
+              {index + 1}
+            </span>
+            <span className="diffusion-v2-initiative-copy">
+              <strong>{c.nomeIniciativa || 'Sem nome'}</strong>
+              <span>{c.fechado ? 'Encerrada' : c.owner || 'Sem owner'}</span>
+            </span>
           </button>
         ))}
       </div>
@@ -271,16 +309,20 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
                   onBlur={() => void patchActive({ objetivoEspecifico: active.objetivoEspecifico })}
                 />
               </label>
-              {active.successCriteria?.length ? (
-                <div className="diffusion-v2-criteria">
-                  <span>Critérios de sucesso (Design)</span>
+              <div className="diffusion-v2-criteria">
+                <span>Critérios de sucesso (Design)</span>
+                {active.successCriteria?.filter(Boolean).length ? (
                   <ul>
                     {active.successCriteria.filter(Boolean).map((c) => (
                       <li key={c}>{c}</li>
                     ))}
                   </ul>
-                </div>
-              ) : null}
+                ) : (
+                  <p className="diffusion-v2-criteria-empty">
+                    Nenhum critério definido no Design para esta iniciativa.
+                  </p>
+                )}
+              </div>
               <label className="diffusion-v2-field">
                 <span>Notas de mobilização</span>
                 <textarea
@@ -365,282 +407,421 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
         </>
       ) : null}
 
-      {drawer && active ? (
-        <div className="diffusion-drawer-overlay" role="presentation" onClick={() => setDrawer(null)}>
+      {drawer && active
+        ? createPortal(
+        <div
+          className="diffusion-drawer-overlay"
+          role="presentation"
+          onClick={() => {
+            if (!saving) closeDrawer();
+          }}
+        >
           <aside
             className="diffusion-drawer"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="diffusion-drawer-title"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="diffusion-drawer-head">
-              <h3>
-                {drawer === 'delivery' && 'Execução da ação'}
-                {drawer === 'risk' && 'Risco'}
-                {drawer === 'signoff' && 'Concluir iniciativa'}
-              </h3>
-              <button type="button" onClick={() => setDrawer(null)} aria-label="Fechar">
+              <div className="diffusion-drawer-head-copy">
+                <p className="diffusion-drawer-eyebrow">
+                  {drawer === 'delivery' && 'Execução'}
+                  {drawer === 'risk' && 'Riscos'}
+                  {drawer === 'signoff' && 'Sign-off'}
+                </p>
+                <h3 id="diffusion-drawer-title">
+                  {drawer === 'delivery' && (delivery?.entrega || 'Execução da ação')}
+                  {drawer === 'risk' && (risk?.risco || 'Risco')}
+                  {drawer === 'signoff' && 'Concluir iniciativa'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="diffusion-drawer-close"
+                onClick={() => {
+                  if (!saving) closeDrawer();
+                }}
+                aria-label="Fechar"
+                disabled={saving}
+              >
                 <X size={18} />
               </button>
             </header>
 
+            {drawer === 'delivery' && !delivery ? (
+              <div className="diffusion-drawer-body">
+                <p className="diffusion-v2-lead">Entrega não encontrada. Feche e abra novamente.</p>
+              </div>
+            ) : null}
+
             {drawer === 'delivery' && delivery ? (
-              <div className="diffusion-drawer-body">
-                <label className="diffusion-v2-field">
-                  <span>Entrega</span>
-                  <input
-                    value={delivery.entrega}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCanvases((prev) =>
-                        prev.map((c) =>
-                          c.id !== active.id
-                            ? c
-                            : {
-                                ...c,
-                                entregas: c.entregas.map((d) =>
-                                  d.id === delivery.id ? { ...d, entrega: value } : d
-                                ),
-                              }
-                        )
-                      );
-                    }}
-                  />
-                </label>
-                <TeamMemberCombobox
-                  label="Responsável"
-                  value={delivery.responsavel}
-                  onChange={(responsavel) => {
-                    setCanvases((prev) =>
-                      prev.map((c) =>
-                        c.id !== active.id
-                          ? c
-                          : {
-                              ...c,
-                              entregas: c.entregas.map((d) =>
-                                d.id === delivery.id ? { ...d, responsavel } : d
-                              ),
-                            }
-                      )
-                    );
-                  }}
-                />
-                <label className="diffusion-v2-field">
-                  <span>Prazo</span>
-                  <input
-                    type="date"
-                    value={delivery.prazo}
-                    onChange={(e) => {
-                      const prazo = e.target.value;
-                      setCanvases((prev) =>
-                        prev.map((c) =>
-                          c.id !== active.id
-                            ? c
-                            : {
-                                ...c,
-                                entregas: c.entregas.map((d) =>
-                                  d.id === delivery.id ? { ...d, prazo } : d
-                                ),
-                              }
-                        )
-                      );
-                    }}
-                  />
-                </label>
-                <label className="diffusion-v2-field">
-                  <span>Status</span>
-                  <select
-                    value={delivery.status}
-                    onChange={(e) => {
-                      const status = e.target.value as DeliveryStatus;
-                      setCanvases((prev) =>
-                        prev.map((c) =>
-                          c.id !== active.id
-                            ? c
-                            : {
-                                ...c,
-                                entregas: c.entregas.map((d) =>
-                                  d.id === delivery.id ? { ...d, status } : d
-                                ),
-                              }
-                        )
-                      );
-                    }}
-                  >
-                    <option value="verde">No prazo</option>
-                    <option value="amarelo">Atenção</option>
-                    <option value="vermelho">Atrasado</option>
-                  </select>
-                </label>
-                <label className="diffusion-v2-field">
-                  <span>Checklist (uma linha por item)</span>
-                  <textarea
-                    rows={6}
-                    value={checklistText(delivery)}
-                    onChange={(e) => {
-                      const checklist = e.target.value
-                        .split('\n')
-                        .map((l) => l.trim())
-                        .filter(Boolean);
-                      setCanvases((prev) =>
-                        prev.map((c) =>
-                          c.id !== active.id
-                            ? c
-                            : {
-                                ...c,
-                                entregas: c.entregas.map((d) =>
-                                  d.id === delivery.id ? { ...d, checklist } : d
-                                ),
-                              }
-                        )
-                      );
-                    }}
-                  />
-                </label>
-                <label className="diffusion-v2-field">
-                  <span>Evidência</span>
-                  <textarea
-                    rows={3}
-                    value={delivery.evidencia}
-                    onChange={(e) => {
-                      const evidencia = e.target.value;
-                      setCanvases((prev) =>
-                        prev.map((c) =>
-                          c.id !== active.id
-                            ? c
-                            : {
-                                ...c,
-                                entregas: c.entregas.map((d) =>
-                                  d.id === delivery.id ? { ...d, evidencia } : d
-                                ),
-                              }
-                        )
-                      );
-                    }}
-                  />
-                </label>
-                {emailHint ? (
-                  <p className="diffusion-v2-email-hint">
-                    <Mail size={14} aria-hidden /> {emailHint}
-                  </p>
-                ) : null}
-                <button
-                  type="button"
-                  className="diffusion-v2-next"
-                  onClick={async () => {
-                    const resolved = await resolveEmailForMember(delivery.responsavel);
-                    const entregas = active.entregas.map((d) =>
-                      d.id === delivery.id
-                        ? {
-                            ...d,
-                            responsavel: resolved.includes('@') ? resolved : d.responsavel,
-                          }
-                        : d
-                    );
-                    await patchActive({ entregas }, { deliveryId: delivery.id });
-                    setDrawer(null);
-                  }}
-                >
-                  <Save size={16} aria-hidden /> Salvar ação
-                </button>
-              </div>
-            ) : null}
+              <>
+                <div className="diffusion-drawer-body">
+                  <div className="diffusion-v2-criteria diffusion-v2-criteria--drawer">
+                    <span>Critérios de sucesso</span>
+                    {active.successCriteria?.filter(Boolean).length ? (
+                      <ul>
+                        {active.successCriteria.filter(Boolean).map((c) => (
+                          <li key={c}>{c}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="diffusion-v2-criteria-empty">
+                        Nenhum critério definido no Design para esta iniciativa.
+                      </p>
+                    )}
+                  </div>
 
-            {drawer === 'risk' && risk ? (
-              <div className="diffusion-drawer-body">
-                <label className="diffusion-v2-field">
-                  <span>Risco</span>
-                  <textarea
-                    rows={3}
-                    value={risk.risco}
-                    onChange={(e) => {
-                      const value = e.target.value;
+                  <label className="diffusion-v2-field">
+                    <span>Entrega</span>
+                    <input
+                      value={delivery.entrega}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCanvases((prev) =>
+                          prev.map((c) =>
+                            c.id !== active.id
+                              ? c
+                              : {
+                                  ...c,
+                                  entregas: c.entregas.map((d) =>
+                                    d.id === delivery.id ? { ...d, entrega: value } : d
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                    />
+                  </label>
+                  <TeamMemberCombobox
+                    label="Responsável"
+                    value={delivery.responsavel}
+                    onChange={(responsavel) => {
                       setCanvases((prev) =>
                         prev.map((c) =>
                           c.id !== active.id
                             ? c
                             : {
                                 ...c,
-                                riscos: c.riscos.map((r) =>
-                                  r.id === risk.id ? { ...r, risco: value } : r
+                                entregas: c.entregas.map((d) =>
+                                  d.id === delivery.id ? { ...d, responsavel } : d
                                 ),
                               }
                         )
                       );
                     }}
                   />
-                </label>
-                <label className="diffusion-v2-field">
-                  <span>Ação a tomar</span>
-                  <textarea
-                    rows={4}
-                    value={risk.acaoTomar}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCanvases((prev) =>
-                        prev.map((c) =>
-                          c.id !== active.id
-                            ? c
-                            : {
-                                ...c,
-                                riscos: c.riscos.map((r) =>
-                                  r.id === risk.id ? { ...r, acaoTomar: value } : r
-                                ),
-                              }
-                        )
-                      );
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="diffusion-v2-next"
-                  onClick={async () => {
-                    await patchActive({ riscos: active.riscos });
-                    setDrawer(null);
-                  }}
-                >
-                  <Save size={16} aria-hidden /> Salvar risco
-                </button>
-              </div>
-            ) : null}
+                  <label className="diffusion-v2-field">
+                    <span>Prazo</span>
+                    <input
+                      type="date"
+                      value={delivery.prazo}
+                      onChange={(e) => {
+                        const prazo = e.target.value;
+                        setCanvases((prev) =>
+                          prev.map((c) =>
+                            c.id !== active.id
+                              ? c
+                              : {
+                                  ...c,
+                                  entregas: c.entregas.map((d) =>
+                                    d.id === delivery.id ? { ...d, prazo } : d
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                    />
+                  </label>
+                  <label className="diffusion-v2-field">
+                    <span>Status</span>
+                    <select
+                      value={delivery.status}
+                      onChange={(e) => {
+                        const status = e.target.value as DeliveryStatus;
+                        setCanvases((prev) =>
+                          prev.map((c) =>
+                            c.id !== active.id
+                              ? c
+                              : {
+                                  ...c,
+                                  entregas: c.entregas.map((d) =>
+                                    d.id === delivery.id ? { ...d, status } : d
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                    >
+                      <option value="verde">No prazo</option>
+                      <option value="amarelo">Atenção</option>
+                      <option value="vermelho">Atrasado</option>
+                    </select>
+                  </label>
+                  <label className="diffusion-v2-field">
+                    <span>Checklist (uma linha por item)</span>
+                    <textarea
+                      rows={5}
+                      value={checklistText(delivery)}
+                      onChange={(e) => {
+                        const checklist = e.target.value
+                          .split('\n')
+                          .map((l) => l.trim())
+                          .filter(Boolean);
+                        setCanvases((prev) =>
+                          prev.map((c) =>
+                            c.id !== active.id
+                              ? c
+                              : {
+                                  ...c,
+                                  entregas: c.entregas.map((d) =>
+                                    d.id === delivery.id ? { ...d, checklist } : d
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                    />
+                  </label>
+                  <label className="diffusion-v2-field">
+                    <span>Evidência</span>
+                    <textarea
+                      rows={3}
+                      value={delivery.evidencia}
+                      onChange={(e) => {
+                        const evidencia = e.target.value;
+                        setCanvases((prev) =>
+                          prev.map((c) =>
+                            c.id !== active.id
+                              ? c
+                              : {
+                                  ...c,
+                                  entregas: c.entregas.map((d) =>
+                                    d.id === delivery.id ? { ...d, evidencia } : d
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                    />
+                  </label>
+                  {emailHint ? (
+                    <p className="diffusion-v2-email-hint">
+                      <Mail size={14} aria-hidden /> {emailHint}
+                    </p>
+                  ) : null}
+                </div>
 
-            {drawer === 'signoff' ? (
-              <div className="diffusion-drawer-body">
-                <p>
-                  Confirme se a iniciativa <strong>{active.nomeIniciativa}</strong> pode ser
-                  encerrada e enviada ao Domínio / Intelligence Dashboard.
-                </p>
-                <div className="diffusion-signoff-actions">
+                <footer className="diffusion-drawer-foot">
+                  {drawerSaved ? (
+                    <p className="diffusion-drawer-saved" role="status">
+                      <CheckCircle2 size={16} aria-hidden />
+                      Ação salva com sucesso
+                    </p>
+                  ) : null}
                   <button
                     type="button"
                     className="diffusion-v2-next"
+                    disabled={saving}
                     onClick={async () => {
-                      await patchActive({ signOff: 'sim', fechado: true });
-                      setDrawer(null);
+                      const resolved = await resolveEmailForMember(delivery.responsavel);
+                      const latest = canvases.find((c) => c.id === active.id) ?? active;
+                      const entregas = latest.entregas.map((d) =>
+                        d.id === delivery.id
+                          ? {
+                              ...d,
+                              responsavel: resolved.includes('@') ? resolved : d.responsavel,
+                            }
+                          : d
+                      );
+                      const ok = await patchActive(
+                        { entregas },
+                        {
+                          deliveryId: delivery.id,
+                          successMessage: 'Ação salva com sucesso.',
+                        },
+                      );
+                      if (ok) {
+                        window.setTimeout(() => closeDrawer(), 700);
+                      }
                     }}
                   >
-                    <CheckCircle2 size={16} aria-hidden /> Concluir com sucesso
+                    {saving ? (
+                      <>
+                        <Loader2 size={16} className="spin" aria-hidden /> Salvando…
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} aria-hidden /> Salvar ação
+                      </>
+                    )}
+                  </button>
+                </footer>
+              </>
+            ) : null}
+
+            {drawer === 'risk' && risk ? (
+              <>
+                <div className="diffusion-drawer-body">
+                  <label className="diffusion-v2-field">
+                    <span>Risco</span>
+                    <textarea
+                      rows={3}
+                      value={risk.risco}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCanvases((prev) =>
+                          prev.map((c) =>
+                            c.id !== active.id
+                              ? c
+                              : {
+                                  ...c,
+                                  riscos: c.riscos.map((r) =>
+                                    r.id === risk.id ? { ...r, risco: value } : r
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                    />
+                  </label>
+                  <label className="diffusion-v2-field">
+                    <span>Ação a tomar</span>
+                    <textarea
+                      rows={4}
+                      value={risk.acaoTomar}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCanvases((prev) =>
+                          prev.map((c) =>
+                            c.id !== active.id
+                              ? c
+                              : {
+                                  ...c,
+                                  riscos: c.riscos.map((r) =>
+                                    r.id === risk.id ? { ...r, acaoTomar: value } : r
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                    />
+                  </label>
+                </div>
+                <footer className="diffusion-drawer-foot">
+                  {drawerSaved ? (
+                    <p className="diffusion-drawer-saved" role="status">
+                      <CheckCircle2 size={16} aria-hidden />
+                      Risco salvo com sucesso
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="diffusion-v2-next"
+                    disabled={saving}
+                    onClick={async () => {
+                      const latest = canvases.find((c) => c.id === active.id) ?? active;
+                      const ok = await patchActive(
+                        { riscos: latest.riscos },
+                        { successMessage: 'Risco salvo com sucesso.' },
+                      );
+                      if (ok) {
+                        window.setTimeout(() => closeDrawer(), 700);
+                      }
+                    }}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 size={16} className="spin" aria-hidden /> Salvando…
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} aria-hidden /> Salvar risco
+                      </>
+                    )}
+                  </button>
+                </footer>
+              </>
+            ) : null}
+
+            {drawer === 'signoff' ? (
+              <>
+                <div className="diffusion-drawer-body diffusion-drawer-body--signoff">
+                  <div className="diffusion-signoff-card">
+                    <p className="diffusion-signoff-label">Iniciativa</p>
+                    <strong className="diffusion-signoff-name">
+                      {active.nomeIniciativa || 'Sem nome'}
+                    </strong>
+                    <p className="diffusion-signoff-copy">
+                      Ao confirmar, a iniciativa é encerrada e enviada ao Domínio / Intelligence
+                      Dashboard.
+                    </p>
+                    <ul className="diffusion-signoff-meta" aria-label="Resumo">
+                      <li>
+                        <span>Entregas</span>
+                        <strong>{active.entregas?.length ?? 0}</strong>
+                      </li>
+                      <li>
+                        <span>Riscos</span>
+                        <strong>{active.riscos?.length ?? 0}</strong>
+                      </li>
+                      <li>
+                        <span>Owner</span>
+                        <strong>{active.owner || '—'}</strong>
+                      </li>
+                    </ul>
+                  </div>
+                  <p className="diffusion-signoff-hint">
+                    <Sparkles size={14} aria-hidden />
+                    Você pode reabrir depois se precisar ajustar.
+                  </p>
+                </div>
+                <footer className="diffusion-drawer-foot diffusion-drawer-foot--signoff">
+                  <button
+                    type="button"
+                    className="diffusion-v2-next"
+                    disabled={saving}
+                    onClick={async () => {
+                      const ok = await patchActive(
+                        { signOff: 'sim', fechado: true },
+                        { successMessage: 'Iniciativa concluída com sucesso.' },
+                      );
+                      if (ok) closeDrawer();
+                    }}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 size={16} className="spin" aria-hidden /> Salvando…
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={16} aria-hidden /> Concluir com sucesso
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"
                     className="diffusion-v2-next is-ghost"
+                    disabled={saving}
                     onClick={async () => {
-                      await patchActive({ signOff: 'nao', fechado: true });
-                      setDrawer(null);
+                      const ok = await patchActive(
+                        { signOff: 'nao', fechado: true },
+                        { successMessage: 'Iniciativa encerrada.' },
+                      );
+                      if (ok) closeDrawer();
                     }}
                   >
                     Encerrar sem sucesso
                   </button>
-                </div>
-                <p className="diffusion-v2-lead">
-                  <Sparkles size={14} aria-hidden /> Você pode reabrir depois se precisar ajustar.
-                </p>
-              </div>
+                </footer>
+              </>
             ) : null}
           </aside>
-        </div>
-      ) : null}
+        </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

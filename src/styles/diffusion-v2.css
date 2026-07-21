@@ -24,6 +24,9 @@
 }
 
 .diffusion-v2-initiative {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.65rem;
   text-align: left;
   padding: 0.75rem 1rem;
   border-radius: 12px;
@@ -32,16 +35,40 @@
   color: #f3ead8;
   cursor: pointer;
   font-family: inherit;
-  min-width: 11rem;
+  min-width: 12.5rem;
+  max-width: 20rem;
+}
+
+.diffusion-v2-initiative-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.4);
+  background: rgba(175, 146, 112, 0.12);
+  color: #ffbc7d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.diffusion-v2-initiative-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 .diffusion-v2-initiative strong {
   display: block;
   font-size: 0.9rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
 }
 
-.diffusion-v2-initiative span {
+.diffusion-v2-initiative-copy > span {
   font-size: 0.72rem;
   color: rgba(241, 235, 224, 0.55);
 }
@@ -49,6 +76,12 @@
 .diffusion-v2-initiative.is-active {
   border-color: rgba(255, 188, 125, 0.55);
   box-shadow: 0 0 0 1px rgba(255, 188, 125, 0.2);
+}
+
+.diffusion-v2-initiative.is-active .diffusion-v2-initiative-num {
+  border-color: rgba(255, 188, 125, 0.65);
+  background: rgba(255, 188, 125, 0.2);
+  color: #ffe0bd;
 }
 
 .diffusion-v2-steps {
@@ -213,47 +246,313 @@
 .diffusion-drawer-overlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
-  background: rgba(6, 8, 12, 0.72);
+  z-index: 12000;
   display: flex;
   justify-content: flex-end;
+  align-items: stretch;
+  padding: 0.85rem 0.85rem 0.85rem 0;
+  background: rgba(4, 8, 14, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: diffusion-drawer-fade-in 0.2s ease;
+}
+
+@keyframes diffusion-drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes diffusion-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .diffusion-drawer {
-  width: min(420px, 100%);
-  height: 100%;
-  background: #12151c;
-  border-left: 1px solid rgba(175, 146, 112, 0.3);
+  width: min(460px, calc(100vw - 1.7rem));
+  height: auto;
+  max-height: 100%;
+  align-self: stretch;
+  background: linear-gradient(180deg, #161a22 0%, #10131a 100%);
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.45);
+  box-shadow: -24px 0 64px rgba(0, 0, 0, 0.55);
+  min-height: 0;
+  overflow: hidden;
+  animation: diffusion-drawer-slide-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .diffusion-drawer-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 1rem 1.1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.75rem;
+  padding: 1.35rem 1.25rem 1.15rem;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.16);
+  flex-shrink: 0;
+  background: rgba(12, 15, 20, 0.88);
+}
+
+.diffusion-drawer-head-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.diffusion-drawer-eyebrow {
+  margin: 0 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 188, 125, 0.8);
 }
 
 .diffusion-drawer-head h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: #f3ead8;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.diffusion-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  border-radius: 10px;
+  background: rgba(8, 10, 14, 0.55);
+  color: #d9c8a8;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.diffusion-drawer-close:hover:not(:disabled) {
+  background: rgba(175, 146, 112, 0.16);
+  border-color: rgba(201, 168, 124, 0.45);
   color: #f3ead8;
 }
 
-.diffusion-drawer-head button {
-  border: none;
-  background: transparent;
-  color: #f3ead8;
-  cursor: pointer;
+.diffusion-drawer-close:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .diffusion-drawer-body {
-  padding: 1.1rem;
+  padding: 1.1rem 1.15rem 1.4rem;
+  overflow-x: hidden;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(175, 146, 112, 0.4) transparent;
+}
+
+.diffusion-drawer-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.diffusion-drawer-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.diffusion-drawer-body::-webkit-scrollbar-thumb {
+  background: rgba(175, 146, 112, 0.35);
+  border-radius: 999px;
+}
+
+.diffusion-drawer-foot {
+  flex-shrink: 0;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.95rem 1.15rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(175, 146, 112, 0.16);
+  background: linear-gradient(180deg, rgba(16, 19, 26, 0.96), #0e1117);
+}
+
+.diffusion-drawer-foot .diffusion-v2-next {
+  margin: 0;
+  width: 100%;
+  justify-content: center;
+}
+
+.diffusion-drawer-saved {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(110, 207, 143, 0.4);
+  background: rgba(110, 207, 143, 0.14);
+  color: #8ee4a8;
+  font-size: 0.84rem;
+  font-weight: 650;
+  animation: diffusion-drawer-fade-in 0.2s ease;
+}
+
+.diffusion-v2-criteria--drawer {
+  margin-bottom: 1.1rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 12px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(175, 146, 112, 0.08);
+}
+
+.diffusion-v2-criteria--drawer ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.diffusion-v2-criteria--drawer li {
+  color: rgba(241, 235, 224, 0.88);
+  line-height: 1.4;
+}
+
+.diffusion-v2-criteria-empty {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(241, 235, 224, 0.55);
+}
+
+.diffusion-drawer-body .team-member-combobox {
+  z-index: 6;
+}
+
+.diffusion-drawer-body .team-member-combobox__list {
+  z-index: 30;
+  max-height: 10rem;
+}
+
+@media (max-width: 640px) {
+  .diffusion-drawer-overlay {
+    padding: 0.65rem;
+  }
+
+  .diffusion-drawer {
+    width: 100%;
+  }
+}
+
+.diffusion-drawer-body--signoff {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.1rem;
+  padding-top: 1.35rem;
+  padding-bottom: 1.35rem;
+}
+
+.diffusion-signoff-card {
+  padding: 1.15rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background:
+    linear-gradient(165deg, rgba(175, 146, 112, 0.1), rgba(8, 10, 14, 0.35));
+}
+
+.diffusion-signoff-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 188, 125, 0.8);
+}
+
+.diffusion-signoff-name {
+  display: block;
+  margin: 0 0 0.7rem;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: #f3ead8;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.diffusion-signoff-copy {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(241, 235, 224, 0.78);
+}
+
+.diffusion-signoff-meta {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid rgba(175, 146, 112, 0.18);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.diffusion-signoff-meta li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.diffusion-signoff-meta span {
+  color: rgba(241, 235, 224, 0.55);
+}
+
+.diffusion-signoff-meta strong {
+  color: #f3ead8;
+  font-weight: 650;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.diffusion-signoff-hint {
+  margin: 0;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(175, 146, 112, 0.16);
+  background: rgba(8, 10, 14, 0.4);
+  color: rgba(241, 235, 224, 0.7);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.diffusion-signoff-hint svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: #ffbc7d;
+}
+
+.diffusion-drawer-foot--signoff {
+  gap: 0.55rem;
+}
+
+.diffusion-drawer-foot--signoff .diffusion-v2-next {
+  justify-content: center;
 }
 
 .diffusion-signoff-actions {
@@ -328,6 +627,14 @@
   background: #1a1e27;
   max-height: 12rem;
   overflow-y: auto;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.team-member-combobox__list.is-portal {
+  position: fixed;
+  top: auto;
+  left: auto;
+  right: auto;
 }
 
 .team-member-combobox__list button {

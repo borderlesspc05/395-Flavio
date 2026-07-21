@@ -495,6 +495,44 @@ body {
   color: var(--accent-blue) !important;
 }
 
+.nav-item.is-phase-locked {
+  color: rgba(185, 182, 195, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(12, 16, 24, 0.35) !important;
+}
+
+.nav-item.is-phase-locked .nav-icon,
+.nav-item.is-phase-locked .nav-label {
+  color: rgba(185, 182, 195, 0.55) !important;
+  opacity: 0.85;
+}
+
+.nav-item.is-phase-locked .nav-lock-icon {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: rgba(175, 146, 112, 0.7);
+  opacity: 0.95;
+}
+
+.nav-item.is-phase-locked.active {
+  border-color: rgba(175, 146, 112, 0.28) !important;
+  background: rgba(20, 24, 32, 0.55) !important;
+  color: rgba(210, 205, 198, 0.72) !important;
+}
+
+.nav-item.is-phase-locked.active .nav-icon {
+  color: rgba(175, 146, 112, 0.65) !important;
+}
+
+.dashboard-sidebar.collapsed .nav-item.is-phase-locked .nav-lock-icon {
+  position: absolute;
+  right: 0.2rem;
+  bottom: 0.2rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin: 0;
+}
+
 .nav-item-logout {
   margin-top: auto;
   border-top: 1px solid rgba(175, 146, 112, 0.1) !important;

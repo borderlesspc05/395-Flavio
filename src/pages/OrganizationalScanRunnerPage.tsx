@@ -9,7 +9,9 @@ import { buildDiagnosticContext, createEmptyDiagnosticData } from '../constants/
 import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
-import { lockSprintPhase } from '../services/phaseLock';
+import { lockSprintPhase, unlockSprintPhase } from '../services/phaseLock';
+import { usePhaseLock } from '../hooks/usePhaseLock';
+import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
 import { getInitialForm, reopenInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
 import { syncMagnusMemoryToServer } from '../services/magnusMemorySync';
 import {
@@ -55,6 +57,12 @@ export function OrganizationalScanRunnerPage() {
   const [cycleNameError, setCycleNameError] = useState<string | null>(null);
 
   const { activeCycle, clearNeedsDiagnosis, persistActiveCycleSnapshot, refreshCycles } = useCycle();
+  const {
+    locks: phaseLocks,
+    setLocks: setPhaseLocks,
+    locked: phaseLocked,
+    cycle: phaseCycle,
+  } = usePhaseLock('diagnostic');
 
   const answers = useMemo(
     () => (scan ? getScanAnswersFromForm(formData, scan.id) : {}),
@@ -65,8 +73,9 @@ export function OrganizationalScanRunnerPage() {
     [scan, answers],
   );
   const status = useMemo(() => (scan ? getScanStatus(scan, answers) : 'not_started'), [scan, answers]);
-  /** Only the scan the user explicitly concluded is frozen; other themes stay editable. */
-  const isLocked = Boolean(scan && isScanMarkedCompleted(formData, scan.id));
+  const scanCompleted = Boolean(scan && isScanMarkedCompleted(formData, scan.id));
+  /** Freeze after this scan is concluded, or when the Diagnóstico phase is locked. */
+  const isLocked = scanCompleted || phaseLocked;
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null));
@@ -227,6 +236,19 @@ export function OrganizationalScanRunnerPage() {
     setRedoing(true);
     setFeedback(null);
     try {
+      if (phaseLocked) {
+        const unlocked = await unlockSprintPhase(phaseCycle ?? activeCycle, 'diagnostic');
+        if (!unlocked.ok) {
+          setFeedback(
+            unlocked.message ??
+              'Desbloqueie a fase Diagnóstico no banner acima antes de refazer este scan.',
+          );
+          setShowRedoConfirm(false);
+          return;
+        }
+        setPhaseLocks(unlocked.locks);
+      }
+
       const next = clearScanCompleted(formData, scan.id);
       const stillHaveCompleted = Object.keys(getCompletedScans(next)).length > 0;
       setFormData(next);
@@ -271,6 +293,13 @@ export function OrganizationalScanRunnerPage() {
 
   return (
     <>
+      <div className="organizational-scans-page">
+        <PhaseLockBanner
+          phase="diagnostic"
+          locks={phaseLocks}
+          cycle={phaseCycle}
+          onLocksChange={setPhaseLocks}
+        />
       <form className={`organizational-scan-runner ${isLocked ? 'is-locked' : ''}`} onSubmit={handleComplete}>
         <header className="organizational-scan-runner-header">
           <button
@@ -291,7 +320,13 @@ export function OrganizationalScanRunnerPage() {
           </p>
           <div className="organizational-scans-progress" aria-label="Progresso deste scan">
             <div>
-              <strong>{isLocked ? 'Concluído' : getScanStatusLabel(status)}</strong>
+              <strong>
+                {phaseLocked
+                  ? 'Fase bloqueada'
+                  : scanCompleted
+                    ? 'Concluído'
+                    : getScanStatusLabel(status)}
+              </strong>
               <span> neste tema</span>
             </div>
             <span>
@@ -303,7 +338,11 @@ export function OrganizationalScanRunnerPage() {
         {isLocked ? (
           <div className="organizational-scan-readonly-banner" role="status">
             <Lock size={16} aria-hidden />
-            <span>Este scan está concluído e bloqueado para edição. Os outros temas seguem liberados.</span>
+            <span>
+              {phaseLocked
+                ? 'Diagnóstico congelado — somente visualização. Desbloqueie a fase para editar.'
+                : 'Este scan está concluído e bloqueado para edição. Os outros temas seguem liberados.'}
+            </span>
           </div>
         ) : null}
 
@@ -404,6 +443,7 @@ export function OrganizationalScanRunnerPage() {
           )}
         </div>
       </form>
+      </div>
 
       {showCycleNameModal ? (
         <div className="cycle-name-modal" role="presentation">

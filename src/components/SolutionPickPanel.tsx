@@ -426,18 +426,24 @@ export function SolutionPickPanel({
             <h2>Escolha as ações para o Design</h2>
             <PhaseInfoButton title="O que é o Solution Pick?">
               <p>
-                Aqui a plataforma traduz o diagnóstico em planos de ação concretos. Leia o resumo da
-                situação, compare as sugestões e selecione até {MAX_SELECT} frentes para levar ao Design.
-              </p>
-              <p>
-                Owner e Sponsor serão definidos na próxima etapa. Foque no que faz sentido para o
-                desafio atual — as recomendações priorizam o que está sob sua esfera de influência.
+                A plataforma traduz o diagnóstico em planos de ação concretos. Compare as sugestões e
+                selecione até {MAX_SELECT} frentes para levar ao Design.
               </p>
               <ul>
-                <li>Revise o resumo executivo da empresa</li>
-                <li>Escolha planos alinhados às dores do diagnóstico</li>
-                <li>Avance para o Design para detalhar critérios e responsáveis</li>
+                <li>
+                  <strong>Resumo</strong> — leia o cenário da empresa
+                </li>
+                <li>
+                  <strong>Seleção</strong> — escolha planos alinhados às dores do diagnóstico
+                </li>
+                <li>
+                  <strong>Próximo passo</strong> — no Design você define critérios e responsáveis
+                </li>
               </ul>
+              <p>
+                Owner e Sponsor são definidos na próxima etapa. Foque no que está sob sua esfera de
+                influência.
+              </p>
             </PhaseInfoButton>
           </div>
           <p>

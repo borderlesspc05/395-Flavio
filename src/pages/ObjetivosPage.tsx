@@ -26,7 +26,7 @@ import { DiffusionWorkspace } from '../components/diffusion/DiffusionWorkspace';
 import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
 import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
 import { usePhaseLock } from '../hooks/usePhaseLock';
-import { lockSprintPhase } from '../services/phaseLock';
+import { lockSprintPhase, getPhaseLocksFromCycle, isPhaseLocked } from '../services/phaseLock';
 import { objectivesApi } from '../services/api';
 import { loadDesignDiffusionContext, type DesignDiffusionContext } from '../services/designDiffusionContext';
 import {
@@ -137,6 +137,23 @@ export function ObjetivosPage() {
   const navigate = useNavigate();
   const { locks, setLocks, locked: phaseLocked, cycle } = usePhaseLock('diffusion');
   const location = useLocation();
+
+  // Difusão liberada ⇒ Design (e anteriores) travados.
+  useEffect(() => {
+    if (!cycle?.id) return;
+    let cancelled = false;
+    const sealPrior = async () => {
+      const current = getPhaseLocksFromCycle(cycle);
+      if (isPhaseLocked(current, 'design')) return;
+      const next = await lockSprintPhase(cycle, 'design');
+      if (!cancelled) setLocks(next);
+    };
+    void sealPrior();
+    return () => {
+      cancelled = true;
+    };
+  }, [cycle?.id, cycle, setLocks]);
+
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [designContext, setDesignContext] = useState<DesignDiffusionContext | null>(null);
@@ -482,8 +499,27 @@ export function ObjetivosPage() {
               <h1 className="objetivos-title sprint-wave-title">Difusão</h1>
               <PhaseInfoButton title="Sobre a Difusão">
                 <p>
-                  Dados importados do Design — refine e incremente. Percorra Mobilização, Execução,
-                  Riscos e Sign-off por iniciativa.
+                  Dados importados do Design — refine e incremente. Os{' '}
+                  <strong>critérios de sucesso</strong> definidos no Design aparecem em cada ação
+                  para orientar a entrega.
+                </p>
+                <ul>
+                  <li>
+                    <strong>Mobilização</strong> — confirme iniciativa, owner e critérios
+                  </li>
+                  <li>
+                    <strong>Execução</strong> — checklist, prazo, responsável e evidência
+                  </li>
+                  <li>
+                    <strong>Riscos</strong> — antecipe problemas e defina a ação a tomar
+                  </li>
+                  <li>
+                    <strong>Sign-off</strong> — conclua e envie ao Domínio / Dashboard
+                  </li>
+                </ul>
+                <p>
+                  Ao atribuir um responsável com e-mail da equipe, a plataforma pode enviar um aviso
+                  de atribuição.
                 </p>
               </PhaseInfoButton>
             </div>

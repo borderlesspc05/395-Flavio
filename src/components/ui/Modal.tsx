@@ -6,7 +6,7 @@ import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-type ModalSize = 'default' | 'compact';
+type ModalSize = 'default' | 'compact' | 'info';
 
 interface ModalProps {
   open: boolean;
@@ -95,7 +95,13 @@ export function Modal({
     >
       <div
         ref={dialogRef}
-        className={`membro-modal-container${size === 'compact' ? ' membro-modal-container--compact' : ''}`}
+        className={[
+          'membro-modal-container',
+          size === 'compact' ? 'membro-modal-container--compact' : '',
+          size === 'info' ? 'membro-modal-container--info' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

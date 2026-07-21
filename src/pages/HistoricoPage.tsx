@@ -36,13 +36,20 @@ export function HistoricoPage() {
               <PhaseInfoButton title="Sobre o Loop contínuo">
                 <p>
                   Aqui o ciclo se fecha: avalie o que viveu, veja as recomendações da plataforma e
-                  decida o próximo movimento. Insights podem virar cards herdados no Design do novo
-                  ciclo.
+                  decida o próximo movimento.
                 </p>
-                <p>
-                  Ao iniciar um novo ciclo, você escolhe no hub de Scans entre diagnóstico completo
-                  ou focado (incluindo SWOT).
-                </p>
+                <ul>
+                  <li>
+                    <strong>Avaliação</strong> — o que funcionou e o que não
+                  </li>
+                  <li>
+                    <strong>Insights</strong> — podem virar cards herdados no Design
+                  </li>
+                  <li>
+                    <strong>Novo ciclo</strong> — escolha diagnóstico completo ou focado no hub de
+                    Scans
+                  </li>
+                </ul>
               </PhaseInfoButton>
             </div>
             <p className="historico-subtitle">

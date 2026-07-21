@@ -5,6 +5,7 @@ import {
   createEmptyPhaseLocks,
   isPhaseLocked,
   lockPhaseInState,
+  normalizePhaseLocks,
   unlockPhaseInState,
   type PhaseLocks,
   type SprintPhase,
@@ -21,7 +22,7 @@ export function readLocalPhaseLocks(cycleId: string | null | undefined): PhaseLo
   try {
     const raw = window.localStorage.getItem(storageKey(cycleId));
     if (!raw) return createEmptyPhaseLocks();
-    return JSON.parse(raw) as PhaseLocks;
+    return normalizePhaseLocks(JSON.parse(raw) as PhaseLocks);
   } catch {
     return createEmptyPhaseLocks();
   }
@@ -29,27 +30,50 @@ export function readLocalPhaseLocks(cycleId: string | null | undefined): PhaseLo
 
 export function writeLocalPhaseLocks(cycleId: string, locks: PhaseLocks) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(storageKey(cycleId), JSON.stringify(locks));
+  window.localStorage.setItem(storageKey(cycleId), JSON.stringify(normalizePhaseLocks(locks)));
 }
 
+function mergePhaseLocks(a: PhaseLocks, b: PhaseLocks): PhaseLocks {
+  const merged: PhaseLocks = { ...a };
+  for (const [key, value] of Object.entries(b) as [SprintPhase, boolean | undefined][]) {
+    if (value) merged[key] = true;
+  }
+  return normalizePhaseLocks(merged);
+}
+
+/**
+ * Lê locks do ciclo + localStorage e faz merge OR.
+ * Assim, se o patch na API atrasar/falhar, o localStorage não é apagado
+ * por um `phaseLocks: {}` vindo do servidor.
+ */
 export function getPhaseLocksFromCycle(cycle: DiagnosticCycle | null | undefined): PhaseLocks {
   if (!cycle) return createEmptyPhaseLocks();
   const fromCycle = (cycle as DiagnosticCycle & { phaseLocks?: PhaseLocks }).phaseLocks;
-  if (fromCycle && typeof fromCycle === 'object') return { ...fromCycle };
-  return readLocalPhaseLocks(cycle.id);
+  const cycleLocks =
+    fromCycle && typeof fromCycle === 'object' ? normalizePhaseLocks(fromCycle) : createEmptyPhaseLocks();
+  const localLocks = readLocalPhaseLocks(cycle.id);
+  return mergePhaseLocks(cycleLocks, localLocks);
 }
 
 export async function persistPhaseLocks(
   cycleId: string,
   locks: PhaseLocks
 ): Promise<PhaseLocks> {
-  writeLocalPhaseLocks(cycleId, locks);
+  const normalized = normalizePhaseLocks(locks);
+  writeLocalPhaseLocks(cycleId, normalized);
   try {
-    await updateDiagnosticCycle(cycleId, { phaseLocks: locks } as Partial<DiagnosticCycle>);
+    await updateDiagnosticCycle(cycleId, { phaseLocks: normalized } as Partial<DiagnosticCycle>);
   } catch {
     // localStorage already updated — cycle patch may fail offline
   }
-  return locks;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('mm:phase-locks-changed', {
+        detail: { cycleId, locks: normalized },
+      }),
+    );
+  }
+  return normalized;
 }
 
 export async function lockSprintPhase(
@@ -93,5 +117,5 @@ export async function unlockSprintPhase(
   return { ok: true, locks: next };
 }
 
-export { isPhaseLocked, canUnlockPhase };
+export { isPhaseLocked, canUnlockPhase, normalizePhaseLocks, createEmptyPhaseLocks };
 export type { PhaseLocks, SprintPhase };

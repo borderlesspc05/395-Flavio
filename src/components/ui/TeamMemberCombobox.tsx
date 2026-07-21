@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { UserPlus, UserRound } from 'lucide-react';
 import { teamApi } from '../../services/api';
@@ -33,6 +34,8 @@ export function TeamMemberCombobox({
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [listStyle, setListStyle] = useState<CSSProperties | null>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setQuery(value);
@@ -74,6 +77,38 @@ export function TeamMemberCombobox({
     return members.some((m) => memberName(m).toLowerCase() === q);
   }, [members, query]);
 
+  const showList = open && loaded && matches.length > 0;
+
+  useLayoutEffect(() => {
+    if (!showList || !fieldRef.current) {
+      setListStyle(null);
+      return;
+    }
+
+    const update = () => {
+      const rect = fieldRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const preferUp = spaceBelow < 180 && rect.top > spaceBelow;
+      setListStyle({
+        position: 'fixed',
+        left: rect.left,
+        width: rect.width,
+        top: preferUp ? undefined : rect.bottom + 4,
+        bottom: preferUp ? window.innerHeight - rect.top + 4 : undefined,
+        zIndex: 1600,
+      });
+    };
+
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [showList, matches.length, query]);
+
   const pick = (name: string) => {
     onChange(name);
     setQuery(name);
@@ -83,7 +118,7 @@ export function TeamMemberCombobox({
   return (
     <label className="team-member-combobox">
       <span>{label}</span>
-      <div className="team-member-combobox__field">
+      <div className="team-member-combobox__field" ref={fieldRef}>
         <UserRound size={14} aria-hidden />
         <input
           id={id}
@@ -101,21 +136,28 @@ export function TeamMemberCombobox({
           onBlur={() => window.setTimeout(() => setOpen(false), 150)}
         />
       </div>
-      {open && loaded && matches.length > 0 ? (
-        <ul className="team-member-combobox__list" role="listbox">
-          {matches.map((m) => {
-            const name = memberName(m);
-            return (
-              <li key={m.id || name}>
-                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(name)}>
-                  <strong>{name}</strong>
-                  {m.email ? <span>{m.email}</span> : null}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+      {showList && listStyle
+        ? createPortal(
+            <ul className="team-member-combobox__list is-portal" role="listbox" style={listStyle}>
+              {matches.map((m) => {
+                const name = memberName(m);
+                return (
+                  <li key={m.id || name}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => pick(name)}
+                    >
+                      <strong>{name}</strong>
+                      {m.email ? <span>{m.email}</span> : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>,
+            document.body,
+          )
+        : null}
       {loaded && query.trim() && !exactMatch ? (
         <Link to="/dashboard/equipe" className="team-member-combobox__add">
           <UserPlus size={14} aria-hidden />

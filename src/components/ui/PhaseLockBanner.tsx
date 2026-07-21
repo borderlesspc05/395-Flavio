@@ -9,6 +9,7 @@ import {
   type SprintPhase,
 } from '../../services/phaseLock';
 import type { DiagnosticCycle } from '../../services/diagnosticCycles';
+import { useCycle } from '../../context/CycleContext';
 
 const PHASE_LABELS: Record<SprintPhase, string> = {
   diagnostic: 'Diagnóstico',
@@ -27,6 +28,7 @@ interface PhaseLockBannerProps {
 }
 
 export function PhaseLockBanner({ phase, locks, cycle, onLocksChange }: PhaseLockBannerProps) {
+  const { refreshCycles } = useCycle();
   const locked = isPhaseLocked(locks, phase);
   const unlockable = canUnlockPhase(locks, phase);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -47,6 +49,7 @@ export function PhaseLockBanner({ phase, locks, cycle, onLocksChange }: PhaseLoc
       return;
     }
     onLocksChange(result.locks);
+    void refreshCycles?.();
     setConfirmOpen(false);
   };
 
@@ -81,30 +84,32 @@ export function PhaseLockBanner({ phase, locks, cycle, onLocksChange }: PhaseLoc
         open={confirmOpen}
         onClose={() => !busy && setConfirmOpen(false)}
         title="Tem certeza disso?"
-        size="compact"
+        size="info"
         dismissLocked={busy}
       >
-        <p className="phase-lock-confirm-text">
-          Desbloquear <strong>{label}</strong> permite editar novamente esta etapa. Confirma?
-        </p>
-        {error ? <p className="phase-lock-confirm-error">{error}</p> : null}
-        <div className="phase-info-actions">
-          <button
-            type="button"
-            className="phase-info-close is-ghost"
-            disabled={busy}
-            onClick={() => setConfirmOpen(false)}
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            className="phase-info-close"
-            disabled={busy}
-            onClick={() => void handleUnlock()}
-          >
-            {busy ? 'Desbloqueando…' : 'Sim, desbloquear'}
-          </button>
+        <div className="phase-lock-confirm-panel">
+          <p className="phase-lock-confirm-text">
+            Desbloquear <strong>{label}</strong> permite editar novamente esta etapa. Confirma?
+          </p>
+          {error ? <p className="phase-lock-confirm-error">{error}</p> : null}
+          <div className="phase-info-actions">
+            <button
+              type="button"
+              className="phase-info-close is-ghost"
+              disabled={busy}
+              onClick={() => setConfirmOpen(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="phase-info-close"
+              disabled={busy}
+              onClick={() => void handleUnlock()}
+            >
+              {busy ? 'Desbloqueando…' : 'Sim, desbloquear'}
+            </button>
+          </div>
         </div>
       </Modal>
     </>

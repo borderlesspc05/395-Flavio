@@ -20,6 +20,58 @@ Documento de validação do que foi implementado na plataforma.
 
 ---
 
+## Checklist — sessão 21/07/2026 (fase lock, Design → Difusão, UX)
+
+### Cascata de trancamento de fases
+
+- [x] **Regra** — fase posterior liberada ⇒ fases anteriores travadas (somente visualização + cadeado na sidebar)
+- [x] **Design aberto** — trava Diagnóstico + Solution Pick automaticamente
+- [x] **Difusão aberta** — trava Design (e anteriores)
+- [x] **Domínio aberto** — trava Difusão (e anteriores)
+- [x] **Normalize + merge** — locks do ciclo + `localStorage` em OR (não perde lock se API devolver `phaseLocks` vazio)
+- [x] **Evento** — `mm:phase-locks-changed` sincroniza sidebar e ciclo ativo
+- [x] **Badge** — “Diagnóstico pendente” some quando Diagnóstico está travado (não volta no `refreshCycles`)
+- [x] **Scans** — runner em read-only quando fase Diagnóstico está locked
+
+### Design — concluir e validação
+
+- [x] **Aviso no rodapé** — “Falta validar X de N planos…”
+- [x] **CTA principal** — “Concluir Design e ir para Difusão” só com todos validados
+- [x] **Opção** — “Avançar sem validar todos” com confirmação; salva planos e segue para Difusão
+
+### Difusão (drawer / Action Canvas)
+
+- [x] Critérios do Design no drawer de entrega e Mobilização
+- [x] Drawer via portal (`document.body`), z-index alto, footer sticky
+- [x] Feedback explícito de save + toast; fecha só após sucesso
+- [x] Sign-off redesenhado; iniciativas numeradas 1, 2, 3…
+- [x] `TeamMemberCombobox` com portal (lista não cortada)
+
+### Hub Diagnóstico + cards de info + MID
+
+- [x] Hub sem cards grandes Completo/Focado; copy sob o hero; Diagnóstico completo como 1º card
+- [x] Modais info (`PhaseInfoButton` / `Modal` size `info`) com copy clara
+- [x] KPI MID — verso do card mais legível (significado, próximos passos, fonte)
+
+### Sidebar
+
+- [x] Collapse = chevron sob o logo; fases travadas com ícone Lock + estilo cinza
+
+### Arquivos principais
+
+- `src/types/phaseLock.ts`, `src/services/phaseLock.ts`, `src/context/CycleContext.tsx`
+- `src/components/DashboardLayout.tsx`, `src/pages/DesignPlansPage.tsx`
+- `src/pages/ObjetivosPage.tsx`, `src/components/domain/DomainWaveWorkspace.tsx`
+- `src/components/diffusion/DiffusionWorkspace.tsx`, estilos `design-plans.css` / `diffusion-v2.css`
+
+### Validação rápida (manual)
+
+- [ ] Abrir Design → Diagnóstico cinza + cadeado; badge pendente some
+- [ ] Rodapé Design com planos pendentes → aviso + “Avançar sem validar todos”
+- [ ] Abrir Difusão → Design travado; abrir Domínio → Difusão travada
+
+---
+
 ## Checklist — sessão 29/05/2026 (Action Canvas, memória IA, UI Difusão)
 
 ### Onda 3 — Action Canvas (Make the Move)
@@ -840,4 +892,4 @@ Teste da API no Render:
 
 ---
 
-*Última atualização: 02 de junho de 2026 — Onda 4 Domínio, Sustainability Score no MID, UI refinada e fluxo real*
+*Última atualização: 21 de julho de 2026 — cascata de phase lock, Design→Difusão com aviso de validação, UX Difusão/Diagnóstico/MID*

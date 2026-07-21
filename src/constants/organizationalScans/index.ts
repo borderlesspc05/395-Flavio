@@ -10,14 +10,14 @@ import { swotAnalysisScan } from './swotAnalysisScan';
 
 export const fullScanIntro: OrganizationalScanDefinition = {
   id: 'fullScan',
-  step: 'Visão integrada',
-  title: 'Full Scan',
-  subtitle: 'Diagnóstico completo da organização',
-  estimatedMinutes: 45,
+  step: 'Canvas completo',
+  title: 'Diagnóstico completo',
+  subtitle: 'Canvas Sprint Waves com Solution Pick e resumo executivo',
+  estimatedMinutes: 90,
   intro:
-    'Diagnostique a organização pelo canvas completo Sprint Waves (1.1–1.5, com Solution Pick e resumo executivo) ou por um scan temático mais rápido. As duas vias levam ao mesmo Solution Pick para escolher planos de ação.',
+    'Percorra o canvas Sprint Waves (1.1–1.5) com profundidade máxima. Ao concluir, você chega ao Solution Pick com resumo executivo e planos priorizados.',
   guidance:
-    'O diagnóstico completo fica no canvas 1.1 a 1.5. O scan focado é alternativa quando você precisa de profundidade em um tema só — ambos alimentam o Solution Pick com o contexto real da empresa.',
+    'Ideal quando você quer um diagnóstico amplo da organização. O tempo médio é de cerca de 90 minutos. Alternativa: um scan focado em um tema específico, mais rápido.',
   blocks: [],
 };
 

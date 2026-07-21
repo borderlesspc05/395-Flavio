@@ -44,7 +44,7 @@ import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../../utils/api
 import { PhaseInfoButton } from '../ui/PhaseInfoButton';
 import { PhaseLockBanner } from '../ui/PhaseLockBanner';
 import { usePhaseLock } from '../../hooks/usePhaseLock';
-import { lockSprintPhase } from '../../services/phaseLock';
+import { lockSprintPhase, getPhaseLocksFromCycle, isPhaseLocked } from '../../services/phaseLock';
 
 const AUTO_SAVE_MS = 2500;
 
@@ -101,6 +101,22 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formDataRef = useRef<InitialFormData | null>(null);
   const persistInFlightRef = useRef(false);
+
+  // Domínio liberado ⇒ Difusão (e anteriores) travados.
+  useEffect(() => {
+    if (!cycle?.id) return;
+    let cancelled = false;
+    const sealPrior = async () => {
+      const current = getPhaseLocksFromCycle(cycle);
+      if (isPhaseLocked(current, 'diffusion')) return;
+      const next = await lockSprintPhase(cycle, 'diffusion');
+      if (!cancelled) setLocks(next);
+    };
+    void sealPrior();
+    return () => {
+      cancelled = true;
+    };
+  }, [cycle?.id, cycle, setLocks]);
 
   const load = useCallback(async (uid: string) => {
     skipAutoSaveRef.current = true;
@@ -326,12 +342,22 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
               <PhaseInfoButton title="Sobre o Domínio">
                 <p>
                   Tudo nesta etapa é <strong>opcional</strong>. Use o Domínio para registrar impacto,
-                  aprendizados e sustentação — a plataforma aprende com o que você compartilha e
-                  alimenta o próximo ciclo.
+                  aprendizados e sustentação — a plataforma aprende com o que você compartilha.
                 </p>
+                <ul>
+                  <li>
+                    <strong>Impacto</strong> — o que mudou após a Difusão
+                  </li>
+                  <li>
+                    <strong>Aprendizados</strong> — o que vale levar ao próximo ciclo
+                  </li>
+                  <li>
+                    <strong>Sustentação</strong> — como manter o resultado vivo
+                  </li>
+                </ul>
                 <p>
-                  Não há campos obrigatórios. Quanto mais contexto você deixar, mais útil fica o
-                  Intelligence Dashboard e o Loop contínuo.
+                  Quanto mais contexto você deixar, mais útil fica o Intelligence Dashboard e o Loop
+                  contínuo.
                 </p>
               </PhaseInfoButton>
             </div>

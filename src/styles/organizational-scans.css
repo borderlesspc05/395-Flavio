@@ -9,6 +9,27 @@
   gap: 0.85rem;
 }
 
+.organizational-scans-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.organizational-scans-title-row .phase-info-btn {
+  padding: 0.5rem 0.95rem;
+  gap: 0.45rem;
+  font-size: 0.84rem;
+  min-height: 2.35rem;
+  border-radius: 999px;
+}
+
+.organizational-scans-title-row .phase-info-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
 .organizational-scans-hero h1 {
   margin: 0;
   font-size: clamp(2.2rem, 4vw, 3.25rem);
@@ -462,6 +483,13 @@
   box-shadow: 0 0 0 1px rgba(255, 188, 125, 0.12);
 }
 
+.organizational-scan-card.is-full-scan {
+  border-color: rgba(255, 188, 125, 0.48);
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(255, 188, 125, 0.14), transparent 55%),
+    linear-gradient(165deg, rgba(36, 30, 22, 0.92), rgba(16, 20, 28, 0.96));
+}
+
 @media (max-width: 900px) {
   .cycle-briefing-columns {
     grid-template-columns: 1fr;
@@ -470,7 +498,8 @@
 
 .organizational-scans-picker {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.55rem;
+  margin: 0 0 1.35rem;
 }
 
 .organizational-scans-picker h2 {
@@ -657,6 +686,18 @@
 
 .organizational-scan-runner.is-locked .diagnostic-field {
   opacity: 0.92;
+}
+
+.organizational-scan-runner.is-locked textarea,
+.organizational-scan-runner.is-locked input,
+.organizational-scan-runner.is-locked select,
+.organizational-scan-runner.is-locked button.scan-choice,
+.organizational-scan-runner.is-locked .scan-option,
+.organizational-scan-runner.is-locked .diagnostic-chip,
+.organizational-scan-runner.is-locked .scan-multi-option {
+  pointer-events: none !important;
+  caret-color: transparent;
+  cursor: default;
 }
 
 .organizational-scan-readonly-banner {

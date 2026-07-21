@@ -27,6 +27,12 @@ import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
 import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
 import { TeamMemberCombobox } from '../components/ui/TeamMemberCombobox';
 import { usePhaseLock } from '../hooks/usePhaseLock';
+import { useCycle } from '../context/CycleContext';
+import {
+  getPhaseLocksFromCycle,
+  isPhaseLocked,
+  lockSprintPhase,
+} from '../services/phaseLock';
 
 type EditablePlan = SuggestedActionCanvasDraft & {
   localId: string;
@@ -220,6 +226,7 @@ function linkPlansToCanvases(
 export function DesignPlansPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { clearNeedsDiagnosis } = useCycle();
   const { locks, setLocks, locked: phaseLocked, cycle, lockCurrent } = usePhaseLock('design');
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const [loading, setLoading] = useState(true);
@@ -230,6 +237,28 @@ export function DesignPlansPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const syncTimers = useRef<Record<string, number>>({});
+
+  // Design liberado ⇒ Diagnóstico + Solution Pick travados (cascata).
+  useEffect(() => {
+    if (!cycle?.id) return;
+    let cancelled = false;
+    const sealDiagnostic = async () => {
+      const current = getPhaseLocksFromCycle(cycle);
+      if (isPhaseLocked(current, 'diagnostic') && isPhaseLocked(current, 'solutionPick')) {
+        clearNeedsDiagnosis();
+        return;
+      }
+      // Trava até Solution Pick → também trava Diagnóstico.
+      const next = await lockSprintPhase(cycle, 'solutionPick');
+      if (cancelled) return;
+      setLocks(next);
+      clearNeedsDiagnosis();
+    };
+    void sealDiagnostic();
+    return () => {
+      cancelled = true;
+    };
+  }, [cycle?.id, clearNeedsDiagnosis, setLocks, cycle]);
 
   useEffect(() => {
     if (!error) return;
@@ -244,7 +273,8 @@ export function DesignPlansPage() {
   }, [notice]);
 
   const validatedCount = useMemo(() => plans.filter((p) => p.validated).length, [plans]);
-  const allValidated = plans.length > 0 && validatedCount === plans.length;
+  const pendingCount = useMemo(() => plans.filter((p) => !p.validated).length, [plans]);
+  const allValidated = plans.length > 0 && pendingCount === 0;
   const activePlan = useMemo(
     () => plans.find((p) => p.localId === activePlanId) ?? plans[0] ?? null,
     [plans, activePlanId]
@@ -383,28 +413,50 @@ export function DesignPlansPage() {
   };
 
 
-  const concludeDesign = async () => {
-    if (!userId || !allValidated) return;
+  const concludeDesign = async (options?: { skipValidation?: boolean }) => {
+    if (!userId || plans.length === 0) return;
+
+    const skipValidation = Boolean(options?.skipValidation);
+    if (!allValidated && !skipValidation) return;
+
+    const namedPlans = plans.filter((p) => p.nomeIniciativa.trim());
+    if (namedPlans.length === 0) {
+      setError('Nomeie ao menos um plano antes de avançar.');
+      return;
+    }
+
+    if (skipValidation && pendingCount > 0) {
+      const ok = window.confirm(
+        `Ainda falta validar ${pendingCount} plano${pendingCount === 1 ? '' : 's'}.\n\n` +
+          'Deseja avançar para a Difusão mesmo assim? Os planos serão salvos, mas podem ficar incompletos.',
+      );
+      if (!ok) return;
+    }
+
     setSaving(true);
     setError(null);
     try {
-      for (const plan of plans) {
-        if (!plan.canvasId) {
-          const canvasId = await persistCanvas(plan);
-          if (canvasId) {
-            setPlans((prev) =>
-              prev.map((p) => (p.localId === plan.localId ? { ...p, canvasId, validated: true } : p))
-            );
-          }
+      for (const plan of namedPlans) {
+        const canvasId = await persistCanvas(plan);
+        if (canvasId && canvasId !== plan.canvasId) {
+          setPlans((prev) =>
+            prev.map((p) =>
+              p.localId === plan.localId ? { ...p, canvasId, validated: true } : p,
+            ),
+          );
         }
       }
       await syncMagnusMemoryAfterCanvasChange();
       await lockCurrent();
+      const skipped = skipValidation ? pendingCount : 0;
       navigate('/dashboard/objetivos', {
         state: {
           postDesignNotice: {
             title: 'Design concluído',
-            message: `${plans.length} plano(s) de ação sincronizados na Difusão.`,
+            message:
+              skipped > 0
+                ? `${namedPlans.length} plano(s) sincronizados na Difusão · ${skipped} ainda sem validação explícita.`
+                : `${namedPlans.length} plano(s) de ação sincronizados na Difusão.`,
           },
         },
       });
@@ -474,12 +526,23 @@ export function DesignPlansPage() {
               <h1 className="sprint-wave-title">Design</h1>
               <PhaseInfoButton title="Como usar o Design">
                 <p>
-                  Transforme as ações escolhidas no Solution Pick em planos claros: o que a iniciativa
-                  pretende alcançar, como saberão que deu certo e quem lidera.
+                  Transforme as ações do Solution Pick em planos claros: o que a iniciativa pretende
+                  alcançar, como saberão que deu certo e quem lidera.
                 </p>
+                <ul>
+                  <li>
+                    <strong>Iniciativa e resultado</strong> — intenção e impacto esperado
+                  </li>
+                  <li>
+                    <strong>Critérios de sucesso</strong> — como medir que deu certo
+                  </li>
+                  <li>
+                    <strong>Owner e Sponsor</strong> — da equipe cadastrada
+                  </li>
+                </ul>
                 <p>
-                  Detalhes operacionais (entregas, riscos e sign-off) ficam para a Difusão. Aqui o
-                  foco é clareza de intenção e critérios de sucesso.
+                  Entregas, riscos e sign-off ficam para a Difusão. Valide só o que estiver pronto
+                  para avançar.
                 </p>
               </PhaseInfoButton>
             </div>
@@ -662,15 +725,48 @@ export function DesignPlansPage() {
           <Plus size={16} aria-hidden />
           Adicionar plano
         </button>
-        <button
-          type="button"
-          className="design-plans-conclude"
-          disabled={!allValidated || saving}
-          onClick={() => void concludeDesign()}
-        >
-          {saving ? <Loader2 size={18} className="spin" aria-hidden /> : <ArrowRight size={18} aria-hidden />}
-          Concluir Design e ir para Difusão
-        </button>
+        <div className="design-plans-footer-end">
+          {pendingCount > 0 ? (
+            <p className="design-plans-footer-hint" role="status">
+              Falta validar <strong>{pendingCount}</strong> de {plans.length} plano
+              {plans.length === 1 ? '' : 's'} para avançar com tudo sincronizado.
+            </p>
+          ) : (
+            <p className="design-plans-footer-hint is-ready" role="status">
+              Todos os {plans.length} planos validados — pronto para Difusão.
+            </p>
+          )}
+          <div className="design-plans-footer-actions">
+            {pendingCount > 0 ? (
+              <button
+                type="button"
+                className="design-plan-btn is-ghost design-plans-skip"
+                disabled={saving || phaseLocked}
+                onClick={() => void concludeDesign({ skipValidation: true })}
+              >
+                Avançar sem validar todos
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="design-plans-conclude"
+              disabled={!allValidated || saving || phaseLocked}
+              onClick={() => void concludeDesign()}
+              title={
+                pendingCount > 0
+                  ? `Valide os ${pendingCount} plano(s) restantes ou use “Avançar sem validar todos”.`
+                  : undefined
+              }
+            >
+              {saving ? (
+                <Loader2 size={18} className="spin" aria-hidden />
+              ) : (
+                <ArrowRight size={18} aria-hidden />
+              )}
+              Concluir Design e ir para Difusão
+            </button>
+          </div>
+        </div>
       </footer>
     </div>
   );
