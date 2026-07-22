@@ -30,21 +30,45 @@ export const BUSINESS_STAGES: BusinessStage[] = [
 export type DeliveryStatus = 'verde' | 'amarelo' | 'vermelho';
 export type ActionCanvasSignOff = 'pendente' | 'sim' | 'nao';
 
+export type ChecklistProgress = 0 | 25 | 50 | 75 | 100;
+
+export interface DeliveryChecklistItem {
+  id: string;
+  texto: string;
+  done?: boolean;
+  responsavel?: string;
+  progresso?: ChecklistProgress;
+  prazo?: string;
+}
+
 export interface ActionCanvasDelivery {
   id: string;
   entrega: string;
+  /** Sponsor da execução (campo legado `responsavel`). */
   responsavel: string;
   prazo: string;
   status: DeliveryStatus;
+  /** @deprecated Removido da UI de Execução; mantido por compatibilidade. */
   evidencia: string;
-  /** Checklist editável na Difusão (etapa Execução) */
+  /** @deprecated Preferir checklistItems */
   checklist?: string[];
+  /** Check-list de ações estruturado (Execução) */
+  checklistItems?: DeliveryChecklistItem[];
 }
+
+export type RiskImpact = 'alto' | 'medio' | 'baixo';
+export type RiskProbability = 'alta' | 'media' | 'baixa';
+export type RiskStatus = 'nao_iniciado' | 'em_andamento' | 'mitigado' | 'monitorando';
 
 export interface ActionCanvasRisk {
   id: string;
   risco: string;
+  /** Plano / ação a tomar */
   acaoTomar: string;
+  impacto?: RiskImpact;
+  probabilidade?: RiskProbability;
+  responsavel?: string;
+  status?: RiskStatus;
 }
 
 /** Rascunho sugerido pela IA antes de criar no backend */

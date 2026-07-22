@@ -3,13 +3,12 @@ import {
   Briefcase,
   Calendar,
   CheckCircle2,
+  Link2,
   Loader2,
   Mail,
   MapPin,
-  MoreVertical,
   Phone,
   Plus,
-  Star,
   Users,
   Pencil,
   Send,
@@ -58,8 +57,8 @@ const STATUS_LABELS: Record<TeamMember['status'], string> = {
 };
 
 const TREND_LABELS: Record<DevelopmentTrend, string> = {
-  improved: 'Melhorou',
-  declined: 'Piorou',
+  improved: 'Avanço',
+  declined: 'Queda',
   stable: 'Estável',
 };
 
@@ -402,6 +401,25 @@ export function MinhaEquipePage() {
     }
   };
 
+  const copyPortalLink = async (member: TeamMember) => {
+    try {
+      const { portalUrl } = await teamApi.getPortalLink(member.id);
+      if (!portalUrl) {
+        setEmailNoticeType('error');
+        setEmailNotice('Não foi possível gerar o link do portal.');
+        return;
+      }
+      await navigator.clipboard.writeText(portalUrl);
+      setEmailNoticeType('success');
+      setEmailNotice(
+        `Link do portal copiado para ${member.name}. Com esse link ele vê e atualiza só as ações atribuídas a ele.`
+      );
+    } catch {
+      setEmailNoticeType('error');
+      setEmailNotice('Não foi possível copiar o link do portal.');
+    }
+  };
+
   return (
     <div className="minha-equipe">
       <header className="equipe-header sprint-wave-header">
@@ -410,11 +428,11 @@ export function MinhaEquipePage() {
             <Users size={26} />
           </div>
           <div className="sprint-wave-title-copy">
-            <span className="equipe-header-kicker sprint-wave-eyebrow">SPRINT WAVES™ · Onda 3</span>
+            <span className="equipe-header-kicker sprint-wave-eyebrow">SPRINT WAVES™ · Equipe</span>
             <h1 className="sprint-wave-title">Equipe</h1>
             <p className="sprint-wave-subtitle">
-              Vincule donos, envie desenvolvimento por e-mail e alinhe entregas ao ciclo{' '}
-              <strong>{activeCycle?.label ?? 'atual'}</strong>.
+              Cadastre pessoas, copie o link do portal (só as ações delas) e acompanhe o desempenho no
+              ciclo {activeCycle?.label ? <strong>{activeCycle.label}</strong> : 'atual'}.
             </p>
           </div>
         </div>
@@ -427,49 +445,73 @@ export function MinhaEquipePage() {
         </div>
       </header>
 
-      {emailNotice && (
+      {emailNotice ? (
         <p className={`equipe-email-notice is-${emailNoticeType}`} role="status">
           {emailNotice}
         </p>
-      )}
+      ) : null}
 
-      <div className="equipe-stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon-wrapper primary">
-            <Users size={24} />
+      <div className="equipe-stats-grid" role="group" aria-label="Resumo da equipe">
+        <article className="equipe-stat">
+          <div className="equipe-stat__lede">
+            <div className="equipe-stat__copy">
+              <p className="equipe-stat__label">Total</p>
+              <p className="equipe-stat__metric">
+                <span className="equipe-stat__value">{stats.total}</span>
+              </p>
+            </div>
+            <div className="equipe-stat__icon" aria-hidden>
+              <Users size={16} />
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{stats.total}</div>
-            <div className="stat-label">Total</div>
+        </article>
+        <article className="equipe-stat">
+          <div className="equipe-stat__lede">
+            <div className="equipe-stat__copy">
+              <p className="equipe-stat__label">Ativos</p>
+              <p className="equipe-stat__metric">
+                <span className="equipe-stat__value">{stats.active}</span>
+              </p>
+            </div>
+            <div className="equipe-stat__icon is-success" aria-hidden>
+              <Briefcase size={16} />
+            </div>
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper success">
-            <Briefcase size={24} />
+        </article>
+        <article className="equipe-stat">
+          <div className="equipe-stat__lede">
+            <div className="equipe-stat__copy">
+              <p className="equipe-stat__label">Remotos</p>
+              <p className="equipe-stat__metric">
+                <span className="equipe-stat__value">{stats.remote}</span>
+              </p>
+            </div>
+            <div className="equipe-stat__icon is-info" aria-hidden>
+              <MapPin size={16} />
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{stats.active}</div>
-            <div className="stat-label">Ativos</div>
+        </article>
+        <article className="equipe-stat equipe-stat--perf">
+          <div className="equipe-stat__lede">
+            <div className="equipe-stat__copy">
+              <p className="equipe-stat__label">Desempenho médio</p>
+              <p className="equipe-stat__metric">
+                <span className="equipe-stat__value">{stats.avgPerf}</span>
+                <span className="equipe-stat__unit">%</span>
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper info">
-            <MapPin size={24} />
+          <div
+            className="equipe-stat__track"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={stats.avgPerf}
+            aria-label={`Desempenho médio ${stats.avgPerf} por cento`}
+          >
+            <div className="equipe-stat__fill" style={{ width: `${stats.avgPerf}%` }} />
           </div>
-          <div>
-            <div className="stat-value">{stats.remote}</div>
-            <div className="stat-label">Remotos</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon-wrapper warning">
-            <Star size={24} />
-          </div>
-          <div>
-            <div className="stat-value">{stats.avgPerf}%</div>
-            <div className="stat-label">Desempenho médio</div>
-          </div>
-        </div>
+        </article>
       </div>
 
       <section className="equipe-section">
@@ -477,27 +519,30 @@ export function MinhaEquipePage() {
           <h2 className="section-title">Membros da equipe</h2>
           <div className="section-actions">
             <button type="button" className="add-member-button" onClick={openCreate}>
-              <Plus size={20} />
+              <Plus size={18} aria-hidden />
               Adicionar membro
             </button>
-            <select
-              className="filter-select"
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-            >
-              {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d === 'todos' ? 'Todos os departamentos' : d}
-                </option>
-              ))}
-            </select>
+            <label className="equipe-filter">
+              <span className="sr-only">Filtrar por departamento</span>
+              <select
+                className="filter-select"
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+              >
+                {departments.map((d) => (
+                  <option key={d} value={d}>
+                    {d === 'todos' ? 'Todos os departamentos' : d}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         </div>
 
         {loading ? (
           <div className="loading-container">
-            <Loader2 className="spinner" size={32} />
-            <span>Carregando equipe...</span>
+            <Loader2 className="spinner" size={32} aria-hidden />
+            <span>Carregando equipe…</span>
           </div>
         ) : error ? (
           <div className="error-container">
@@ -508,7 +553,7 @@ export function MinhaEquipePage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <Users size={48} />
+            <Users size={40} aria-hidden />
             <h3>Nenhum membro encontrado</h3>
             <p>Adicione o primeiro membro da sua equipe.</p>
           </div>
@@ -519,83 +564,96 @@ export function MinhaEquipePage() {
               const devEntries = developmentByMember[member.id] ?? [];
               const latestDev = devEntries[0];
               const TrendIcon = latestDev ? trendIcon(latestDev.trend) : LineChart;
+              const perf = member.performance ?? 0;
               return (
                 <article key={member.id} className="member-card">
                   <div className="member-card-header">
-                    <div className="member-avatar">{initials(member.name)}</div>
+                    <div className="member-avatar" aria-hidden>
+                      {initials(member.name)}
+                    </div>
                     <div className="member-header-info">
                       <h3 className="member-name">{member.name}</h3>
-                      <p className="member-role">{member.role}</p>
+                      {member.role ? <p className="member-role">{member.role}</p> : null}
                     </div>
-                    <button type="button" className="member-menu-button" aria-label="Menu">
-                      <MoreVertical size={18} />
-                    </button>
                   </div>
+
                   <div className="member-card-body">
-                    {member.department && (
+                    {member.department ? (
                       <div className="member-info-row">
-                        <Briefcase size={14} />
+                        <Briefcase size={14} aria-hidden />
                         <span className="member-department">{member.department}</span>
                       </div>
-                    )}
-                    {member.email && (
+                    ) : null}
+                    {member.email ? (
                       <div className="member-info-row">
-                        <Mail size={14} />
-                        <span>{member.email}</span>
+                        <Mail size={14} aria-hidden />
+                        <span className="member-email">{member.email}</span>
                       </div>
-                    )}
-                    {member.phone && (
+                    ) : null}
+                    {member.phone ? (
                       <div className="member-info-row">
-                        <Phone size={14} />
+                        <Phone size={14} aria-hidden />
                         <span>{member.phone}</span>
                       </div>
-                    )}
-                    {member.location && (
+                    ) : null}
+                    {member.location ? (
                       <div className="member-info-row">
-                        <MapPin size={14} />
+                        <MapPin size={14} aria-hidden />
                         <span className="member-location">{member.location}</span>
                       </div>
-                    )}
-                    {member.hireDate && (
+                    ) : null}
+                    {member.hireDate ? (
                       <div className="member-info-row">
-                        <Calendar size={14} />
+                        <Calendar size={14} aria-hidden />
                         <span className="member-hire-date">
                           {new Date(member.hireDate).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
-                  {member.performance != null && (
-                    <div className="member-performance">
-                      <div className="performance-header">
+
+                  {member.performance != null ? (
+                    <div className={`member-performance is-${perfClass}`}>
+                      <div className="member-performance__lede">
                         <span className="performance-label">Desempenho</span>
-                        <span className={`performance-value ${perfClass}`}>{member.performance}%</span>
+                        <span className={`performance-value ${perfClass}`}>
+                          {perf}
+                          <span className="performance-unit">%</span>
+                        </span>
                       </div>
-                      <div className="performance-bar">
+                      <div
+                        className="performance-bar"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={perf}
+                        aria-label={`Desempenho ${perf} por cento`}
+                      >
                         <div
                           className={`performance-fill ${perfClass}`}
-                          style={{ width: `${member.performance}%` }}
+                          style={{ width: `${perf}%` }}
                         />
                       </div>
                     </div>
-                  )}
+                  ) : null}
+
                   <div className="member-development">
                     <div className="member-development-header">
                       <div className="member-development-title">
                         <LineChart size={14} aria-hidden />
                         <span>Evolução</span>
-                        {latestDev && (
+                        {latestDev ? (
                           <span className={`dev-trend dev-trend--${latestDev.trend}`}>
                             <TrendIcon size={12} aria-hidden />
                             {TREND_LABELS[latestDev.trend]}
-                            {latestDev.delta != null && latestDev.delta !== 0 && (
+                            {latestDev.delta != null && latestDev.delta !== 0 ? (
                               <span className="dev-trend-delta">
                                 {latestDev.delta > 0 ? '+' : ''}
                                 {latestDev.delta}%
                               </span>
-                            )}
+                            ) : null}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       <button
                         type="button"
@@ -611,23 +669,28 @@ export function MinhaEquipePage() {
                           const EntryTrendIcon = trendIcon(entry.trend);
                           return (
                             <li key={entry.id} className="dev-timeline-item">
-                              <span className="dev-timeline-date">{formatCheckInDate(entry.createdAt)}</span>
+                              <span className="dev-timeline-date">
+                                {formatCheckInDate(entry.createdAt)}
+                              </span>
                               <span className="dev-timeline-score">{entry.score}%</span>
                               <span className={`dev-timeline-trend dev-trend--${entry.trend}`}>
                                 <EntryTrendIcon size={11} aria-hidden />
                               </span>
-                              {entry.notes && <span className="dev-timeline-notes">{entry.notes}</span>}
+                              {entry.notes ? (
+                                <span className="dev-timeline-notes">{entry.notes}</span>
+                              ) : null}
                             </li>
                           );
                         })}
                       </ul>
                     ) : (
                       <p className="member-development-empty">
-                        Nenhum check-in ainda. Registre a evolução para acompanhar melhorias ao longo do tempo.
+                        Nenhum check-in ainda. Registre a evolução para acompanhar ao longo do tempo.
                       </p>
                     )}
                   </div>
-                  {member.skills && member.skills.length > 0 && (
+
+                  {member.skills && member.skills.length > 0 ? (
                     <div className="member-skills">
                       <span className="skills-label">Habilidades</span>
                       <div className="skills-tags">
@@ -636,16 +699,21 @@ export function MinhaEquipePage() {
                             {skill}
                           </span>
                         ))}
-                        {member.skills.length > 4 && (
+                        {member.skills.length > 4 ? (
                           <span className="skill-tag more">+{member.skills.length - 4}</span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
-                  )}
+                  ) : null}
+
                   <div className="member-card-footer">
                     <span
                       className={`status-badge ${
-                        member.status === 'active' ? 'success' : member.status === 'remote' ? 'info' : 'warning'
+                        member.status === 'active'
+                          ? 'success'
+                          : member.status === 'remote'
+                            ? 'info'
+                            : 'warning'
                       }`}
                     >
                       {STATUS_LABELS[member.status]}
@@ -654,23 +722,37 @@ export function MinhaEquipePage() {
                       <button
                         type="button"
                         className="action-button"
+                        onClick={() => void copyPortalLink(member)}
+                        aria-label="Copiar link do portal do colaborador"
+                        title="Copiar link: o membro vê só as ações atribuídas a ele"
+                      >
+                        <Link2 size={16} aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="action-button"
                         onClick={() => sendDevelopmentEmail(member)}
                         disabled={emailSendingId === member.id}
                         aria-label="Enviar e-mail de desenvolvimento"
                         title={
                           member.email
-                            ? 'Enviar resumo de desenvolvimento por e-mail'
+                            ? 'Enviar resumo + link do portal por e-mail'
                             : 'Cadastre o e-mail do membro'
                         }
                       >
                         {emailSendingId === member.id ? (
-                          <Loader2 size={16} className="spinner" />
+                          <Loader2 size={16} className="spinner" aria-hidden />
                         ) : (
-                          <Send size={16} />
+                          <Send size={16} aria-hidden />
                         )}
                       </button>
-                      <button type="button" className="action-button" onClick={() => openEdit(member)} aria-label="Editar">
-                        <Pencil size={16} />
+                      <button
+                        type="button"
+                        className="action-button"
+                        onClick={() => openEdit(member)}
+                        aria-label="Editar"
+                      >
+                        <Pencil size={16} aria-hidden />
                       </button>
                       <button
                         type="button"
@@ -678,7 +760,7 @@ export function MinhaEquipePage() {
                         onClick={() => remove(member.id)}
                         aria-label="Remover"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={16} aria-hidden />
                       </button>
                     </div>
                   </div>
@@ -715,8 +797,8 @@ export function MinhaEquipePage() {
             }}
           >
             <p className="membro-modal-hint">
-              Registre a nota atual e observações. O sistema compara com o último check-in e indica se o membro
-              melhorou, piorou ou manteve o ritmo.
+              Registre a nota atual e observações. O sistema compara com o último check-in e indica se houve
+              avanço, queda ou estabilidade.
             </p>
             {checkInError && (
               <p className="membro-field-error" role="alert">

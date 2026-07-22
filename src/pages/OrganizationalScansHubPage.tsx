@@ -55,7 +55,7 @@ export function OrganizationalScansHubPage() {
   const cycleNumber = activeCycle?.cycleNumber ?? 1;
   const previousCycleNumber = Math.max(1, cycleNumber - 1);
   const isVersionTwoPlus = cycleNumber >= 2 || Boolean(locationState?.fromEvolutionLoop) || Boolean(evolution);
-  const { locks, setLocks, cycle } = usePhaseLock('diagnostic');
+  const { locks, setLocks, cycle, progress, setProgress } = usePhaseLock('diagnostic');
 
   const scanAnswers = useMemo(
     () => parseOrganizationalScanData(formData[ORGANIZATIONAL_SCAN_DATA_KEY]),
@@ -108,12 +108,6 @@ export function OrganizationalScansHubPage() {
 
   return (
     <div className="organizational-scans-page">
-      <PhaseLockBanner
-        phase="diagnostic"
-        locks={locks}
-        cycle={cycle}
-        onLocksChange={setLocks}
-      />
       <header className="organizational-scans-hero sprint-wave-header">
         <div className="sprint-wave-title-group">
           <div className="sprint-wave-icon-wrapper" aria-hidden>
@@ -149,6 +143,14 @@ export function OrganizationalScansHubPage() {
           </div>
         </div>
       </header>
+      <PhaseLockBanner
+        phase="diagnostic"
+        locks={locks}
+        cycle={cycle}
+        onLocksChange={setLocks}
+        progress={progress}
+        onProgressChange={setProgress}
+      />
 
       <section className="organizational-scans-picker" aria-labelledby="scan-picker-title">
         <h2 id="scan-picker-title">Escolha um tema para o diagnóstico</h2>
@@ -257,7 +259,7 @@ export function OrganizationalScansHubPage() {
                 ))}
               </ul>
               <p className="cycle-briefing-rag-note">
-                A memória RAG do projeto permanece ativa: o Solution Pick e a IA usam o contexto
+                A memória do projeto permanece ativa: o Solution Pick e a IA usam o contexto
                 acumulado dos ciclos anteriores para personalizar recomendações.
               </p>
             </div>

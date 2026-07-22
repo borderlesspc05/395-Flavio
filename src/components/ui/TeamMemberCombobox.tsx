@@ -17,6 +17,8 @@ interface TeamMemberComboboxProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   id?: string;
+  /** Link “Adicionar à equipe” — desligado por padrão (evita sair do fluxo). */
+  showAddToTeam?: boolean;
 }
 
 function memberName(m: TeamMemberLite) {
@@ -29,6 +31,7 @@ export function TeamMemberCombobox({
   onChange,
   disabled,
   id,
+  showAddToTeam = false,
 }: TeamMemberComboboxProps) {
   const [members, setMembers] = useState<TeamMemberLite[]>([]);
   const [query, setQuery] = useState(value);
@@ -116,8 +119,8 @@ export function TeamMemberCombobox({
   };
 
   return (
-    <label className="team-member-combobox">
-      <span>{label}</span>
+    <label className={`team-member-combobox${label ? '' : ' is-compact'}`}>
+      {label ? <span>{label}</span> : null}
       <div className="team-member-combobox__field" ref={fieldRef}>
         <UserRound size={14} aria-hidden />
         <input
@@ -158,7 +161,7 @@ export function TeamMemberCombobox({
             document.body,
           )
         : null}
-      {loaded && query.trim() && !exactMatch ? (
+      {showAddToTeam && loaded && query.trim() && !exactMatch ? (
         <Link to="/dashboard/equipe" className="team-member-combobox__add">
           <UserPlus size={14} aria-hidden />
           Adicionar à equipe

@@ -43,7 +43,8 @@ export function HistoricoPage() {
                     <strong>Avaliação</strong> — o que funcionou e o que não
                   </li>
                   <li>
-                    <strong>Insights</strong> — podem virar cards herdados no Design
+                    <strong>Insights</strong> — até 3 iniciativas para o próximo ciclo (cards
+                    herdados no Design)
                   </li>
                   <li>
                     <strong>Novo ciclo</strong> — escolha diagnóstico completo ou focado no hub de

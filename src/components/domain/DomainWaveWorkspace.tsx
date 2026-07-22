@@ -44,7 +44,7 @@ import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../../utils/api
 import { PhaseInfoButton } from '../ui/PhaseInfoButton';
 import { PhaseLockBanner } from '../ui/PhaseLockBanner';
 import { usePhaseLock } from '../../hooks/usePhaseLock';
-import { lockSprintPhase, getPhaseLocksFromCycle, isPhaseLocked } from '../../services/phaseLock';
+import { concludeSprintPhase, PHASE_PATHS } from '../../services/phaseLock';
 
 const AUTO_SAVE_MS = 2500;
 
@@ -85,7 +85,7 @@ interface Props {
 
 export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
   const navigate = useViewTransitionNavigate();
-  const { locks, setLocks, locked: phaseLocked, cycle } = usePhaseLock('domain');
+  const { locks, setLocks, locked: phaseLocked, cycle, progress, setProgress } = usePhaseLock('domain');
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -101,22 +101,6 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formDataRef = useRef<InitialFormData | null>(null);
   const persistInFlightRef = useRef(false);
-
-  // Domínio liberado ⇒ Difusão (e anteriores) travados.
-  useEffect(() => {
-    if (!cycle?.id) return;
-    let cancelled = false;
-    const sealPrior = async () => {
-      const current = getPhaseLocksFromCycle(cycle);
-      if (isPhaseLocked(current, 'diffusion')) return;
-      const next = await lockSprintPhase(cycle, 'diffusion');
-      if (!cancelled) setLocks(next);
-    };
-    void sealPrior();
-    return () => {
-      cancelled = true;
-    };
-  }, [cycle?.id, cycle, setLocks]);
 
   const load = useCallback(async (uid: string) => {
     skipAutoSaveRef.current = true;
@@ -299,13 +283,16 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
     if (!domainData) return;
     const ok = await persist(domainData);
     if (ok) {
-      if (cycle) {
-        await lockSprintPhase(cycle, 'domain');
-        await lockSprintPhase(cycle, 'loopClosed');
+      const result = await concludeSprintPhase(cycle, 'domain');
+      if (!result.ok) {
+        setNotice(result.message ?? 'Não foi possível concluir o Domínio.');
+        return;
       }
-      navigate('/dashboard/historico', { state: { cycleClosed: true } });
+      setProgress(result.state);
+      setLocks(result.state.phaseLocks);
+      navigate(result.nextPath ?? PHASE_PATHS.loopClosed, { state: { cycleClosed: true } });
     }
-  }, [domainData, persist, navigate, cycle]);
+  }, [domainData, persist, navigate, cycle, setProgress, setLocks]);
 
   useEffect(() => {
     if (!notice) return;
@@ -321,7 +308,6 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
 
   return (
     <div className={`domain-wave phase-locked-shell${phaseLocked ? ' is-locked' : ''}${hasEntered ? ' is-entered' : ''}`}>
-      <PhaseLockBanner phase="domain" locks={locks} cycle={cycle} onLocksChange={setLocks} />
       <div className="domain-wave-bg" aria-hidden>
         <div className="domain-wave-glow domain-wave-glow--1" />
         <div className="domain-wave-glow domain-wave-glow--2" />
@@ -379,6 +365,14 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
           </dl>
         </aside>
       </header>
+      <PhaseLockBanner
+        phase="domain"
+        locks={locks}
+        cycle={cycle}
+        onLocksChange={setLocks}
+        progress={progress}
+        onProgressChange={setProgress}
+      />
 
       <nav className="domain-wave-nav domain-reveal domain-reveal--1" aria-label="Navegação dos blocos">
         {BLOCK_NAV.map((item) => (

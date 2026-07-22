@@ -15,6 +15,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock,
+  CheckCircle2,
+  RotateCcw,
+  Circle,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -28,16 +31,21 @@ import { clearWorkspaceEntered } from '../services/projectWorkspace';
 import { AnimatedOutlet } from './navigation/AnimatedOutlet';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import {
-  createEmptyPhaseLocks,
-  getPhaseLocksFromCycle,
-  isPhaseLocked,
-  type PhaseLocks,
+  createInitialSprintProgress,
+  getPhaseAccess,
+  getSprintProgressFromCycle,
+  isPathAllowedForProgress,
+  PHASE_LABELS,
+  PHASE_PATHS,
+  type NavSprintPhase,
+  type PhaseAccess,
   type SprintPhase,
+  type SprintProgressState,
 } from '../services/phaseLock';
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = 'mm.sidebar.collapsed';
 
-const NAV_PHASE_BY_ID: Partial<Record<string, SprintPhase | SprintPhase[]>> = {
+const NAV_PHASE_BY_ID: Partial<Record<string, SprintPhase>> = {
   formulario: 'diagnostic',
   consultoria: 'design',
   objetivos: 'diffusion',
@@ -45,11 +53,12 @@ const NAV_PHASE_BY_ID: Partial<Record<string, SprintPhase | SprintPhase[]>> = {
   historico: 'loopClosed',
 };
 
-function navItemIsLocked(itemId: string, locks: PhaseLocks): boolean {
-  const phase = NAV_PHASE_BY_ID[itemId];
-  if (!phase) return false;
-  if (Array.isArray(phase)) return phase.some((p) => isPhaseLocked(locks, p));
-  return isPhaseLocked(locks, phase);
+function accessTitle(label: string, access: PhaseAccess | null): string {
+  if (!access) return label;
+  if (access === 'completed') return `${label} · concluída (somente leitura)`;
+  if (access === 'locked') return `${label} · bloqueada — conclua a fase atual primeiro`;
+  if (access === 'reopened') return `${label} · reaberta`;
+  return `${label} · fase atual`;
 }
 
 export function DashboardLayout() {
@@ -61,9 +70,10 @@ export function DashboardLayout() {
   const mainRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [phaseLocks, setPhaseLocks] = useState<PhaseLocks>(() =>
-    getPhaseLocksFromCycle(activeCycle),
+  const [progress, setProgress] = useState<SprintProgressState>(() =>
+    getSprintProgressFromCycle(activeCycle),
   );
+  const [navNotice, setNavNotice] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(SIDEBAR_COLLAPSE_STORAGE_KEY) === '1';
@@ -91,27 +101,54 @@ export function DashboardLayout() {
 
   useEffect(() => {
     if (!activeCycle?.id) {
-      setPhaseLocks(createEmptyPhaseLocks());
+      setProgress(createInitialSprintProgress());
       return;
     }
-    const next = getPhaseLocksFromCycle(activeCycle);
-    setPhaseLocks(next);
-  }, [activeCycle?.id, activeCycle?.phaseLocks, location.pathname]);
+    setProgress(getSprintProgressFromCycle(activeCycle));
+  }, [
+    activeCycle?.id,
+    activeCycle?.sprintProgress,
+    activeCycle?.phaseLocks,
+    activeCycle?.reopenedPhase,
+    activeCycle?.phaseEvents?.length,
+    location.pathname,
+  ]);
 
   useEffect(() => {
     const onLocksChanged = (event: Event) => {
-      const detail = (event as CustomEvent<{ cycleId?: string; locks?: PhaseLocks }>).detail;
+      const detail = (
+        event as CustomEvent<{ cycleId?: string; progress?: SprintProgressState }>
+      ).detail;
       if (detail?.cycleId && activeCycle?.id && detail.cycleId !== activeCycle.id) return;
-      if (detail?.locks) {
-        setPhaseLocks(detail.locks);
+      if (detail?.progress) {
+        setProgress(detail.progress);
       } else {
-        setPhaseLocks(getPhaseLocksFromCycle(activeCycle));
+        setProgress(getSprintProgressFromCycle(activeCycle));
       }
       void refreshCycles?.();
     };
     window.addEventListener('mm:phase-locks-changed', onLocksChanged);
     return () => window.removeEventListener('mm:phase-locks-changed', onLocksChanged);
   }, [activeCycle, refreshCycles]);
+
+  // Guarda de rota: fases futuras por URL → redirect
+  useEffect(() => {
+    if (!activeCycle?.id) return;
+    const state = getSprintProgressFromCycle(activeCycle);
+    if (isPathAllowedForProgress(location.pathname, state.sprintProgress, state.reopenedPhase)) {
+      return;
+    }
+    const target = PHASE_PATHS[state.sprintProgress];
+    const label = PHASE_LABELS[state.sprintProgress];
+    setNavNotice(`Conclua ${label} para liberar esta etapa.`);
+    navigate(target, { replace: true });
+  }, [activeCycle, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (!navNotice) return;
+    const timer = window.setTimeout(() => setNavNotice(null), 4500);
+    return () => window.clearTimeout(timer);
+  }, [navNotice]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -158,10 +195,23 @@ export function DashboardLayout() {
         location.pathname === item.path ||
         (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
         (item.id === 'formulario' && isDiagnosticRoute) ||
-        (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe')
+        (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe'),
     )?.label ?? 'Sprint';
 
-  const handleNav = (_id: string, path: string) => {
+  const handleNav = (id: string, path: string, label: string) => {
+    const phase = NAV_PHASE_BY_ID[id];
+    if (phase) {
+      const access = getPhaseAccess(progress, phase);
+      if (access === 'locked') {
+        const currentLabel = PHASE_LABELS[progress.sprintProgress as NavSprintPhase];
+        setNavNotice(`Conclua ${currentLabel} para liberar ${label}.`);
+        setSidebarOpen(false);
+        return;
+      }
+      if (access === 'completed') {
+        setNavNotice(`${label} já foi finalizada. Você pode visualizar ou reabrir a etapa.`);
+      }
+    }
     navigate(path);
     setSidebarOpen(false);
   };
@@ -226,19 +276,29 @@ export function DashboardLayout() {
                 (item.id === 'dashboard' && location.pathname === '/dashboard/inicio') ||
                 (item.id === 'formulario' && isDiagnosticRoute) ||
                 (item.id === 'equipe' && location.pathname === '/dashboard/minha-equipe');
-              const locked = navItemIsLocked(item.id, phaseLocks);
-              const lockTitle = locked
-                ? `${item.label} · concluído (somente visualização)`
-                : item.label;
+              const phase = NAV_PHASE_BY_ID[item.id];
+              const access = phase ? getPhaseAccess(progress, phase) : null;
+              const title = accessTitle(item.label, access);
+              const stateClass =
+                access === 'completed'
+                  ? 'is-phase-completed'
+                  : access === 'locked'
+                    ? 'is-phase-future-locked'
+                    : access === 'reopened'
+                      ? 'is-phase-reopened'
+                      : access === 'current'
+                        ? 'is-phase-current'
+                        : '';
               return (
                 <button
                   key={item.id}
                   type="button"
-                  className={`nav-item ${active ? 'active' : ''} ${locked ? 'is-phase-locked' : ''}`}
-                  onClick={() => handleNav(item.id, item.path)}
+                  className={`nav-item ${active ? 'active' : ''} ${stateClass}`}
+                  onClick={() => handleNav(item.id, item.path, item.label)}
                   aria-current={active ? 'page' : undefined}
-                  aria-label={lockTitle}
-                  title={sidebarCollapsed || locked ? lockTitle : undefined}
+                  aria-label={title}
+                  aria-disabled={access === 'locked' ? true : undefined}
+                  title={sidebarCollapsed || access ? title : undefined}
                 >
                   {item.id === 'conta' && photoURL ? (
                     <UserAvatar
@@ -252,8 +312,14 @@ export function DashboardLayout() {
                     <Icon className="nav-icon" size={20} aria-hidden />
                   )}
                   <span className="nav-label">{item.label}</span>
-                  {locked ? (
-                    <Lock className="nav-lock-icon" size={14} aria-hidden />
+                  {access === 'completed' ? (
+                    <CheckCircle2 className="nav-phase-icon" size={14} aria-hidden />
+                  ) : access === 'locked' ? (
+                    <Lock className="nav-phase-icon" size={14} aria-hidden />
+                  ) : access === 'reopened' ? (
+                    <RotateCcw className="nav-phase-icon" size={14} aria-hidden />
+                  ) : access === 'current' ? (
+                    <Circle className="nav-phase-icon is-current-dot" size={10} aria-hidden />
                   ) : null}
                 </button>
               );
@@ -305,6 +371,11 @@ export function DashboardLayout() {
             <div className="dashboard-header__row dashboard-header__row--secondary">
               <CycleSelector />
             </div>
+            {navNotice ? (
+              <p className="dashboard-phase-notice" role="status">
+                {navNotice}
+              </p>
+            ) : null}
           </header>
           <main
             ref={mainRef}

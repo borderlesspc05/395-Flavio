@@ -9,6 +9,11 @@ import {
   createDevelopmentEntry,
   listDevelopmentEntries,
 } from '../services/teamMemberDevelopment';
+import {
+  buildMemberPortalUrl,
+  ensureMemberPortalToken,
+  generatePortalToken,
+} from '../services/memberPortal';
 
 const router = Router();
 
@@ -92,7 +97,13 @@ function buildMemberPatch(body: Record<string, unknown>): Partial<TeamMember> {
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const items = await listByUser<TeamMember>(COLLECTIONS.teamMembers, req.userId);
-    res.json(items);
+    const withTokens = await Promise.all(items.map((m) => ensureMemberPortalToken(m)));
+    res.json(
+      withTokens.map((m) => ({
+        ...m,
+        portalUrl: buildMemberPortalUrl(m),
+      }))
+    );
   } catch (err) {
     next(err);
   }
@@ -123,6 +134,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       status,
       skills: patch.skills,
       performance: patch.performance,
+      portalToken: generatePortalToken(),
       ativo: patch.ativo ?? statusToAtivo(status) ?? true,
       createdAt: nowIso(),
       updatedAt: nowIso(),
@@ -134,7 +146,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       entidadeId: id,
     });
 
-    res.status(201).json(member);
+    res.status(201).json({ ...member, portalUrl: buildMemberPortalUrl(member) });
   } catch (err) {
     next(err);
   }
@@ -202,6 +214,30 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
 
     const updated = await update<TeamMember>(COLLECTIONS.teamMembers, id, patch);
     res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/portal-link', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = String(req.params.id);
+    const existing = await getById<TeamMember>(COLLECTIONS.teamMembers, id);
+    if (!existing || existing.userId !== req.userId) {
+      throw new AppError(404, 'Team member not found');
+    }
+    const rotate = Boolean(req.body?.rotate);
+    let member = await ensureMemberPortalToken(existing);
+    if (rotate) {
+      const portalToken = generatePortalToken();
+      member =
+        (await update<TeamMember>(COLLECTIONS.teamMembers, id, { portalToken })) ?? {
+          ...member,
+          portalToken,
+        };
+    }
+    const portalUrl = buildMemberPortalUrl(member);
+    res.json({ portalUrl, memberId: member.id });
   } catch (err) {
     next(err);
   }

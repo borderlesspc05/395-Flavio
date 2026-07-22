@@ -1,6 +1,17 @@
 export type DeliveryStatus = 'verde' | 'amarelo' | 'vermelho';
 export type ActionCanvasSignOff = 'pendente' | 'sim' | 'nao';
 
+export type ChecklistProgress = 0 | 25 | 50 | 75 | 100;
+
+export interface DeliveryChecklistItem {
+  id: string;
+  texto: string;
+  done?: boolean;
+  responsavel?: string;
+  progresso?: ChecklistProgress;
+  prazo?: string;
+}
+
 export interface ActionCanvasDelivery {
   id: string;
   entrega: string;
@@ -9,12 +20,22 @@ export interface ActionCanvasDelivery {
   status: DeliveryStatus;
   evidencia: string;
   checklist?: string[];
+  checklistItems?: DeliveryChecklistItem[];
 }
+
+export type RiskImpact = 'alto' | 'medio' | 'baixo';
+export type RiskProbability = 'alta' | 'media' | 'baixa';
+export type RiskStatus = 'nao_iniciado' | 'em_andamento' | 'mitigado' | 'monitorando';
 
 export interface ActionCanvasRisk {
   id: string;
   risco: string;
+  /** Plano / ação a tomar */
   acaoTomar: string;
+  impacto?: RiskImpact;
+  probabilidade?: RiskProbability;
+  responsavel?: string;
+  status?: RiskStatus;
 }
 
 export interface ActionCanvas {
@@ -75,6 +96,8 @@ export interface TeamMember {
   status?: TeamMemberStatus;
   skills?: string[];
   performance?: number;
+  /** Token opaco para o portal do colaborador (só tarefas atribuídas). */
+  portalToken?: string;
   ativo: boolean;
   createdAt: string;
   updatedAt: string;

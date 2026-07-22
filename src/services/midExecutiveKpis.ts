@@ -5,6 +5,7 @@ import { computeSustainabilityScore } from '../utils/domainWave';
 import { pickDaily, rotateDaily } from '../utils/dailyInsight';
 import { parseDomainWaveData } from './domainWaveStorage';
 import { ensureMidScanBaseline, getMidScanBaseline } from './midBaseline';
+import { deliveryProgressWeight } from '../utils/deliveryChecklist';
 
 interface ReportLike {
   stats?: {
@@ -100,7 +101,7 @@ function computeActionVelocity(canvases: ActionCanvas[], objectives: Objective[]
   for (const canvas of canvases) {
     for (const entrega of canvas.entregas) {
       if (!entrega.entrega?.trim()) continue;
-      weighted.push(actionWeight(classifyAction(entrega.status, entrega.prazo)));
+      weighted.push(deliveryProgressWeight(entrega));
     }
   }
 
@@ -122,6 +123,9 @@ function computeParticipation(canvases: ActionCanvas[], objectives: Objective[],
     if (canvas.owner?.trim()) activeOwners.add(canvas.owner.trim().toLowerCase());
     for (const e of canvas.entregas) {
       if (e.responsavel?.trim()) activeOwners.add(e.responsavel.trim().toLowerCase());
+      for (const item of e.checklistItems ?? []) {
+        if (item.responsavel?.trim()) activeOwners.add(item.responsavel.trim().toLowerCase());
+      }
     }
   }
   for (const obj of objectives) {
@@ -226,7 +230,7 @@ export function buildExecutiveKpis(input: BuildExecutiveKpisInput): MidExecutive
   const objectiveRate = totalObjectives ? Math.round((doneObjectives / totalObjectives) * 100) : 0;
 
   const allDeliveries = input.canvases.flatMap((c) => c.entregas.filter((e) => e.entrega?.trim()));
-  const greenCount = allDeliveries.filter((e) => e.status === 'verde').length;
+  const greenCount = allDeliveries.filter((e) => deliveryProgressWeight(e) >= 80).length;
   const deliveryGreenRate = allDeliveries.length
     ? Math.round((greenCount / allDeliveries.length) * 100)
     : 0;

@@ -1,35 +1,99 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCycle } from '../context/CycleContext';
 import {
-  getPhaseLocksFromCycle,
-  lockSprintPhase,
+  concludeSprintPhase,
+  getPhaseAccess,
+  getSprintProgressFromCycle,
+  isPhaseEditable,
+  reopenSprintPhase,
+  type NavSprintPhase,
+  type PhaseAccess,
   type PhaseLocks,
   type SprintPhase,
+  type SprintProgressState,
 } from '../services/phaseLock';
-import { isPhaseLocked } from '../types/phaseLock';
 
 export function usePhaseLock(phase: SprintPhase) {
   const { activeCycle, refreshCycles } = useCycle();
-  const [locks, setLocks] = useState<PhaseLocks>(() => getPhaseLocksFromCycle(activeCycle));
+  const [progress, setProgress] = useState<SprintProgressState>(() =>
+    getSprintProgressFromCycle(activeCycle),
+  );
 
   useEffect(() => {
-    setLocks(getPhaseLocksFromCycle(activeCycle));
-  }, [activeCycle?.id, activeCycle?.phaseLocks]);
+    setProgress(getSprintProgressFromCycle(activeCycle));
+  }, [
+    activeCycle?.id,
+    activeCycle?.sprintProgress,
+    activeCycle?.phaseLocks,
+    activeCycle?.reopenedPhase,
+    activeCycle?.phaseEvents?.length,
+  ]);
 
-  const locked = isPhaseLocked(locks, phase);
+  useEffect(() => {
+    const onChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ cycleId?: string; progress?: SprintProgressState }>).detail;
+      if (detail?.cycleId && activeCycle?.id && detail.cycleId !== activeCycle.id) return;
+      if (detail?.progress) {
+        setProgress(detail.progress);
+      } else {
+        setProgress(getSprintProgressFromCycle(activeCycle));
+      }
+    };
+    window.addEventListener('mm:phase-locks-changed', onChange);
+    return () => window.removeEventListener('mm:phase-locks-changed', onChange);
+  }, [activeCycle]);
+
+  const access: PhaseAccess = useMemo(
+    () => getPhaseAccess(progress, phase),
+    [progress, phase],
+  );
+  const locked = access === 'completed' || access === 'locked';
+  const editable = isPhaseEditable(progress.sprintProgress, phase, progress.reopenedPhase);
 
   const lockCurrent = useCallback(async () => {
-    const next = await lockSprintPhase(activeCycle, phase);
-    setLocks(next);
+    const result = await concludeSprintPhase(activeCycle, phase);
+    setProgress(result.state);
     await refreshCycles?.();
-    return next;
+    return result.state.phaseLocks;
   }, [activeCycle, phase, refreshCycles]);
 
+  const concludeCurrent = useCallback(async () => {
+    const result = await concludeSprintPhase(activeCycle, phase);
+    setProgress(result.state);
+    await refreshCycles?.();
+    return result;
+  }, [activeCycle, phase, refreshCycles]);
+
+  const reopenCurrent = useCallback(
+    async (reason?: string) => {
+      const result = await reopenSprintPhase(activeCycle, phase, reason);
+      setProgress(result.state);
+      await refreshCycles?.();
+      return result;
+    },
+    [activeCycle, phase, refreshCycles],
+  );
+
+  const setLocks = useCallback((locks: PhaseLocks) => {
+    setProgress((prev) => ({ ...prev, phaseLocks: locks }));
+  }, []);
+
   return {
-    locks,
+    locks: progress.phaseLocks,
     setLocks,
-    locked,
+    locked: locked && access === 'completed',
+    /** true quando fase está concluída (somente leitura) */
+    completed: access === 'completed',
+    /** true quando fase futura inacessível */
+    futureLocked: access === 'locked',
+    access,
+    editable,
+    progress,
+    setProgress,
     lockCurrent,
+    concludeCurrent,
+    reopenCurrent,
     cycle: activeCycle,
+    currentPhase: progress.sprintProgress as NavSprintPhase,
   };
 }

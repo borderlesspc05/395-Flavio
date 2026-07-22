@@ -44,14 +44,14 @@ function defaultSuggestions(): SuggestedActionCanvasDraft[] {
       entregas: [
         {
           entrega: 'Definir escopo e critérios de sucesso da mudança',
-          responsavel: 'Owner',
+          responsavel: '',
           prazo: defaultPrazo(14),
           status: 'amarelo',
           evidencia: 'Documento ou workshop de alinhamento',
         },
         {
           entrega: 'Executar piloto da solução escolhida no Gate Zero',
-          responsavel: 'Equipe núcleo',
+          responsavel: '',
           prazo: defaultPrazo(45),
           status: 'amarelo',
         },
@@ -111,7 +111,7 @@ function normalizeDraft(raw: unknown): SuggestedActionCanvasDraft | null {
       : [
           {
             entrega: 'Detalhar primeira entrega',
-            responsavel: String(o.owner ?? 'Owner'),
+            responsavel: String(o.sponsor ?? '').trim(),
             prazo: defaultPrazo(21),
             status: 'amarelo' as DeliveryStatus,
           },
@@ -168,13 +168,14 @@ Com base EXCLUSIVAMENTE na memoria Magnus Waves abaixo (diagnostico 1.1-1.5, Gat
 
 Cada Action Canvas e uma iniciativa de mudanca pratica com:
 - nomeIniciativa, objetivoEspecifico, owner, sponsor, prazoFinal (YYYY-MM-DD)
-- entregas: 2 a 5 itens com entrega, responsavel, prazo (YYYY-MM-DD), status (verde|amarelo|vermelho), evidencia opcional
+- entregas: 2 a 5 itens com entrega, responsavel (nome do Sponsor daquela entrega — NUNCA use "Owner"), prazo (YYYY-MM-DD), status (verde|amarelo|vermelho), evidencia opcional
 - riscos: 1 a 3 itens com risco e acaoTomar
 - insightOrigem: frase curta citando evidencia do diagnostico ou do Gate (ex: "1.2 Gap Scan: ...")
 
 Regras:
 - Priorize mudancas derivadas do diagnostico e do caminho A/B do Gate Zero.
 - Nao duplique canvases existentes: ${existingNames}
+- owner = quem conduz o plano; sponsor = sponsor executivo. Em entregas.responsavel use o sponsor (pessoa), nunca a palavra "Owner".
 - Seja especifico com nomes de papeis plausiveis (nao invente pessoas reais).
 - signOff sempre pendente (nao incluir signOff no JSON).
 

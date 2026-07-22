@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronDown, FolderKanban, Layers, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { ViewTransitionLink } from './navigation/ViewTransitionLink';
 import { usePlan } from '../context/PlanContext';
 import { canCreateMoreCycles, formatCycleUsage } from '../utils/cycleLimits';
 import { useCycle } from '../context/CycleContext';
+
+const PREVIEW_LIMIT = 3;
 
 export function CycleSelector() {
   const navigate = useViewTransitionNavigate();
@@ -20,23 +22,44 @@ export function CycleSelector() {
   } = useCycle();
   const { maxOpenCycles, maxOpenCyclesLabel, plan } = usePlan();
   const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const canCreateMore = canCreateMoreCycles(cycles, maxOpenCycles);
   const usageLabel = formatCycleUsage(cycles.length, maxOpenCycles);
+  const hasMore = cycles.length > PREVIEW_LIMIT;
+
+  const visibleCycles = useMemo(() => {
+    if (showAll || !hasMore) return cycles;
+
+    const preview = cycles.slice(0, PREVIEW_LIMIT);
+    const activeId = activeCycle?.id;
+    if (!activeId || preview.some((c) => c.id === activeId)) return preview;
+
+    const active = cycles.find((c) => c.id === activeId);
+    if (!active) return preview;
+    // Garante o ciclo ativo na lista curta.
+    return [active, ...preview.slice(0, PREVIEW_LIMIT - 1)];
+  }, [activeCycle?.id, cycles, hasMore, showAll]);
+
+  const closeMenu = () => {
+    setOpen(false);
+    setShowAll(false);
+    setConfirmDeleteId(null);
+  };
 
   const handleSwitch = async (cycleId: string) => {
     if (confirmDeleteId || deletingId) return;
-    setOpen(false);
+    closeMenu();
     await switchCycle(cycleId);
   };
 
   const handleNewCycle = async () => {
     if (
       !window.confirm(
-        'Criar novo ciclo? O diagnóstico atual será arquivado e você precisará preencher um novo diagnóstico.'
+        'Criar novo ciclo? O diagnóstico atual será arquivado e você precisará preencher um novo diagnóstico.',
       )
     ) {
       return;
@@ -51,7 +74,7 @@ export function CycleSelector() {
       }
     } finally {
       setBusy(false);
-      setOpen(false);
+      closeMenu();
     }
   };
 
@@ -88,7 +111,13 @@ export function CycleSelector() {
       <button
         type="button"
         className="cycle-selector__trigger"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (open) {
+            closeMenu();
+          } else {
+            setOpen(true);
+          }
+        }}
         aria-expanded={open}
         aria-haspopup="listbox"
       >
@@ -112,10 +141,7 @@ export function CycleSelector() {
             type="button"
             className="cycle-selector__backdrop"
             aria-label="Fechar seleção de ciclo"
-            onClick={() => {
-              setOpen(false);
-              setConfirmDeleteId(null);
-            }}
+            onClick={closeMenu}
           />
           <div className="cycle-selector__menu" role="listbox" aria-label="Ciclos de diagnóstico">
             <div className="cycle-selector__menu-head">
@@ -123,104 +149,6 @@ export function CycleSelector() {
               <span className="cycle-selector__menu-usage">{usageLabel}</span>
             </div>
 
-            {cycles.length === 0 ? (
-              <p className="cycle-selector__empty">Nenhum processo ainda.</p>
-            ) : (
-              cycles.map((cycle) => {
-                const isConfirming = confirmDeleteId === cycle.id;
-                const isDeleting = deletingId === cycle.id;
-
-                if (isConfirming) {
-                  return (
-                    <div
-                      key={cycle.id}
-                      className="cycle-selector__confirm"
-                      role="alertdialog"
-                      aria-labelledby={`cycle-delete-title-${cycle.id}`}
-                    >
-                      <p id={`cycle-delete-title-${cycle.id}`} className="cycle-selector__confirm-text">
-                        Excluir <strong>{cycle.label}</strong>? Os dados deste processo serão removidos
-                        permanentemente.
-                      </p>
-                      <div className="cycle-selector__confirm-actions">
-                        <button
-                          type="button"
-                          className="cycle-selector__confirm-cancel"
-                          disabled={isDeleting}
-                          onClick={() => setConfirmDeleteId(null)}
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          type="button"
-                          className="cycle-selector__confirm-delete"
-                          disabled={isDeleting}
-                          onClick={() => void handleDelete(cycle.id)}
-                        >
-                          {isDeleting ? (
-                            <>
-                              <Loader2 size={13} className="spinning" aria-hidden />
-                              Excluindo…
-                            </>
-                          ) : (
-                            'Excluir'
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    key={cycle.id}
-                    className={`cycle-selector__row ${cycle.id === activeCycle?.id ? 'is-active' : ''}`}
-                  >
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={cycle.id === activeCycle?.id}
-                      className="cycle-selector__option"
-                      disabled={Boolean(deletingId) || switching}
-                      onClick={() => void handleSwitch(cycle.id)}
-                    >
-                      <span className="cycle-selector__option-copy">
-                        <span className="cycle-selector__option-title">{cycle.label}</span>
-                        <span className={`cycle-selector__status cycle-selector__status--${cycle.status}`}>
-                          {cycle.status === 'archived'
-                            ? 'Arquivado'
-                            : cycle.status === 'draft'
-                              ? 'Rascunho'
-                              : 'Ativo'}
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className="cycle-selector__delete"
-                      aria-label={`Excluir ${cycle.label}`}
-                      disabled={Boolean(deletingId) || switching || busy}
-                      onClick={(e) => requestDelete(cycle.id, e)}
-                    >
-                      <Trash2 size={14} aria-hidden />
-                    </button>
-                  </div>
-                );
-              })
-            )}
-
-            <button
-              type="button"
-              className="cycle-selector__hub"
-              onClick={() => {
-                setOpen(false);
-                setConfirmDeleteId(null);
-                navigate('/escolher-projeto', { state: { fromDashboard: true } });
-              }}
-            >
-              <FolderKanban size={14} aria-hidden />
-              Gerenciar projetos
-            </button>
             <button
               type="button"
               className="cycle-selector__new"
@@ -241,6 +169,124 @@ export function CycleSelector() {
                 <ViewTransitionLink to="/planos">Faça upgrade</ViewTransitionLink>.
               </p>
             )}
+
+            {cycles.length === 0 ? (
+              <p className="cycle-selector__empty">Nenhum processo ainda.</p>
+            ) : (
+              <>
+                {visibleCycles.map((cycle) => {
+                  const isConfirming = confirmDeleteId === cycle.id;
+                  const isDeleting = deletingId === cycle.id;
+
+                  if (isConfirming) {
+                    return (
+                      <div
+                        key={cycle.id}
+                        className="cycle-selector__confirm"
+                        role="alertdialog"
+                        aria-labelledby={`cycle-delete-title-${cycle.id}`}
+                      >
+                        <p
+                          id={`cycle-delete-title-${cycle.id}`}
+                          className="cycle-selector__confirm-text"
+                        >
+                          Excluir <strong>{cycle.label}</strong>? Os dados deste processo serão
+                          removidos permanentemente.
+                        </p>
+                        <div className="cycle-selector__confirm-actions">
+                          <button
+                            type="button"
+                            className="cycle-selector__confirm-cancel"
+                            disabled={isDeleting}
+                            onClick={() => setConfirmDeleteId(null)}
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            className="cycle-selector__confirm-delete"
+                            disabled={isDeleting}
+                            onClick={() => void handleDelete(cycle.id)}
+                          >
+                            {isDeleting ? (
+                              <>
+                                <Loader2 size={13} className="spinning" aria-hidden />
+                                Excluindo…
+                              </>
+                            ) : (
+                              'Excluir'
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={cycle.id}
+                      className={`cycle-selector__row ${cycle.id === activeCycle?.id ? 'is-active' : ''}`}
+                    >
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={cycle.id === activeCycle?.id}
+                        className="cycle-selector__option"
+                        disabled={Boolean(deletingId) || switching}
+                        onClick={() => void handleSwitch(cycle.id)}
+                      >
+                        <span className="cycle-selector__option-copy">
+                          <span className="cycle-selector__option-title">{cycle.label}</span>
+                          <span
+                            className={`cycle-selector__status cycle-selector__status--${cycle.status}`}
+                          >
+                            {cycle.status === 'archived'
+                              ? 'Arquivado'
+                              : cycle.status === 'draft'
+                                ? 'Rascunho'
+                                : 'Ativo'}
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="cycle-selector__delete"
+                        aria-label={`Excluir ${cycle.label}`}
+                        disabled={Boolean(deletingId) || switching || busy}
+                        onClick={(e) => requestDelete(cycle.id, e)}
+                      >
+                        <Trash2 size={14} aria-hidden />
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {hasMore ? (
+                  <button
+                    type="button"
+                    className="cycle-selector__more"
+                    onClick={() => setShowAll((v) => !v)}
+                    aria-expanded={showAll}
+                  >
+                    {showAll
+                      ? 'Mostrar menos'
+                      : `Mostrar mais (${cycles.length - visibleCycles.length})`}
+                  </button>
+                ) : null}
+              </>
+            )}
+
+            <button
+              type="button"
+              className="cycle-selector__hub"
+              onClick={() => {
+                closeMenu();
+                navigate('/escolher-projeto', { state: { fromDashboard: true } });
+              }}
+            >
+              <FolderKanban size={14} aria-hidden />
+              Gerenciar projetos
+            </button>
           </div>
         </>
       )}

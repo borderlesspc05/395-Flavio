@@ -129,24 +129,256 @@
   cursor: not-allowed;
 }
 
+/* —— Ciclo Sprint: título + % → barra → passos —— */
+.sprint-phase-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0 0 0.65rem;
+}
+
+.sprint-cycle-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 188, 125, 0.04), transparent 42%),
+    linear-gradient(165deg, rgba(18, 22, 30, 0.96), rgba(11, 14, 20, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* 1) Título + número — primeiro bloco */
+.sprint-cycle-progress__lede {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 0 0 0.4rem;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.14);
+}
+
+.sprint-cycle-progress__title {
+  margin: 0;
+  min-width: 0;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(1.02rem, 2.2vw, 1.18rem);
+  font-weight: 600;
+  color: #f3ead8;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.sprint-cycle-progress__metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.08rem;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.28rem 0.55rem 0.32rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 188, 125, 0.28);
+  background: rgba(255, 188, 125, 0.08);
+  color: #ffbc7d;
+  line-height: 1;
+}
+
+.sprint-cycle-progress__pct {
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.sprint-cycle-progress__pct-unit {
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+/* 2) Barra de progresso — logo abaixo do título */
+.sprint-cycle-progress__bar {
+  padding: 0 0.05rem;
+}
+
+.sprint-cycle-progress__track {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.sprint-cycle-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8a7358 0%, #af9270 48%, #ffbc7d 100%);
+  transform-origin: left center;
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprint-cycle-progress__fill {
+    transition: none;
+  }
+
+  .sprint-cycle-progress__step.is-viewing .sprint-cycle-progress__dot {
+    transform: none;
+  }
+}
+
+/* 3) Passos das ondas */
+.sprint-cycle-progress__steps {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0.2rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.3rem;
+}
+
+.sprint-cycle-progress__steps::before {
+  content: '';
+  position: absolute;
+  top: calc(0.35rem + 0.78rem);
+  left: 12.5%;
+  right: 12.5%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(175, 146, 112, 0.28) 12%,
+    rgba(175, 146, 112, 0.28) 88%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.sprint-cycle-progress__step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.sprint-cycle-progress__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.56rem;
+  height: 1.56rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(8, 12, 18, 0.92);
+  color: rgba(241, 235, 224, 0.55);
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.sprint-cycle-progress__step-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(241, 235, 224, 0.5);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sprint-cycle-progress__step.is-done .sprint-cycle-progress__dot {
+  background: rgba(110, 180, 120, 0.2);
+  border-color: rgba(140, 190, 150, 0.55);
+  color: #9ed4a6;
+}
+
+.sprint-cycle-progress__step.is-done .sprint-cycle-progress__step-label {
+  color: rgba(186, 220, 186, 0.85);
+}
+
+.sprint-cycle-progress__step.is-current .sprint-cycle-progress__dot,
+.sprint-cycle-progress__step.is-reopened .sprint-cycle-progress__dot {
+  background: rgba(255, 188, 125, 0.16);
+  border-color: rgba(255, 188, 125, 0.7);
+  color: #ffbc7d;
+  box-shadow: inset 0 0 0 1px rgba(255, 188, 125, 0.12);
+}
+
+.sprint-cycle-progress__step.is-current .sprint-cycle-progress__step-label,
+.sprint-cycle-progress__step.is-reopened .sprint-cycle-progress__step-label,
+.sprint-cycle-progress__step.is-viewing .sprint-cycle-progress__step-label {
+  color: #f3ead8;
+}
+
+.sprint-cycle-progress__step.is-locked .sprint-cycle-progress__dot {
+  opacity: 0.5;
+}
+
+.sprint-cycle-progress__step.is-viewing .sprint-cycle-progress__dot {
+  transform: scale(1.06);
+}
+
+@media (max-width: 520px) {
+  .sprint-cycle-progress {
+    padding: 0.85rem 0.9rem 0.9rem;
+    gap: 0.6rem;
+  }
+
+  .sprint-cycle-progress__lede {
+    gap: 0.65rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .sprint-cycle-progress__title {
+    font-size: 0.98rem;
+  }
+
+  .sprint-cycle-progress__pct {
+    font-size: 0.84rem;
+  }
+
+  .sprint-cycle-progress__step-label {
+    font-size: 0.62rem;
+  }
+
+  .sprint-cycle-progress__steps::before {
+    left: 14%;
+    right: 14%;
+  }
+}
+
 .phase-lock-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.85rem;
   flex-wrap: wrap;
-  margin: 0 0 1.25rem;
-  padding: 0.9rem 1.1rem;
-  border-radius: 14px;
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
   border: 1px solid rgba(175, 146, 112, 0.35);
   background: linear-gradient(160deg, rgba(28, 22, 18, 0.92), rgba(14, 18, 24, 0.9));
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .phase-lock-banner__copy {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.65rem;
   color: #ffbc7d;
   min-width: 0;
   flex: 1;
@@ -155,15 +387,17 @@
 .phase-lock-banner__copy strong {
   display: block;
   color: #f3ead8;
-  font-size: 0.95rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.1rem;
+  text-wrap: balance;
 }
 
 .phase-lock-banner__copy p {
   margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.4;
   color: rgba(241, 235, 224, 0.7);
+  text-wrap: pretty;
 }
 
 .phase-lock-banner__btn {
@@ -180,6 +414,26 @@
   cursor: pointer;
   font-family: inherit;
   flex-shrink: 0;
+  touch-action: manipulation;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.phase-lock-banner__btn:hover {
+  background: rgba(255, 188, 125, 0.18);
+  border-color: rgba(255, 188, 125, 0.6);
+}
+
+.phase-lock-banner__btn:active {
+  transform: translateY(1px);
+}
+
+.phase-lock-banner__btn:focus-visible {
+  outline: 2px solid rgba(255, 188, 125, 0.7);
+  outline-offset: 2px;
 }
 
 .phase-lock-banner__hint {
@@ -187,6 +441,44 @@
   color: rgba(241, 235, 224, 0.5);
   max-width: 12rem;
   text-align: right;
+}
+
+.phase-lock-banner--current {
+  border-color: rgba(110, 180, 120, 0.35);
+}
+
+.phase-lock-banner--current .phase-lock-banner__copy {
+  color: #8fd49a;
+}
+
+.phase-lock-banner--reopened {
+  border-color: rgba(255, 188, 125, 0.45);
+}
+
+.phase-lock-banner--completed {
+  border-color: rgba(175, 146, 112, 0.35);
+}
+
+.phase-lock-reason {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.75rem 1.25rem 0;
+  color: rgba(241, 235, 224, 0.75);
+  font-size: 0.82rem;
+}
+
+.phase-lock-reason textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 4.5rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(175, 146, 112, 0.3);
+  background: rgba(8, 12, 18, 0.65);
+  color: #f3ead8;
+  font-family: inherit;
+  font-size: 0.88rem;
 }
 
 .phase-lock-confirm-panel {

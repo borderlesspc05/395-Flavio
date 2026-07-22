@@ -21,6 +21,16 @@
   font-family: inherit;
 }
 
+.evo-loop-include-btn.is-selected {
+  border-color: rgba(106, 143, 90, 0.55);
+  background: rgba(106, 143, 90, 0.18);
+  color: #c5e0b4;
+}
+
+.evo-loop-practices li.is-selected {
+  border-color: rgba(106, 143, 90, 0.35);
+}
+
 .historico-page--refined {
   --hl-gold: #c9a87c;
   --hl-gold-dim: rgba(201, 168, 124, 0.35);

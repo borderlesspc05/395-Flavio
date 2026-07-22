@@ -48,17 +48,58 @@ export function buildSolutionActionDetalhes(action: SuggestedSolutionAction): st
     .map((e) => `${fixMojibakeText(e.entrega)} (${fixMojibakeText(e.responsavel)}, até ${formatPrazoBR(e.prazo)})`)
     .join('; ');
   const risco = draft.riscos[0];
+  const objetivo = fixMojibakeText(draft.objetivoEspecifico).trim();
 
   const parts = [
-    `Esta ação responde a um gap de ${fixMojibakeText(action.categoria)} identificado no diagnóstico. ${fixMojibakeText(action.rationale)}`,
-    fixMojibakeText(draft.objetivoEspecifico),
-    marcos ? `Na prática, comece por: ${marcos}.` : '',
-    risco ? `Principal risco: ${fixMojibakeText(risco.risco)}. Mitigação sugerida: ${fixMojibakeText(risco.acaoTomar)}.` : '',
-    `Horizonte da iniciativa até ${formatPrazoBR(draft.prazoFinal)}, com owner ${fixMojibakeText(draft.owner)} e sponsor ${fixMojibakeText(draft.sponsor)}.`,
+    `Contexto do diagnóstico\nEsta ação responde a um gap de ${fixMojibakeText(action.categoria)} identificado no diagnóstico. ${fixMojibakeText(action.rationale)}`,
+    objetivo
+      ? `Objetivo da iniciativa\n${objetivo}`
+      : '',
+    marcos ? `Primeiros passos\nNa prática, comece por: ${marcos}.` : '',
+    risco
+      ? `Risco e mitigação\nPrincipal risco: ${fixMojibakeText(risco.risco)}. Mitigação sugerida: ${fixMojibakeText(risco.acaoTomar)}.`
+      : '',
+    `Governança e prazo\nHorizonte da iniciativa até ${formatPrazoBR(draft.prazoFinal)}, com owner ${fixMojibakeText(draft.owner)} e sponsor ${fixMojibakeText(draft.sponsor)}.`,
   ];
 
-  return parts.filter(Boolean).join(' ');
+  return parts.filter(Boolean).join('\n\n');
 }
+
+/** Quebra o bloco de detalhes em seções { title, body } para exibição tipada. */
+export function splitSolutionDetailSections(
+  detalhes: string,
+): Array<{ title?: string; body: string }> {
+  const blocks = detalhes
+    .split(/\n\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+
+  return blocks.map((block) => {
+    const nl = block.indexOf('\n');
+    if (nl > 0 && nl < 80) {
+      const title = block.slice(0, nl).trim();
+      const body = block.slice(nl + 1).trim();
+      // Título curto sem pontuação final → seção tipada
+      if (title && !/[.!?]$/.test(title) && title.length <= 48) {
+        return { title, body: body || title };
+      }
+    }
+    // Legado: texto corrido — tenta as mesmas quebras do Design
+    const legacy = block
+      .replace(/\s+(Fundamento no diagnóstico:)/gi, '\n\n$1')
+      .replace(/\s+(Marcos principais:)/gi, '\n\n$1')
+      .replace(/\s+(Critério de sucesso:)/gi, '\n\n$1')
+      .replace(/\s+(Na prática, comece por:)/gi, '\n\n$1')
+      .replace(/\s+(Principal risco:)/gi, '\n\n$1')
+      .replace(/\s+(Horizonte da iniciativa)/gi, '\n\n$1')
+      .replace(/\s+(Esta ação responde)/gi, '\n\n$1');
+    if (legacy.includes('\n\n')) {
+      return { body: legacy };
+    }
+    return { body: block };
+  });
+}
+
 
 export function getSolutionActionDetails(action: SuggestedSolutionAction): SolutionActionDetailSections {
   const { draft } = action;

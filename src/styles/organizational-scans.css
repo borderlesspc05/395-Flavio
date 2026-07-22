@@ -4,17 +4,22 @@
   max-width: none;
 }
 
+/* Grid gap 2rem é largo demais entre header e progresso do ciclo */
+.organizational-scans-page > .sprint-wave-header + .sprint-phase-chrome {
+  margin-top: -1.25rem;
+}
+
 .organizational-scans-hero {
-  display: grid;
-  gap: 0.85rem;
+  display: flex;
+  gap: 0.65rem;
 }
 
 .organizational-scans-title-row {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  margin: 0.15rem 0 0.35rem;
+  margin: 0;
 }
 
 .organizational-scans-title-row .phase-info-btn {

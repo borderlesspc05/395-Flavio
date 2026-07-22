@@ -13,6 +13,7 @@ import type {
   MidTimelineEvent,
 } from '../types/mid';
 import { pickDaily, rotateDaily } from '../utils/dailyInsight';
+import { deliveryProgressWeight } from '../utils/deliveryChecklist';
 
 const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] as const;
 const CHECKIN_STALE_DAYS = 15;
@@ -86,9 +87,9 @@ export function computeProjectHealthScore(input: MidIntelligenceInput): {
   factors: MidHealthFactor[];
 } {
   const deliveries = input.canvases.flatMap((c) => c.entregas.filter((e) => e.entrega?.trim()));
-  const green = deliveries.filter((e) => e.status === 'verde').length;
-  const yellow = deliveries.filter((e) => e.status === 'amarelo').length;
-  const red = deliveries.filter((e) => e.status === 'vermelho').length;
+  const progressWeights = deliveries.map((e) => deliveryProgressWeight(e));
+  const yellow = progressWeights.filter((w) => w >= 40 && w < 80).length;
+  const red = progressWeights.filter((w) => w < 40).length;
   const totalDel = deliveries.length;
 
   const objs = input.objectives;
@@ -103,7 +104,8 @@ export function computeProjectHealthScore(input: MidIntelligenceInput): {
       return !Number.isNaN(d.getTime()) && d.getTime() < now;
     }).length +
     deliveries.filter((e) => {
-      if (!e.prazo || e.status === 'verde') return false;
+      if (deliveryProgressWeight(e) >= 80) return false;
+      if (!e.prazo) return false;
       const d = new Date(e.prazo);
       return !Number.isNaN(d.getTime()) && d.getTime() < now;
     }).length;
@@ -126,7 +128,9 @@ export function computeProjectHealthScore(input: MidIntelligenceInput): {
       ? input.formComplete
         ? 50
         : 30
-      : clampScore((green / totalDel) * 100);
+      : clampScore(
+          progressWeights.reduce((a, b) => a + b, 0) / Math.max(totalDel, 1)
+        );
 
   const checkIns = input.memberCheckIns ?? [];
   let checkinScore = 50;

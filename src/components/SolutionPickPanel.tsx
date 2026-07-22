@@ -32,13 +32,14 @@ import {
 } from '../services/solutionPick';
 import { isApiUnreachableError, localSolutionPickFallback } from '../services/solutionPickLocal';
 import { isLlmNotConfiguredApiError, readApiErrorMessage } from '../utils/apiError';
-import { getSolutionActionDetails } from '../utils/solutionActionDetails';
+import { getSolutionActionDetails, splitSolutionDetailSections } from '../utils/solutionActionDetails';
+import { ensureObjetivoParagraphs } from '../utils/enrichObjetivoEspecifico';
 import { fixMojibakeText } from '../utils/textEncoding';
 import { ToastStack } from './ui/ToastStack';
 import { PhaseInfoButton } from './ui/PhaseInfoButton';
 import { PhaseLockBanner } from './ui/PhaseLockBanner';
 import { usePhaseLock } from '../hooks/usePhaseLock';
-import { lockSprintPhase } from '../services/phaseLock';
+import { concludeSprintPhase, PHASE_PATHS } from '../services/phaseLock';
 import type { InitialFormData } from '../types';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 
@@ -147,7 +148,7 @@ export function SolutionPickPanel({
   onSaveDraft,
 }: Props) {
   const navigate = useNavigate();
-  const { locks, setLocks, locked: phaseLocked, cycle } = usePhaseLock('solutionPick');
+  const { locks, setLocks, locked: phaseLocked, cycle, progress, setProgress } = usePhaseLock('solutionPick');
   const [suggestions, setSuggestions] = useState<SuggestedSolutionAction[]>([]);
   const [companySummary, setCompanySummary] = useState<string | null>(null);
   const [companySituation, setCompanySituation] = useState<string | null>(null);
@@ -266,9 +267,14 @@ export function SolutionPickPanel({
       }
       if (!options?.force) {
         const cached = readCachedSolutionPick(context);
-        if (cached && hasRobustSummary(cached)) {
+        const cachedText = `${cached?.companySummary ?? ''} ${cached?.companySituation ?? ''}`;
+        const hasProductBrandAsCompany = /sprint\s*waves?/i.test(cachedText);
+        if (cached && hasRobustSummary(cached) && !hasProductBrandAsCompany) {
           applyResult(cached);
           return;
+        }
+        if (cached && hasProductBrandAsCompany) {
+          clearCachedSolutionPick(context);
         }
       }
 
@@ -285,6 +291,7 @@ export function SolutionPickPanel({
               'A IA no servidor não gerou sugestões personalizadas. Verifique OPENROUTER_API_KEY ou OPENAI_API_KEY no Render e clique em Atualizar sugestões.',
           );
         } else {
+          // Cache antigo pode ter "Sprint Waves" como empresa — força regenerar se detectar.
           writeCachedSolutionPick(context, result);
         }
       } catch (err) {
@@ -393,11 +400,16 @@ export function SolutionPickPanel({
       onDataChange(payload);
       stashSelectedSolutionActions(currentSelected);
       await onSaveDraft(payload);
-      if (cycle) {
-        await lockSprintPhase(cycle, 'diagnostic');
-        await lockSprintPhase(cycle, 'solutionPick');
+      if (cycle && progress.sprintProgress === 'diagnostic') {
+        const result = await concludeSprintPhase(cycle, 'diagnostic');
+        if (!result.ok) {
+          setError(result.message ?? 'Não foi possível concluir o Diagnóstico.');
+          return;
+        }
+        setProgress(result.state);
+        setLocks(result.state.phaseLocks);
       }
-      navigate('/dashboard/design', { state: { selectedActions: currentSelected } });
+      navigate(PHASE_PATHS.design, { state: { selectedActions: currentSelected } });
     } catch {
       setError('Não foi possível salvar suas escolhas. Tente novamente.');
     } finally {
@@ -415,6 +427,8 @@ export function SolutionPickPanel({
         locks={locks}
         cycle={cycle}
         onLocksChange={setLocks}
+        progress={progress}
+        onProgressChange={setProgress}
       />
       <header className="solution-pick-header">
         <div>
@@ -568,10 +582,20 @@ export function SolutionPickPanel({
           </span>
         </div>
       ) : (
-        <ol className="solution-pick-list">
+        <div className="solution-pick-actions-block">
+          <p className="solution-pick-list-intro">
+            Utilize estas sugestões como ponto de partida. Você poderá editá-las na próxima fase de
+            design.
+          </p>
+          <ol className="solution-pick-list">
           {suggestions.map((action, index) => {
             const isDetailsOpen = expandedActionIds.has(action.id);
             const details = getSolutionActionDetails(action);
+            const detailSections = splitSolutionDetailSections(details.detalhes ?? '');
+            const objetivoParagraphs = ensureObjetivoParagraphs(details.objetivo)
+              .split(/\n\n+/)
+              .map((p) => p.trim())
+              .filter(Boolean);
             const letter = String.fromCharCode(97 + (index % 26));
             return (
               <li key={action.id}>
@@ -618,7 +642,18 @@ export function SolutionPickPanel({
 
                   {isDetailsOpen ? (
                     <div className="solution-pick-card-details" id={`solution-pick-details-${action.id}`}>
-                      <p className="solution-pick-detail-text">{details.detalhes}</p>
+                      <div className="solution-pick-detail-narrative">
+                        {detailSections.map((section, sectionIndex) => (
+                          <div key={`detail-sec-${sectionIndex}`} className="solution-pick-detail-topic">
+                            {section.title ? (
+                              <h4 className="solution-pick-detail-topic-title">{section.title}</h4>
+                            ) : null}
+                            {section.body.split(/\n\n+/).map((paragraph, pIndex) => (
+                              <p key={`detail-p-${sectionIndex}-${pIndex}`}>{paragraph}</p>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
                       <div className="solution-pick-detail-grid">
                         <div className="solution-pick-detail-block">
                           <h4>Por que este score</h4>
@@ -626,7 +661,9 @@ export function SolutionPickPanel({
                         </div>
                         <div className="solution-pick-detail-block">
                           <h4>Objetivo no Design</h4>
-                          <p>{details.objetivo}</p>
+                          {objetivoParagraphs.map((paragraph, pIndex) => (
+                            <p key={`obj-${pIndex}`}>{paragraph}</p>
+                          ))}
                         </div>
                       </div>
                       {details.entregas.length > 0 ? (
@@ -719,6 +756,7 @@ export function SolutionPickPanel({
             );
           })}
         </ol>
+        </div>
       )}
 
       <footer className="solution-pick-footer">

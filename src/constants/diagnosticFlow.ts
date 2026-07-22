@@ -1350,7 +1350,7 @@ export function getRequiredDiagnosticFieldKeysExcludingSolutionPick(): string[] 
 }
 
 export function buildDiagnosticContextThroughTeamScan(data: InitialFormData): string {
-  const lines: string[] = ['# Sprint Waves - Diagnóstico 1.1 a 1.4'];
+  const lines: string[] = ['# Diagnóstico organizacional (etapas 1.1 a 1.4)'];
 
   for (const phase of DIAGNOSTIC_PHASES) {
     if (phase.id === SOLUTION_PICK_PHASE_ID) break;
@@ -1445,7 +1445,7 @@ function fieldLabel(field: DiagnosticField, key: string): string {
 }
 
 export function buildDiagnosticContext(data: InitialFormData): string {
-  const lines: string[] = ['# Sprint Waves - Diagnóstico 1.1 a 1.5'];
+  const lines: string[] = ['# Diagnóstico organizacional (etapas 1.1 a 1.5)'];
 
   for (const phase of DIAGNOSTIC_PHASES) {
     const phaseLines: string[] = [];
@@ -1482,7 +1482,17 @@ function buildCompanyProfileBlock(data: InitialFormData): string {
     if (text) lines.push(`- ${label}: ${text}`);
   };
 
+  const orgFromForm = formatValue(data.organizacao);
+  const scanAnswers = parseOrganizationalScanData(data.organizationalScanData);
+  const orgFromSwot = formatValue(scanAnswers.swot?.swot_organization);
+  const orgName = orgFromForm || orgFromSwot;
+  if (orgName) {
+    lines.push(`- Nome da empresa (usar exatamente este nome nos textos): ${orgName}`);
+  }
   push('Organização', data.organizacao);
+  if (orgFromSwot && orgFromSwot !== orgFromForm) {
+    lines.push(`- Organização (informada no Scan SWOT): ${orgFromSwot}`);
+  }
   push('Produto / serviço', data.produtoServico);
   push('Estágio do negócio', data.estagioNegocio);
   push('Fatores externos', data.fatoresExternos);

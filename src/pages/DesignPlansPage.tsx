@@ -19,20 +19,20 @@ import {
 } from '../services/solutionPick';
 import type { SuggestedSolutionAction } from '../types/solutionPick';
 import { syncMagnusMemoryAfterCanvasChange } from '../services/magnusMemorySync';
-import { readStashedEvolution } from '../services/evolutionLoopStorage';
+import {
+  clearSelectedInheritedPractices,
+  MAX_INHERITED_INITIATIVES,
+  readSelectedInheritedPractices,
+  readStashedEvolution,
+} from '../services/evolutionLoopStorage';
 import { enrichDraftObjetivo, ensureObjetivoParagraphs } from '../utils/enrichObjetivoEspecifico';
 import type { ActionCanvas, SuggestedActionCanvasDraft } from '../types';
 import { ToastStack } from '../components/ui/ToastStack';
 import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
 import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
-import { TeamMemberCombobox } from '../components/ui/TeamMemberCombobox';
 import { usePhaseLock } from '../hooks/usePhaseLock';
 import { useCycle } from '../context/CycleContext';
-import {
-  getPhaseLocksFromCycle,
-  isPhaseLocked,
-  lockSprintPhase,
-} from '../services/phaseLock';
+import { PHASE_PATHS } from '../services/phaseLock';
 
 type EditablePlan = SuggestedActionCanvasDraft & {
   localId: string;
@@ -75,7 +75,7 @@ function blankPlan(): EditablePlan {
     entregas: [
       {
         entrega: '',
-        responsavel: 'Owner',
+        responsavel: '',
         prazo: defaultPrazo(30),
         status: 'amarelo',
       },
@@ -227,7 +227,15 @@ export function DesignPlansPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { clearNeedsDiagnosis } = useCycle();
-  const { locks, setLocks, locked: phaseLocked, cycle, lockCurrent } = usePhaseLock('design');
+  const {
+    locks,
+    setLocks,
+    locked: phaseLocked,
+    cycle,
+    concludeCurrent,
+    progress,
+    setProgress,
+  } = usePhaseLock('design');
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<EditablePlan[]>([]);
@@ -238,27 +246,11 @@ export function DesignPlansPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const syncTimers = useRef<Record<string, number>>({});
 
-  // Design liberado ⇒ Diagnóstico + Solution Pick travados (cascata).
   useEffect(() => {
-    if (!cycle?.id) return;
-    let cancelled = false;
-    const sealDiagnostic = async () => {
-      const current = getPhaseLocksFromCycle(cycle);
-      if (isPhaseLocked(current, 'diagnostic') && isPhaseLocked(current, 'solutionPick')) {
-        clearNeedsDiagnosis();
-        return;
-      }
-      // Trava até Solution Pick → também trava Diagnóstico.
-      const next = await lockSprintPhase(cycle, 'solutionPick');
-      if (cancelled) return;
-      setLocks(next);
+    if (progress.sprintProgress !== 'diagnostic') {
       clearNeedsDiagnosis();
-    };
-    void sealDiagnostic();
-    return () => {
-      cancelled = true;
-    };
-  }, [cycle?.id, clearNeedsDiagnosis, setLocks, cycle]);
+    }
+  }, [progress.sprintProgress, clearNeedsDiagnosis]);
 
   useEffect(() => {
     if (!error) return;
@@ -295,6 +287,54 @@ export function DesignPlansPage() {
     setLoading(true);
     setError(null);
     try {
+      // Materializa iniciativas selecionadas no Loop (até 3) neste ciclo de Design
+      const queued = readSelectedInheritedPractices();
+      if (queued.length > 0) {
+        let existing = await actionCanvasesApi.list().catch(() => [] as ActionCanvas[]);
+        const names = new Set(
+          existing.map((c) => c.nomeIniciativa.trim().toLowerCase()).filter(Boolean)
+        );
+        for (const item of queued.slice(0, MAX_INHERITED_INITIATIVES)) {
+          const key = item.practice.trim().toLowerCase();
+          if (!key || names.has(key)) continue;
+          try {
+            const created = await actionCanvasesApi.create({
+              nomeIniciativa: item.practice.trim(),
+              objetivoEspecifico:
+                item.rationale?.trim() ||
+                `Insight herdado do Loop contínuo: ${item.practice.trim()}`,
+              owner: '',
+              sponsor: '',
+              prazoFinal: defaultPrazo(90),
+              successCriteria: emptyCriteria(),
+              inheritedFromCycle: true,
+              entregas: [
+                {
+                  entrega: `Primeiro passo: ${item.practice.trim()}`,
+                  responsavel: '',
+                  prazo: defaultPrazo(30),
+                  status: 'amarelo',
+                  evidencia: '',
+                },
+              ],
+              riscos: [
+                {
+                  risco: 'Risco a mapear nesta iniciativa herdada',
+                  acaoTomar: 'Definir plano de mitigação no Design',
+                },
+              ],
+              signOff: 'pendente',
+              fechado: false,
+            });
+            names.add(key);
+            existing = [...existing, created];
+          } catch {
+            // Continua as demais; aviso abaixo se nada foi criado
+          }
+        }
+        clearSelectedInheritedPractices();
+      }
+
       const [{ data }, canvases] = await Promise.all([
         getInitialForm(uid),
         actionCanvasesApi.list().catch(() => [] as ActionCanvas[]),
@@ -313,7 +353,14 @@ export function DesignPlansPage() {
         }
       }
       setPlans(next);
-      setActivePlanId((prev) => (prev && next.some((p) => p.localId === prev) ? prev : next[0]?.localId ?? null));
+      setActivePlanId((prev) =>
+        prev && next.some((p) => p.localId === prev) ? prev : next[0]?.localId ?? null
+      );
+      if (queued.length > 0) {
+        setNotice(
+          `${Math.min(queued.length, MAX_INHERITED_INITIATIVES)} iniciativa(s) herdada(s) do ciclo anterior — revise e valide no Design.`
+        );
+      }
     } catch {
       setError('Não foi possível carregar os planos do Solution Pick.');
     } finally {
@@ -335,6 +382,16 @@ export function DesignPlansPage() {
       Object.values(syncTimers.current).forEach((timer) => window.clearTimeout(timer));
     };
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const state = location.state as { addPlan?: boolean } | null;
+    if (!state?.addPlan || phaseLocked) return;
+    const plan = blankPlan();
+    setPlans((prev) => [...prev, plan]);
+    setActivePlanId(plan.localId);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [loading, location.state, location.pathname, navigate, phaseLocked]);
 
   const scheduleCanvasSync = useCallback(
     (plan: EditablePlan) => {
@@ -447,9 +504,14 @@ export function DesignPlansPage() {
         }
       }
       await syncMagnusMemoryAfterCanvasChange();
-      await lockCurrent();
+      const concluded = await concludeCurrent();
+      if (!concluded.ok) {
+        setError(concluded.message ?? 'Não foi possível concluir o Design.');
+        return;
+      }
+      if (concluded.state) setProgress(concluded.state);
       const skipped = skipValidation ? pendingCount : 0;
-      navigate('/dashboard/objetivos', {
+      navigate(concluded.nextPath ?? PHASE_PATHS.diffusion, {
         state: {
           postDesignNotice: {
             title: 'Design concluído',
@@ -507,14 +569,6 @@ export function DesignPlansPage() {
 
   return (
     <div className={`design-plans-page phase-locked-shell${phaseLocked ? ' is-locked' : ''}`}>
-      <PhaseLockBanner phase="design" locks={locks} cycle={cycle} onLocksChange={setLocks} />
-      {evolutionCarryOver && (
-        <div className="design-evolution-banner">
-          <p className="design-evolution-banner__eyebrow">Nova onda · Evolution Loop</p>
-          <h2>Foco: {evolutionCarryOver.nextWave.focus}</h2>
-          <p>{evolutionCarryOver.nextWave.rationale}</p>
-        </div>
-      )}
       <header className="design-plans-header sprint-wave-header">
         <div className="sprint-wave-title-group">
           <div className="sprint-wave-icon-wrapper" aria-hidden>
@@ -527,7 +581,8 @@ export function DesignPlansPage() {
               <PhaseInfoButton title="Como usar o Design">
                 <p>
                   Transforme as ações do Solution Pick em planos claros: o que a iniciativa pretende
-                  alcançar, como saberão que deu certo e quem lidera.
+                  alcançar e como saberão que deu certo. Iniciativas herdadas do Loop (até{' '}
+                  {MAX_INHERITED_INITIATIVES}) aparecem marcadas — você decide o que validar.
                 </p>
                 <ul>
                   <li>
@@ -537,18 +592,18 @@ export function DesignPlansPage() {
                     <strong>Critérios de sucesso</strong> — como medir que deu certo
                   </li>
                   <li>
-                    <strong>Owner e Sponsor</strong> — da equipe cadastrada
+                    <strong>Prazo</strong> — horizonte do plano
                   </li>
                 </ul>
                 <p>
-                  Entregas, riscos e sign-off ficam para a Difusão. Valide só o que estiver pronto
-                  para avançar.
+                  Owner, Sponsor, entregas, riscos e sign-off ficam para a Difusão / Execução.
+                  Valide só o que estiver pronto para avançar.
                 </p>
               </PhaseInfoButton>
             </div>
             <p className="sprint-wave-subtitle">
-              Defina iniciativa, resultado esperado e critérios de sucesso. Owner e Sponsor vêm da
-              equipe — valide só o que estiver pronto para a Difusão.
+              Defina iniciativa, resultado esperado e critérios de sucesso. Valide só o que
+              estiver pronto para a Difusão.
             </p>
           </div>
         </div>
@@ -559,6 +614,21 @@ export function DesignPlansPage() {
           <span>validados</span>
         </div>
       </header>
+      <PhaseLockBanner
+        phase="design"
+        locks={locks}
+        cycle={cycle}
+        onLocksChange={setLocks}
+        progress={progress}
+        onProgressChange={setProgress}
+      />
+      {evolutionCarryOver && (
+        <div className="design-evolution-banner">
+          <p className="design-evolution-banner__eyebrow">Nova onda · Evolution Loop</p>
+          <h2>Foco: {evolutionCarryOver.nextWave.focus}</h2>
+          <p>{evolutionCarryOver.nextWave.rationale}</p>
+        </div>
+      )}
 
       <ToastStack
         toasts={[
@@ -660,18 +730,6 @@ export function DesignPlansPage() {
                   </div>
 
                   <aside className="design-plan-side">
-                    <div className="design-plan-row" onClick={(e) => e.stopPropagation()}>
-                      <TeamMemberCombobox
-                        label="Owner"
-                        value={plan.owner}
-                        onChange={(owner) => updatePlan(plan.localId, { owner })}
-                      />
-                      <TeamMemberCombobox
-                        label="Sponsor"
-                        value={plan.sponsor}
-                        onChange={(sponsor) => updatePlan(plan.localId, { sponsor })}
-                      />
-                    </div>
                     <label className="design-plan-field" onClick={(e) => e.stopPropagation()}>
                       <span>Prazo final</span>
                       <input

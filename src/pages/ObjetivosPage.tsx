@@ -2,6 +2,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
+  ArrowLeft,
   ArrowRight,
   BarChart3,
   Bot,
@@ -11,6 +12,7 @@ import {
   Filter,
   GitBranch,
   Lightbulb,
+  Loader2,
   Pencil,
   Plus,
   RefreshCw,
@@ -25,8 +27,17 @@ import { auth } from '../config/firebase';
 import { DiffusionWorkspace } from '../components/diffusion/DiffusionWorkspace';
 import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
 import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
+import { Modal } from '../components/ui/Modal';
 import { usePhaseLock } from '../hooks/usePhaseLock';
-import { lockSprintPhase, getPhaseLocksFromCycle, isPhaseLocked } from '../services/phaseLock';
+import { useCycle } from '../context/CycleContext';
+import {
+  canReopenPhase,
+  concludeSprintPhase,
+  getPhaseAccess,
+  PHASE_LABELS,
+  PHASE_PATHS,
+  reopenSprintPhase,
+} from '../services/phaseLock';
 import { objectivesApi } from '../services/api';
 import { loadDesignDiffusionContext, type DesignDiffusionContext } from '../services/designDiffusionContext';
 import {
@@ -36,6 +47,7 @@ import {
   type ObjectivePriority,
   type ObjectiveStatus,
 } from '../types';
+import { phasesAfter } from '../types/phaseLock';
 
 const STATUS_LABELS: Record<ObjectiveStatus, string> = {
   nao_iniciado: 'Não iniciado',
@@ -135,24 +147,9 @@ function defaultDueDate(horizon?: ObjectiveHorizon) {
 
 export function ObjetivosPage() {
   const navigate = useNavigate();
-  const { locks, setLocks, locked: phaseLocked, cycle } = usePhaseLock('diffusion');
+  const { locks, setLocks, locked: phaseLocked, cycle, progress, setProgress } = usePhaseLock('diffusion');
+  const { refreshCycles } = useCycle();
   const location = useLocation();
-
-  // Difusão liberada ⇒ Design (e anteriores) travados.
-  useEffect(() => {
-    if (!cycle?.id) return;
-    let cancelled = false;
-    const sealPrior = async () => {
-      const current = getPhaseLocksFromCycle(cycle);
-      if (isPhaseLocked(current, 'design')) return;
-      const next = await lockSprintPhase(cycle, 'design');
-      if (!cancelled) setLocks(next);
-    };
-    void sealPrior();
-    return () => {
-      cancelled = true;
-    };
-  }, [cycle?.id, cycle, setLocks]);
 
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,6 +170,13 @@ export function ObjetivosPage() {
   const [suggestions, setSuggestions] = useState<SuggestedItem[]>([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
   const [suggestLoading, setSuggestLoading] = useState(false);
+  const [returnModal, setReturnModal] = useState<{ open: boolean; addPlan: boolean }>({
+    open: false,
+    addPlan: false,
+  });
+  const [returnReason, setReturnReason] = useState('');
+  const [returnBusy, setReturnBusy] = useState(false);
+  const [returnError, setReturnError] = useState<string | null>(null);
   const [importLoading, setImportLoading] = useState(false);
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
   const [difusaoTab, setDifusaoTab] = useState<'canvas' | 'objetivos'>('canvas');
@@ -480,14 +484,50 @@ export function ObjetivosPage() {
     }
   };
 
+  const designAccess = getPhaseAccess(progress, 'design');
+  const canReturnToDesign =
+    designAccess === 'completed' || designAccess === 'current' || designAccess === 'reopened';
+  const designLater = useMemo(() => {
+    const after = phasesAfter('design').filter((p) => p !== 'loopClosed');
+    return after.map((p) => PHASE_LABELS[p]).join(' e ');
+  }, []);
+
+  const openReturnToDesign = (addPlan: boolean) => {
+    if (!canReturnToDesign) {
+      window.alert('Não é possível retornar ao Design neste momento.');
+      return;
+    }
+    if (designAccess === 'completed' && canReopenPhase(progress, 'design')) {
+      setReturnError(null);
+      setReturnReason('');
+      setReturnModal({ open: true, addPlan });
+      return;
+    }
+    navigate(PHASE_PATHS.design, { state: addPlan ? { addPlan: true } : undefined });
+  };
+
+  const confirmReturnToDesign = async () => {
+    const wantAddPlan = returnModal.addPlan;
+    setReturnBusy(true);
+    setReturnError(null);
+    const result = await reopenSprintPhase(cycle, 'design', returnReason);
+    setReturnBusy(false);
+    if (!result.ok) {
+      setReturnError(result.message ?? 'Não foi possível reabrir o Design.');
+      return;
+    }
+    setProgress(result.state);
+    setLocks(result.state.phaseLocks);
+    void refreshCycles?.();
+    setReturnModal({ open: false, addPlan: false });
+    setReturnReason('');
+    navigate(PHASE_PATHS.design, {
+      state: wantAddPlan ? { addPlan: true } : undefined,
+    });
+  };
+
   return (
     <div className={`objetivos-page phase-locked-shell${phaseLocked ? ' is-locked' : ''}`}>
-      <PhaseLockBanner
-        phase="diffusion"
-        locks={locks}
-        cycle={cycle}
-        onLocksChange={setLocks}
-      />
       <header className="objetivos-header difusao-wave-header sprint-wave-header">
         <div className="objetivos-title-group sprint-wave-title-group">
           <div className="objetivos-icon-wrapper sprint-wave-icon-wrapper" aria-hidden>
@@ -508,7 +548,7 @@ export function ObjetivosPage() {
                     <strong>Mobilização</strong> — confirme iniciativa, owner e critérios
                   </li>
                   <li>
-                    <strong>Execução</strong> — checklist, prazo, responsável e evidência
+                    <strong>Execução</strong> — checklist, prazo, Sponsor e evidência
                   </li>
                   <li>
                     <strong>Riscos</strong> — antecipe problemas e defina a ação a tomar
@@ -518,8 +558,8 @@ export function ObjetivosPage() {
                   </li>
                 </ul>
                 <p>
-                  Ao atribuir um responsável com e-mail da equipe, a plataforma pode enviar um aviso
-                  de atribuição.
+                  Ao definir um Sponsor com e-mail na equipe, a plataforma envia o aviso de
+                  atribuição e atualizações a cada mudança na Execução.
                 </p>
               </PhaseInfoButton>
             </div>
@@ -529,6 +569,14 @@ export function ObjetivosPage() {
           </div>
         </div>
       </header>
+      <PhaseLockBanner
+        phase="diffusion"
+        locks={locks}
+        cycle={cycle}
+        onLocksChange={setLocks}
+        progress={progress}
+        onProgressChange={setProgress}
+      />
 
       <DiffusionWorkspace onCanvasClosed={() => reloadDesignContext()} />
 
@@ -972,13 +1020,33 @@ export function ObjetivosPage() {
       )}
 
       <section className="mid-diffusion-panel" aria-labelledby="mid-conclude-title">
+        <div className="mid-diffusion-panel-start">
+          <button
+            type="button"
+            className="mid-diffusion-secondary-btn"
+            disabled={phaseLocked || !canReturnToDesign}
+            onClick={() => openReturnToDesign(true)}
+          >
+            <Plus size={16} aria-hidden />
+            Adicionar plano
+          </button>
+          <button
+            type="button"
+            className="mid-diffusion-secondary-btn"
+            disabled={!canReturnToDesign}
+            onClick={() => openReturnToDesign(false)}
+          >
+            <ArrowLeft size={16} aria-hidden />
+            Voltar ao Design
+          </button>
+        </div>
         <div className="mid-diffusion-panel-copy">
           <h2 id="mid-conclude-title" className="mid-diffusion-title">
-            Concluir Difusão
+            Tudo pronto para seguir em frente?
           </h2>
           <p className="mid-diffusion-subtitle">
-            Finalize a etapa de Difusão e avance para a fase final de avaliação dos resultados e impactos gerados no
-            Domínio.
+            Confirme que todas as ações, riscos e entregas foram concluídos antes de encerrar esta
+            fase.
           </p>
         </div>
         <button
@@ -986,8 +1054,14 @@ export function ObjetivosPage() {
           className="mid-diffusion-conclude"
           onClick={() => {
             void (async () => {
-              if (cycle) await lockSprintPhase(cycle, 'diffusion');
-              navigate('/dashboard/relatorios', {
+              const result = await concludeSprintPhase(cycle, 'diffusion');
+              if (!result.ok) {
+                window.alert(result.message ?? 'Não foi possível concluir a Difusão.');
+                return;
+              }
+              setProgress(result.state);
+              setLocks(result.state.phaseLocks);
+              navigate(result.nextPath ?? PHASE_PATHS.domain, {
                 state: {
                   autoGenerate: true,
                   midConcludeNotice: 'Difusão concluída. Gerando relatório Domínio...',
@@ -995,12 +1069,80 @@ export function ObjetivosPage() {
               });
             })();
           }}
+          disabled={phaseLocked}
         >
           <BarChart3 size={18} aria-hidden />
           Concluir Difusão
           <ArrowRight size={16} aria-hidden />
         </button>
       </section>
+
+      <Modal
+        open={returnModal.open}
+        onClose={() => !returnBusy && setReturnModal({ open: false, addPlan: false })}
+        title="Reabrir Design?"
+        size="info"
+        dismissLocked={returnBusy}
+      >
+        <div className="phase-lock-confirm-panel">
+          <p className="phase-lock-confirm-text">
+            {returnModal.addPlan ? (
+              <>
+                Para <strong>adicionar um plano</strong>, é preciso reabrir a fase{' '}
+                <strong>Design</strong>.
+              </>
+            ) : (
+              <>
+                Deseja voltar à fase <strong>Design</strong>?
+              </>
+            )}
+            {designLater ? (
+              <>
+                {' '}
+                As fases posteriores (<strong>{designLater}</strong>) deixarão de ser concluídas e
+                precisarão ser executadas novamente para manter a consistência do projeto.
+              </>
+            ) : null}
+          </p>
+          <label className="phase-lock-reason">
+            <span>Motivo (opcional)</span>
+            <textarea
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              rows={3}
+              placeholder="Por que esta etapa precisa ser reaberta?"
+              disabled={returnBusy}
+            />
+          </label>
+          {returnError ? <p className="phase-lock-confirm-error">{returnError}</p> : null}
+          <div className="phase-info-actions">
+            <button
+              type="button"
+              className="phase-info-close is-ghost"
+              disabled={returnBusy}
+              onClick={() => setReturnModal({ open: false, addPlan: false })}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="phase-info-close"
+              disabled={returnBusy}
+              onClick={() => void confirmReturnToDesign()}
+            >
+              {returnBusy ? (
+                <>
+                  <Loader2 size={16} className="spin" aria-hidden /> Reabrindo…
+                </>
+              ) : returnModal.addPlan ? (
+                'Reabrir e adicionar plano'
+              ) : (
+                'Reabrir Design'
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

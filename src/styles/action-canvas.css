@@ -1287,6 +1287,43 @@
   font-family: 'Figtree', system-ui, sans-serif;
 }
 
+.mid-diffusion-panel-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.mid-diffusion-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: transparent;
+  color: #f3ead8;
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mid-diffusion-secondary-btn:hover:not(:disabled) {
+  border-color: rgba(175, 146, 112, 0.55);
+  background: rgba(175, 146, 112, 0.1);
+}
+
+.mid-diffusion-secondary-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mid-diffusion-panel-copy {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
 .mid-diffusion-panel-copy .mid-diffusion-subtitle {
   margin-bottom: 0;
 }
@@ -1382,20 +1419,42 @@
   }
 }
 
-/* Difusão — layout compacto (mínimo espaço até o topo) */
+/* Difusão — stack compacto: header → progresso → cards */
 .objetivos-page {
-  padding-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.15rem;
+  margin: 0;
+  max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.objetivos-page > .sprint-wave-header,
+.objetivos-page > .objetivos-header {
+  margin-bottom: 0 !important;
+}
+
+.objetivos-page > .sprint-phase-chrome {
+  margin-bottom: 0;
+  gap: 0.45rem;
+}
+
+.objetivos-page .diffusion-v2 {
+  gap: 0.7rem;
+  margin: 0 0 1.25rem;
 }
 
 /* Cabeçalho Onda 3 — Difusão */
 .objetivos-page .difusao-wave-header.objetivos-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem 1.25rem;
-  margin-bottom: 0.4rem !important;
-  padding: 0.85rem 1rem 0.9rem !important;
+  gap: 0.55rem 1rem;
+  margin-bottom: 0 !important;
+  padding: 0.7rem 0.9rem !important;
   border-radius: var(--ac-radius-lg, 20px);
   border: 1px solid rgba(175, 146, 112, 0.2);
   border-bottom: 1px solid rgba(175, 146, 112, 0.2) !important;
@@ -1409,16 +1468,14 @@
 }
 
 .objetivos-page .difusao-wave-header.objetivos-header::after {
-  left: 1rem;
-  bottom: 0;
-  width: 56px;
-  height: 2px;
+  content: none;
+  display: none;
 }
 
 .objetivos-page .objetivos-title-group {
   display: flex;
-  align-items: center;
-  gap: 0.85rem;
+  align-items: flex-start;
+  gap: 0.75rem;
   flex: 1 1 260px;
   min-width: 0;
 }
@@ -1467,7 +1524,8 @@
 }
 
 .objetivos-page .objetivos-subtitle {
-  margin: 0.35rem 0 0;
+  margin: 0;
+  padding: 0.55rem 0 0;
   font-size: 0.8rem;
   line-height: 1.45;
   color: rgba(185, 182, 195, 0.82);

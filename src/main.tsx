@@ -31,6 +31,7 @@ import './styles/evolution-loop.css';
 import './styles/cycle-closeout.css';
 import './styles/app-toast.css';
 import './styles/employee-profile.css';
+import './styles/member-portal.css';
 import './styles/solution-pick.css';
 import './styles/design-plans.css';
 import './styles/diagnostic-laudo.css';

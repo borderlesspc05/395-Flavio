@@ -123,6 +123,23 @@
   border: 1px solid rgba(251, 191, 36, 0.22);
 }
 
+.evo-loop__queue {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  color: #c5e0b4;
+  background: rgba(106, 143, 90, 0.12);
+  border: 1px solid rgba(106, 143, 90, 0.28);
+}
+
+.evo-loop__next-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--evo-muted);
+}
+
 .evo-loop__placeholder,
 .evo-loop__loading {
   display: flex;

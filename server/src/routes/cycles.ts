@@ -1,12 +1,15 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors';
 import {
+  concludeCyclePhaseForUser,
   createDiagnosticCycleForUser,
   deleteDiagnosticCycleForUser,
   getCycleQuotaForUser,
   listDiagnosticCyclesForUser,
+  reopenCyclePhaseForUser,
   updateDiagnosticCycleForUser,
 } from '../services/diagnosticCyclesServer';
+import { isNavPhase } from '../services/sprintPhaseProgress';
 
 const router = Router();
 
@@ -56,6 +59,35 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+router.post('/:id/phases/conclude', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const cycleId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const phase = req.body?.phase;
+    if (!isNavPhase(phase) || phase === 'loopClosed') {
+      throw new AppError(400, 'Fase inválida para conclusão.');
+    }
+    const updated = await concludeCyclePhaseForUser(req.userId, cycleId, phase);
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/phases/reopen', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const cycleId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const phase = req.body?.phase;
+    if (!isNavPhase(phase) || phase === 'loopClosed') {
+      throw new AppError(400, 'Fase inválida para reabertura.');
+    }
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason : undefined;
+    const updated = await reopenCyclePhaseForUser(req.userId, cycleId, phase, reason);
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const cycleId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -83,6 +115,18 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
         req.body?.phaseLocks && typeof req.body.phaseLocks === 'object'
           ? (req.body.phaseLocks as Record<string, boolean>)
           : undefined,
+      sprintProgress: isNavPhase(req.body?.sprintProgress) ? req.body.sprintProgress : undefined,
+      phaseCompletions:
+        req.body?.phaseCompletions && typeof req.body.phaseCompletions === 'object'
+          ? req.body.phaseCompletions
+          : undefined,
+      phaseEvents: Array.isArray(req.body?.phaseEvents) ? req.body.phaseEvents : undefined,
+      reopenedPhase:
+        req.body?.reopenedPhase === null
+          ? null
+          : isNavPhase(req.body?.reopenedPhase)
+            ? req.body.reopenedPhase
+            : undefined,
       completedAt:
         req.body?.completedAt === null
           ? null

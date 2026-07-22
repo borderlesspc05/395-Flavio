@@ -139,6 +139,30 @@ export const actionCanvasesApi = {
             demoMode?: boolean;
           }
       ),
+  suggestRisks: (id: string) =>
+    api.post(`/api/action-canvases/${id}/suggest-risks`).then(
+      (r) =>
+        r.data as {
+          risks: import('../types').ActionCanvasRisk[];
+          demoMode?: boolean;
+        }
+    ),
+  remindRisk: (id: string, riskId: string) =>
+    api
+      .post(`/api/action-canvases/${id}/risks/${riskId}/remind`)
+      .then((r) => r.data as { sent: boolean; demoMode?: boolean; reason?: string }),
+  suggestDeliveryActions: (id: string, deliveryId: string) =>
+    api.post(`/api/action-canvases/${id}/deliveries/${deliveryId}/suggest-actions`).then(
+      (r) =>
+        r.data as {
+          items: import('../types').DeliveryChecklistItem[];
+          demoMode?: boolean;
+        }
+    ),
+  remindChecklistItem: (id: string, deliveryId: string, itemId: string) =>
+    api
+      .post(`/api/action-canvases/${id}/deliveries/${deliveryId}/checklist/${itemId}/remind`)
+      .then((r) => r.data as { sent: boolean; demoMode?: boolean; reason?: string }),
 };
 
 export const objectivesApi = {
@@ -166,6 +190,10 @@ export const teamApi = {
   update: (id: string, data: unknown) =>
     api.patch(`/api/team-members/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/api/team-members/${id}`).then((r) => r.data),
+  getPortalLink: (id: string, rotate = false) =>
+    api
+      .post(`/api/team-members/${id}/portal-link`, { rotate })
+      .then((r) => r.data as { portalUrl: string; memberId: string }),
   sendDevelopmentEmail: (id: string) =>
     api
       .post(

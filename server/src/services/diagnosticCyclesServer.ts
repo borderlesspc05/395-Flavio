@@ -8,6 +8,17 @@ import {
   getMaxOpenCyclesForUser,
   type CycleStatus,
 } from './cyclePolicy';
+import {
+  concludePhaseInState,
+  createInitialSprintProgress,
+  isNavPhase,
+  reopenPhaseInState,
+  resolveSprintProgress,
+  type NavSprintPhase,
+  type PhaseCompletions,
+  type PhaseEvent,
+  type SprintProgressState,
+} from './sprintPhaseProgress';
 
 export interface ServerDiagnosticCycle {
   id: string;
@@ -21,6 +32,10 @@ export interface ServerDiagnosticCycle {
   gateRationale?: string;
   formData?: Record<string, unknown>;
   phaseLocks?: Record<string, boolean>;
+  sprintProgress?: NavSprintPhase;
+  phaseCompletions?: PhaseCompletions;
+  phaseEvents?: PhaseEvent[];
+  reopenedPhase?: NavSprintPhase | null;
   completedAt?: string;
   createdAt: string;
   archivedAt?: string;
@@ -46,6 +61,18 @@ function mapCycleDoc(id: string, raw: Record<string, unknown>): ServerDiagnostic
       raw.phaseLocks && typeof raw.phaseLocks === 'object'
         ? (raw.phaseLocks as Record<string, boolean>)
         : undefined,
+    sprintProgress: isNavPhase(raw.sprintProgress) ? raw.sprintProgress : undefined,
+    phaseCompletions:
+      raw.phaseCompletions && typeof raw.phaseCompletions === 'object'
+        ? (raw.phaseCompletions as PhaseCompletions)
+        : undefined,
+    phaseEvents: Array.isArray(raw.phaseEvents) ? (raw.phaseEvents as PhaseEvent[]) : undefined,
+    reopenedPhase:
+      raw.reopenedPhase === null
+        ? null
+        : isNavPhase(raw.reopenedPhase)
+          ? raw.reopenedPhase
+          : undefined,
     completedAt: raw.completedAt ? String(raw.completedAt) : undefined,
     createdAt,
     archivedAt,
@@ -107,6 +134,11 @@ export async function createDiagnosticCycleForUser(
     gatePath: payload.gatePath ?? null,
     gateRationale: payload.gateRationale?.trim() || null,
     formData: payload.formData ?? null,
+    sprintProgress: 'diagnostic',
+    phaseCompletions: {},
+    phaseEvents: [],
+    reopenedPhase: null,
+    phaseLocks: {},
     createdAt: now,
     archivedAt: payload.status === 'archived' ? now : null,
   });
@@ -143,6 +175,10 @@ export async function updateDiagnosticCycleForUser(
     gateRationale: string;
     formData: Record<string, unknown>;
     phaseLocks: Record<string, boolean>;
+    sprintProgress: NavSprintPhase;
+    phaseCompletions: PhaseCompletions;
+    phaseEvents: PhaseEvent[];
+    reopenedPhase: NavSprintPhase | null;
     completedAt: string | null;
     archivedAt: string | true;
   }>
@@ -167,7 +203,12 @@ export async function updateDiagnosticCycleForUser(
   if (patch.gatePath !== undefined) next.gatePath = patch.gatePath;
   if (patch.gateRationale !== undefined) next.gateRationale = patch.gateRationale.trim() || null;
   if (patch.formData !== undefined) next.formData = patch.formData;
+  // phaseLocks / sprintProgress via PATCH genérico: aceita sync do cliente após conclude/reopen local
   if (patch.phaseLocks !== undefined) next.phaseLocks = patch.phaseLocks;
+  if (patch.sprintProgress !== undefined) next.sprintProgress = patch.sprintProgress;
+  if (patch.phaseCompletions !== undefined) next.phaseCompletions = patch.phaseCompletions;
+  if (patch.phaseEvents !== undefined) next.phaseEvents = patch.phaseEvents;
+  if (patch.reopenedPhase !== undefined) next.reopenedPhase = patch.reopenedPhase;
   if (patch.completedAt !== undefined) next.completedAt = patch.completedAt;
   if (patch.archivedAt || patch.status === 'archived') {
     next.archivedAt = new Date();
@@ -179,6 +220,63 @@ export async function updateDiagnosticCycleForUser(
 
   return (await getDiagnosticCycleForUser(userId, cycleId)) ?? existing;
 }
+
+function cycleToProgressState(cycle: ServerDiagnosticCycle): SprintProgressState {
+  return resolveSprintProgress({
+    sprintProgress: cycle.sprintProgress,
+    phaseLocks: cycle.phaseLocks,
+    phaseCompletions: cycle.phaseCompletions,
+    phaseEvents: cycle.phaseEvents,
+    reopenedPhase: cycle.reopenedPhase,
+  });
+}
+
+async function persistProgressState(
+  userId: string,
+  cycleId: string,
+  state: SprintProgressState,
+): Promise<ServerDiagnosticCycle> {
+  return updateDiagnosticCycleForUser(userId, cycleId, {
+    sprintProgress: state.sprintProgress,
+    phaseCompletions: state.phaseCompletions,
+    phaseEvents: state.phaseEvents,
+    reopenedPhase: state.reopenedPhase ?? null,
+    phaseLocks: state.phaseLocks,
+  });
+}
+
+export async function concludeCyclePhaseForUser(
+  userId: string,
+  cycleId: string,
+  phase: NavSprintPhase,
+): Promise<ServerDiagnosticCycle> {
+  const existing = await getDiagnosticCycleForUser(userId, cycleId);
+  if (!existing) throw new AppError(404, 'Processo não encontrado.');
+
+  const current = cycleToProgressState(existing);
+  const result = concludePhaseInState(current, phase, userId);
+  if (!result.ok) throw new AppError(400, result.message);
+
+  return persistProgressState(userId, cycleId, result.state);
+}
+
+export async function reopenCyclePhaseForUser(
+  userId: string,
+  cycleId: string,
+  phase: NavSprintPhase,
+  reason?: string,
+): Promise<ServerDiagnosticCycle> {
+  const existing = await getDiagnosticCycleForUser(userId, cycleId);
+  if (!existing) throw new AppError(404, 'Processo não encontrado.');
+
+  const current = cycleToProgressState(existing);
+  const result = reopenPhaseInState(current, phase, userId, reason);
+  if (!result.ok) throw new AppError(400, result.message);
+
+  return persistProgressState(userId, cycleId, result.state);
+}
+
+export { createInitialSprintProgress };
 
 export async function deleteDiagnosticCycleForUser(userId: string, cycleId: string): Promise<void> {
   const db = getFirestore();

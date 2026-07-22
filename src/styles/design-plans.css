@@ -235,6 +235,25 @@
   border-bottom: 1px solid rgba(175, 146, 112, 0.16);
 }
 
+.design-plans-header.sprint-wave-header {
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.2);
+}
+
+.design-plans-header.sprint-wave-header h1 {
+  margin: 0;
+}
+
+.design-plans-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
 .design-plans-kicker {
   font-size: 0.72rem;
   letter-spacing: 0.12em;

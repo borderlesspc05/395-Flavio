@@ -404,6 +404,47 @@ function truncateDiagnosticContext(context: string, max = DIAGNOSTIC_INPUT_MAX):
   return `${trimmed.slice(0, headSize)}\n\n[... trecho intermediário omitido para agilizar a análise ...]\n\n${trimmed.slice(-tailSize)}`;
 }
 
+const PRODUCT_BRAND_NAMES = [
+  'Sprint Waves',
+  'Sprint Wave',
+  'SPRINT WAVES',
+  'SPRINT WAVES™',
+  'Magnus Mind',
+  'MagnusMind',
+  'People Sprint',
+];
+
+/** Extrai o nome real da empresa do contexto; ignora marcas do produto. */
+function extractCompanyName(context: string): string | null {
+  const patterns = [
+    /Nome da empresa \(usar exatamente este nome nos textos\):\s*(.+)/i,
+    /Organização \(informada no Scan SWOT\):\s*(.+)/i,
+    /- Organização:\s*(.+)/i,
+    /nome da empresa \/ organização analisada nesta SWOT\?\s*:\s*(.+)/i,
+  ];
+  for (const pattern of patterns) {
+    const match = context.match(pattern);
+    const value = match?.[1]?.trim().split('\n')[0]?.trim();
+    if (!value) continue;
+    if (PRODUCT_BRAND_NAMES.some((brand) => value.toLowerCase() === brand.toLowerCase())) continue;
+    if (/^sprint\b/i.test(value) && /wave/i.test(value)) continue;
+    return value;
+  }
+  return null;
+}
+
+function sanitizeCompanyNarrative(text: string, companyName: string | null): string {
+  let next = text;
+  for (const brand of PRODUCT_BRAND_NAMES) {
+    const re = new RegExp(brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    next = next.replace(re, companyName || 'a organização');
+  }
+  // Evita "A a organização" / "a A organização"
+  next = next.replace(/\b[Aa]\s+a organização\b/g, 'A organização');
+  next = next.replace(/\ba A organização\b/g, 'a organização');
+  return next;
+}
+
 async function fetchSolutionPickRag(
   userId: string,
   query: string
@@ -435,6 +476,11 @@ export async function suggestSolutionPickActions(
   userId: string
 ): Promise<SolutionPickSuggestResult> {
   const compactContext = truncateDiagnosticContext(diagnosticContext);
+  const companyName = extractCompanyName(compactContext);
+  const companyRule = companyName
+    ? `NOME DA EMPRESA: use exatamente "${companyName}" quando citar a organizacao. Nunca substitua por outro nome.`
+    : `NOME DA EMPRESA: o diagnostico nao informa um nome claro. Refira-se apenas como "a organizacao" ou "a empresa". Nunca invente um nome.`;
+
   const ragQuery = `${compactContext.slice(0, 500)} solution pick planos acao diagnostico gaps`;
   const ragResult = await fetchSolutionPickRag(userId, ragQuery);
 
@@ -455,6 +501,14 @@ ${ragResult.context}`
   const prompt = `Voce e o motor de Solution Pick do Magnus Mind / Sprint (etapa 1.5).
 
 Leia o diagnostico da empresa abaixo (pode incluir SWOT Analysis Scan ou canvas completo). Quando houver contexto RAG, use como complemento.
+
+${companyRule}
+
+REGRA CRITICA — NOME DA EMPRESA:
+- "Sprint Waves", "Magnus Mind", "Sprint" sao marcas do PRODUTO/plataforma, NAO sao o nome da empresa do cliente.
+- Nunca use essas marcas como se fossem a organizacao analisada.
+- Se o nome real estiver no diagnostico (campo Organizacao / Nome da empresa), use-o.
+- Se nao houver nome, escreva "a organizacao" / "a empresa" sem inventar.
 
 REGRA CRITICA — ESFERA DE INFLUENCIA:
 Todas as recomendacoes devem estar dentro da esfera de influencia e controle do usuario.
@@ -496,7 +550,7 @@ Responda APENAS com JSON valido (sem markdown):
         {
           role: 'system',
           content:
-            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). companySummary e companySituation devem ter exatamente 2 paragrafos cada, separados por duas quebras de linha. Toda acao sugerida deve estar na esfera de influencia do usuario — nunca proponha mudar fatores externos incontrolaveis (ex.: cotacao do dolar); proponha mitigacoes executaveis.',
+            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). companySummary e companySituation devem ter exatamente 2 paragrafos cada, separados por duas quebras de linha. Nunca use "Sprint Waves" ou "Magnus Mind" como nome da empresa do cliente. Toda acao sugerida deve estar na esfera de influencia do usuario — nunca proponha mudar fatores externos incontrolaveis (ex.: cotacao do dolar); proponha mitigacoes executaveis.',
         },
         { role: 'user', content: prompt },
       ],
@@ -518,8 +572,14 @@ Responda APENAS com JSON valido (sem markdown):
         if (suggestions.length >= 3) {
           return attachRagMeta({
             suggestions,
-            companySummary: String(root.companySummary ?? '').trim() || undefined,
-            companySituation: String(root.companySituation ?? '').trim() || undefined,
+            companySummary: sanitizeCompanyNarrative(
+              String(root.companySummary ?? '').trim(),
+              companyName,
+            ) || undefined,
+            companySituation: sanitizeCompanyNarrative(
+              String(root.companySituation ?? '').trim(),
+              companyName,
+            ) || undefined,
           });
         }
       }

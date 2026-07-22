@@ -68,7 +68,23 @@
   gap: 1.5rem;
 }
 
-/* Hero */
+/* Hero — quando usa sprint-wave-header, o layout compartilhado manda */
+.domain-wave-hero.sprint-wave-header {
+  display: flex !important;
+  grid-template-columns: unset;
+  align-items: flex-start !important;
+  gap: 0.65rem 1.15rem !important;
+  padding: 0.85rem 1rem !important;
+}
+
+@media (min-width: 768px) {
+  .domain-wave-hero.sprint-wave-header {
+    grid-template-columns: unset;
+    align-items: flex-start !important;
+    gap: 0.65rem 1.15rem !important;
+  }
+}
+
 .domain-wave-hero {
   display: grid;
   grid-template-columns: 1fr;
@@ -77,7 +93,7 @@
 }
 
 @media (min-width: 768px) {
-  .domain-wave-hero {
+  .domain-wave-hero:not(.sprint-wave-header) {
     grid-template-columns: 1.15fr 0.85fr;
     align-items: end;
     gap: 2rem;
@@ -1003,17 +1019,17 @@
   display: none;
 }
 
-/* Shared Sprint wave header */
+/* Shared Sprint wave header — título no topo, acento logo abaixo, sem “vão” morto */
 .sprint-wave-header {
   position: relative;
   display: flex !important;
   flex-wrap: wrap;
-  align-items: center !important;
+  align-items: flex-start !important;
   justify-content: space-between;
-  gap: 0.75rem 1.25rem !important;
+  gap: 0.65rem 1.15rem !important;
   width: 100%;
-  margin: 0 0 1.4rem !important;
-  padding: 0.85rem 1rem 0.9rem !important;
+  margin: 0 0 0.85rem !important;
+  padding: 0.85rem 1rem !important;
   border-radius: var(--ac-radius-lg, 20px) !important;
   border: 1px solid rgba(175, 146, 112, 0.2) !important;
   background: linear-gradient(135deg, rgba(12, 18, 28, 0.92) 0%, rgba(20, 28, 42, 0.88) 55%, rgba(14, 22, 36, 0.94) 100%) !important;
@@ -1021,20 +1037,16 @@
   overflow: hidden;
 }
 
+/* Barra decorativa sai do ::after absoluto no fundo do card */
 .sprint-wave-header::after {
-  content: '';
-  position: absolute;
-  left: 1rem;
-  bottom: 0;
-  width: 56px;
-  height: 2px;
-  background: linear-gradient(90deg, #ffbc7d, rgba(255, 188, 125, 0));
+  content: none;
+  display: none;
 }
 
 .sprint-wave-title-group {
   display: flex !important;
-  align-items: center !important;
-  gap: 0.85rem !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
   flex: 1 1 280px;
   min-width: 0;
 }
@@ -1046,7 +1058,7 @@
   width: 2.85rem !important;
   height: 2.85rem !important;
   flex: 0 0 2.85rem;
-  margin: 0 !important;
+  margin: 0.15rem 0 0 !important;
   border-radius: 12px !important;
   border: 1px solid rgba(175, 146, 112, 0.28) !important;
   background: linear-gradient(135deg, rgba(175, 146, 112, 0.16), rgba(255, 188, 125, 0.06)) !important;
@@ -1055,12 +1067,17 @@
 }
 
 .sprint-wave-title-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .sprint-wave-eyebrow {
   display: block !important;
-  margin: 0 0 0.3rem !important;
+  margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
   background: none !important;
@@ -1086,17 +1103,40 @@
   color: transparent !important;
 }
 
+/* Acento / progresso visual — colado sob o título, antes do subtítulo */
 .sprint-wave-subtitle {
-  margin: 0.35rem 0 0 !important;
+  position: relative;
+  margin: 0 !important;
+  padding: 0.55rem 0 0 !important;
   max-width: 54ch !important;
   color: rgba(185, 182, 195, 0.82) !important;
   font-size: 0.8rem !important;
   line-height: 1.45 !important;
 }
 
+.sprint-wave-subtitle::before {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 2px;
+  margin: 0 0 0.5rem;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #ffbc7d, rgba(255, 188, 125, 0));
+}
+
 .sprint-wave-side {
   flex: 0 0 auto;
   margin: 0 !important;
+  align-self: center;
+}
+
+/* Header → progresso do ciclo: colados sem vão */
+.sprint-wave-header:has(+ .sprint-phase-chrome) {
+  margin-bottom: 0.5rem !important;
+}
+
+.sprint-wave-header + .sprint-phase-chrome {
+  margin-top: 0;
 }
 
 @media (max-width: 640px) {
@@ -1106,5 +1146,6 @@
 
   .sprint-wave-side {
     width: 100%;
+    align-self: stretch;
   }
 }

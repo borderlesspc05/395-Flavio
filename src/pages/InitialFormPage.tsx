@@ -37,7 +37,7 @@ import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
 import { getInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
-import { lockSprintPhase } from '../services/phaseLock';
+import { concludeSprintPhase, PHASE_PATHS } from '../services/phaseLock';
 import { usePhaseLock } from '../hooks/usePhaseLock';
 import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
 import {
@@ -404,7 +404,7 @@ export function InitialFormPage() {
   const [cycleNameError, setCycleNameError] = useState<string | null>(null);
   const { activeCycle, needsDiagnosis, clearNeedsDiagnosis, persistActiveCycleSnapshot, refreshCycles, switching } =
     useCycle();
-  const { locks, setLocks, locked: phaseLocked } = usePhaseLock('diagnostic');
+  const { locks, setLocks, locked: phaseLocked, progress, setProgress } = usePhaseLock('diagnostic');
 
   const activePhase = useMemo(
     () => DIAGNOSTIC_PHASES.find((phase) => phase.id === activePhaseId) ?? DIAGNOSTIC_PHASES[0],
@@ -552,13 +552,19 @@ export function InitialFormPage() {
           formData: data,
         });
         await persistActiveCycleSnapshot();
-        await lockSprintPhase(activeCycle, 'diagnostic');
+        if (progress.sprintProgress === 'diagnostic') {
+          const result = await concludeSprintPhase(activeCycle, 'diagnostic');
+          if (result.ok) {
+            setProgress(result.state);
+            setLocks(result.state.phaseLocks);
+          }
+        }
         await refreshCycles();
         clearNeedsDiagnosis();
       }
       setShowCycleNameModal(false);
       scrollProjectToTop('auto');
-      navigate('/dashboard/design', {
+      navigate(PHASE_PATHS.design, {
         state: {
           postDiagnosticNotice: {
             title: `Projeto "${trimmedName}" iniciado`,
@@ -596,6 +602,8 @@ export function InitialFormPage() {
         locks={locks}
         cycle={activeCycle}
         onLocksChange={setLocks}
+        progress={progress}
+        onProgressChange={setProgress}
       />
       <section className="diagnostic-topbar">
         <div className="diagnostic-brand">

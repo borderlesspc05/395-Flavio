@@ -12,6 +12,16 @@ export const swotAnalysisScan: OrganizationalScanDefinition = {
   guidance:
     'Este Scan permite utilizar uma análise SWOT já realizada ou construí-la diretamente na plataforma. Se você já possui uma SWOT pronta, basta copiar e colar o conteúdo nos campos abaixo. Caso contrário, utilize as perguntas orientadoras para elaborar sua análise de forma estruturada.\n\nEste Scan pode substituir o Canvas completo para análises estratégicas iniciais. Responda no seu ritmo e conclua quando estiver pronto. Não é necessário preencher os demais Scans.',
   blocks: [
+    customBlock('swot_org', 'Organização', [
+      {
+        id: 'swot_organization',
+        prompt: 'Qual é o nome da empresa / organização analisada nesta SWOT?',
+        type: 'text',
+        required: true,
+        rows: 1,
+        placeholder: 'Ex.: Nome real da empresa (não use o nome do produto Sprint)',
+      },
+    ]),
     customBlock('swot_note', 'Como preencher', [
       {
         id: 'swot_paste_note',

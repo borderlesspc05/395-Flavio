@@ -9,7 +9,7 @@ import { buildDiagnosticContext, createEmptyDiagnosticData } from '../constants/
 import { useCycle } from '../context/CycleContext';
 import { useViewTransitionNavigate } from '../hooks/useViewTransitionNavigate';
 import { updateDiagnosticCycle } from '../services/diagnosticCycles';
-import { lockSprintPhase, unlockSprintPhase } from '../services/phaseLock';
+import { reopenSprintPhase } from '../services/phaseLock';
 import { usePhaseLock } from '../hooks/usePhaseLock';
 import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
 import { getInitialForm, reopenInitialForm, saveInitialForm, saveInitialFormDraft } from '../services/initialForm';
@@ -62,6 +62,8 @@ export function OrganizationalScanRunnerPage() {
     setLocks: setPhaseLocks,
     locked: phaseLocked,
     cycle: phaseCycle,
+    progress,
+    setProgress,
   } = usePhaseLock('diagnostic');
 
   const answers = useMemo(
@@ -203,7 +205,7 @@ export function OrganizationalScanRunnerPage() {
           formData: nextForm,
         });
         await persistActiveCycleSnapshot();
-        await lockSprintPhase(activeCycle, 'diagnostic');
+        // Não conclui a fase Diagnóstico aqui — Solution Pick ainda faz parte do Diagnóstico.
         await refreshCycles();
         clearNeedsDiagnosis();
       }
@@ -237,16 +239,17 @@ export function OrganizationalScanRunnerPage() {
     setFeedback(null);
     try {
       if (phaseLocked) {
-        const unlocked = await unlockSprintPhase(phaseCycle ?? activeCycle, 'diagnostic');
+        const unlocked = await reopenSprintPhase(phaseCycle ?? activeCycle, 'diagnostic');
         if (!unlocked.ok) {
           setFeedback(
             unlocked.message ??
-              'Desbloqueie a fase Diagnóstico no banner acima antes de refazer este scan.',
+              'Reabra a fase Diagnóstico no banner acima antes de refazer este scan.',
           );
           setShowRedoConfirm(false);
           return;
         }
-        setPhaseLocks(unlocked.locks);
+        setPhaseLocks(unlocked.state.phaseLocks);
+        setProgress(unlocked.state);
       }
 
       const next = clearScanCompleted(formData, scan.id);
@@ -299,6 +302,8 @@ export function OrganizationalScanRunnerPage() {
           locks={phaseLocks}
           cycle={phaseCycle}
           onLocksChange={setPhaseLocks}
+          progress={progress}
+          onProgressChange={setProgress}
         />
       <form className={`organizational-scan-runner ${isLocked ? 'is-locked' : ''}`} onSubmit={handleComplete}>
         <header className="organizational-scan-runner-header">

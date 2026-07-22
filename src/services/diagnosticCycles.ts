@@ -13,7 +13,12 @@ import { api } from './api';
 import { getBlueprintGate, saveBlueprintGateSelection, clearBlueprintGate } from './blueprintGate';
 import { clearInitialForm, getInitialForm, saveInitialFormDraft } from './initialForm';
 import type { InitialFormData } from '../types';
-import type { PhaseLocks } from '../types/phaseLock';
+import type {
+  PhaseCompletions,
+  PhaseEvent,
+  PhaseLocks,
+  NavSprintPhase,
+} from '../types/phaseLock';
 
 export type CycleStatus = 'draft' | 'active' | 'archived';
 
@@ -30,6 +35,11 @@ export interface DiagnosticCycle {
   formData?: InitialFormData;
   /** Travamento das fases do Sprint Waves (persistido no ciclo) */
   phaseLocks?: PhaseLocks;
+  /** Ponteiro da fase atual do fluxo sequencial */
+  sprintProgress?: NavSprintPhase;
+  phaseCompletions?: PhaseCompletions;
+  phaseEvents?: PhaseEvent[];
+  reopenedPhase?: NavSprintPhase | null;
   completedAt?: string;
   createdAt: string;
   archivedAt?: string;
@@ -60,6 +70,21 @@ function mapCycleDoc(id: string, raw: Record<string, unknown>): DiagnosticCycle 
       raw.phaseLocks && typeof raw.phaseLocks === 'object'
         ? (raw.phaseLocks as PhaseLocks)
         : undefined,
+    sprintProgress:
+      typeof raw.sprintProgress === 'string'
+        ? (raw.sprintProgress as NavSprintPhase)
+        : undefined,
+    phaseCompletions:
+      raw.phaseCompletions && typeof raw.phaseCompletions === 'object'
+        ? (raw.phaseCompletions as PhaseCompletions)
+        : undefined,
+    phaseEvents: Array.isArray(raw.phaseEvents) ? (raw.phaseEvents as PhaseEvent[]) : undefined,
+    reopenedPhase:
+      raw.reopenedPhase === null
+        ? null
+        : typeof raw.reopenedPhase === 'string'
+          ? (raw.reopenedPhase as NavSprintPhase)
+          : undefined,
     completedAt: raw.completedAt ? String(raw.completedAt) : undefined,
     createdAt: createdAt.toISOString(),
     archivedAt: archivedAt ? archivedAt.toISOString() : undefined,
@@ -144,6 +169,10 @@ export async function updateDiagnosticCycle(
       | 'gateRationale'
       | 'formData'
       | 'phaseLocks'
+      | 'sprintProgress'
+      | 'phaseCompletions'
+      | 'phaseEvents'
+      | 'reopenedPhase'
     >
   > & {
     archivedAt?: string | true;

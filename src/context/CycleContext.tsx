@@ -25,7 +25,13 @@ import { getInitialForm } from '../services/initialForm';
 import { getBlueprintGate } from '../services/blueprintGate';
 import { clearActiveCycleId, resolveActiveCycleId, setActiveCycleId } from '../services/cycleWorkspace';
 import { workspaceApi } from '../services/api';
-import { getPhaseLocksFromCycle, isPhaseLocked, type PhaseLocks } from '../services/phaseLock';
+import {
+  getPhaseLocksFromCycle,
+  isPhaseLocked,
+  getSprintProgressFromCycle,
+  type PhaseLocks,
+  type SprintProgressState,
+} from '../services/phaseLock';
 import { usePlan } from './PlanContext';
 import { canCreateMoreCycles, cycleLimitMessage } from '../utils/cycleLimits';
 
@@ -33,7 +39,9 @@ function cycleNeedsDiagnosis(cycle: DiagnosticCycle | null | undefined): boolean
   if (!cycle) return false;
   if (cycle.completedAt) return false;
   if (cycle.status !== 'draft') return false;
-  // Se o Diagnóstico já foi travado (ex.: Design liberado), não é mais "pendente".
+  const progress = getSprintProgressFromCycle(cycle);
+  // Pendente só enquanto a fase atual ainda é Diagnóstico.
+  if (progress.sprintProgress !== 'diagnostic') return false;
   if (isPhaseLocked(getPhaseLocksFromCycle(cycle), 'diagnostic')) return false;
   return true;
 }
@@ -170,22 +178,49 @@ export function CycleProvider({ children }: { children: ReactNode }) {
     void refreshCycles();
   }, [refreshCycles]);
 
-  // Mantém phaseLocks no ciclo ativo e o badge "pendente" alinhados ao trancamento.
+  // Mantém progresso do Sprint e o badge "pendente" alinhados.
   useEffect(() => {
     const onLocksChanged = (event: Event) => {
-      const detail = (event as CustomEvent<{ cycleId?: string; locks?: PhaseLocks }>).detail;
-      if (!detail?.cycleId || !detail.locks) return;
+      const detail = (
+        event as CustomEvent<{ cycleId?: string; locks?: PhaseLocks; progress?: SprintProgressState }>
+      ).detail;
+      if (!detail?.cycleId) return;
 
       setActiveCycle((prev) => {
         if (!prev || prev.id !== detail.cycleId) return prev;
-        const next = { ...prev, phaseLocks: detail.locks };
+        const next: DiagnosticCycle = {
+          ...prev,
+          ...(detail.locks ? { phaseLocks: detail.locks } : {}),
+          ...(detail.progress
+            ? {
+                sprintProgress: detail.progress.sprintProgress,
+                phaseCompletions: detail.progress.phaseCompletions,
+                phaseEvents: detail.progress.phaseEvents,
+                reopenedPhase: detail.progress.reopenedPhase,
+                phaseLocks: detail.progress.phaseLocks,
+              }
+            : {}),
+        };
         setNeedsDiagnosis(cycleNeedsDiagnosis(next));
         return next;
       });
       setCycles((prev) =>
-        prev.map((cycle) =>
-          cycle.id === detail.cycleId ? { ...cycle, phaseLocks: detail.locks } : cycle,
-        ),
+        prev.map((cycle) => {
+          if (cycle.id !== detail.cycleId) return cycle;
+          return {
+            ...cycle,
+            ...(detail.locks ? { phaseLocks: detail.locks } : {}),
+            ...(detail.progress
+              ? {
+                  sprintProgress: detail.progress.sprintProgress,
+                  phaseCompletions: detail.progress.phaseCompletions,
+                  phaseEvents: detail.progress.phaseEvents,
+                  reopenedPhase: detail.progress.reopenedPhase,
+                  phaseLocks: detail.progress.phaseLocks,
+                }
+              : {}),
+          };
+        }),
       );
     };
     window.addEventListener('mm:phase-locks-changed', onLocksChanged);

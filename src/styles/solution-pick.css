@@ -198,6 +198,21 @@
   gap: 0.65rem;
 }
 
+.solution-pick-actions-block {
+  margin-top: 0.35rem;
+}
+
+.solution-pick-list-intro {
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 12px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background: rgba(175, 146, 112, 0.08);
+  color: rgba(241, 235, 224, 0.88);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .solution-pick-card {
   width: 100%;
   text-align: left;
@@ -351,6 +366,39 @@
   font-size: 0.9rem;
   line-height: 1.6;
   color: rgba(243, 236, 226, 0.88);
+}
+
+.solution-pick-detail-narrative {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0 0 0.85rem;
+}
+
+.solution-pick-detail-topic {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.solution-pick-detail-topic-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffbc7d;
+}
+
+.solution-pick-detail-topic p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(243, 236, 226, 0.88);
+}
+
+.solution-pick-detail-block p + p {
+  margin-top: 0.45rem;
 }
 
 .solution-pick-detail-grid {

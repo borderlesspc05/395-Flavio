@@ -60,7 +60,15 @@ function emptyDelivery(): ActionCanvasDelivery {
 }
 
 function emptyRisk(): ActionCanvasRisk {
-  return { id: newId('risk'), risco: '', acaoTomar: '' };
+  return {
+    id: newId('risk'),
+    risco: '',
+    acaoTomar: '',
+    impacto: 'medio',
+    probabilidade: 'media',
+    responsavel: '',
+    status: 'nao_iniciado',
+  };
 }
 
 function blankCanvas(): Omit<ActionCanvas, 'id'> {
@@ -387,6 +395,10 @@ export function ActionCanvasPanel({ onCanvasClosed, canUseAi = false }: ActionCa
             id: newId('risk'),
             risco: r.risco,
             acaoTomar: r.acaoTomar,
+            impacto: 'medio' as const,
+            probabilidade: 'media' as const,
+            responsavel: '',
+            status: 'nao_iniciado' as const,
           })),
         };
         const raw = await actionCanvasesApi.create(body);

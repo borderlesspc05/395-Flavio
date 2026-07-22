@@ -1,7 +1,7 @@
 .diffusion-v2 {
   display: grid;
-  gap: 1.25rem;
-  margin: 0 0 2rem;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
 }
 
 .diffusion-v2-toolbar {
@@ -9,6 +9,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+}
+
+.diffusion-v2-toolbar:empty {
+  display: none;
 }
 
 .diffusion-v2-saving,
@@ -19,16 +23,16 @@
 
 .diffusion-v2-initiatives {
   display: flex;
-  gap: 0.65rem;
+  gap: 0.55rem;
   flex-wrap: wrap;
 }
 
 .diffusion-v2-initiative {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.65rem;
+  gap: 0.55rem;
   text-align: left;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.85rem;
   border-radius: 12px;
   border: 1px solid rgba(175, 146, 112, 0.28);
   background: rgba(18, 20, 26, 0.75);
@@ -184,12 +188,34 @@
   color: rgba(241, 235, 224, 0.75);
 }
 
-.diffusion-v2-criteria span {
+.diffusion-v2-criteria > span:first-child {
   display: block;
   font-size: 0.75rem;
   font-weight: 650;
   color: rgba(255, 188, 125, 0.85);
   margin-bottom: 0.35rem;
+}
+
+.diffusion-v2-criteria-hint {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(241, 235, 224, 0.55);
+}
+
+.diffusion-v2-criteria-fields {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.diffusion-v2-criteria-index {
+  font-size: 0.7rem !important;
+  color: rgba(241, 235, 224, 0.5) !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.diffusion-v2-criteria .diffusion-v2-field {
+  margin-bottom: 0;
 }
 
 .diffusion-v2-list {
@@ -220,6 +246,307 @@
 .diffusion-v2-list span {
   font-size: 0.78rem;
   color: rgba(241, 235, 224, 0.55);
+}
+
+.diffusion-v2-risks-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.diffusion-v2-risks-head h3 {
+  margin: 0;
+}
+
+.diffusion-v2-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(175, 146, 112, 0.4);
+  background: rgba(175, 146, 112, 0.12);
+  color: #e8d4b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.diffusion-v2-ai-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.diffusion-v2-risks {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.diffusion-v2-risk-card {
+  padding: 1rem 1.05rem;
+  border-radius: 14px;
+  border: 1px solid rgba(175, 146, 112, 0.22);
+  background: rgba(8, 10, 14, 0.4);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.diffusion-v2-risk-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.diffusion-v2-field--grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.diffusion-v2-risk-remove {
+  margin-top: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 120, 100, 0.35);
+  background: transparent;
+  color: #d4a090;
+  cursor: pointer;
+}
+
+.diffusion-v2-risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.diffusion-v2-risk-assignee {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.diffusion-v2-remind-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 2.45rem;
+  padding: 0 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(175, 146, 112, 0.1);
+  color: #f3ead8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.diffusion-v2-remind-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.diffusion-v2-risks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.diffusion-v2-add-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0;
+  border: none;
+  background: none;
+  color: #c4a882;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.diffusion-v2-sponsor-block {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.diffusion-v2-field-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba(241, 235, 224, 0.5);
+  text-wrap: pretty;
+}
+
+.diffusion-exec-meter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 0.85rem 1rem;
+  align-items: stretch;
+  margin-bottom: 0.25rem;
+}
+
+.diffusion-exec-meter-row > .diffusion-v2-field {
+  margin: 0;
+}
+
+.diffusion-exec-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 188, 125, 0.05), transparent 55%),
+    rgba(8, 10, 14, 0.45);
+}
+
+.diffusion-exec-meter__lede {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.14);
+}
+
+.diffusion-exec-meter__title {
+  margin: 0;
+  min-width: 0;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #f3ead8;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.diffusion-exec-meter__metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.06rem;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.26rem 0.5rem 0.3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 188, 125, 0.28);
+  background: rgba(255, 188, 125, 0.08);
+  color: #ffbc7d;
+  line-height: 1;
+}
+
+.diffusion-exec-meter__pct {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.diffusion-exec-meter__unit {
+  font-size: 0.66rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.diffusion-exec-meter__track {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.diffusion-exec-meter__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8a7358 0%, #af9270 48%, #ffbc7d 100%);
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.diffusion-exec-meter.is-verde .diffusion-exec-meter__metric {
+  border-color: rgba(140, 190, 150, 0.4);
+  background: rgba(110, 180, 120, 0.12);
+  color: #9ed4a6;
+}
+
+.diffusion-exec-meter.is-verde .diffusion-exec-meter__fill {
+  background: linear-gradient(90deg, #5f8f68, #8fc89a);
+}
+
+.diffusion-exec-meter.is-amarelo .diffusion-exec-meter__metric {
+  border-color: rgba(200, 160, 80, 0.45);
+  background: rgba(200, 160, 80, 0.12);
+  color: #f0d9a0;
+}
+
+.diffusion-exec-meter.is-amarelo .diffusion-exec-meter__fill {
+  background: linear-gradient(90deg, #8a7358, #d4b06a, #ffbc7d);
+}
+
+.diffusion-exec-meter.is-vermelho .diffusion-exec-meter__metric {
+  border-color: rgba(180, 90, 80, 0.45);
+  background: rgba(180, 90, 80, 0.12);
+  color: #f0b8b0;
+}
+
+.diffusion-exec-meter.is-vermelho .diffusion-exec-meter__fill {
+  background: linear-gradient(90deg, #8a5550, #c87870);
+}
+
+.diffusion-exec-meter__hint {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: rgba(241, 235, 224, 0.48);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diffusion-exec-meter__fill {
+    transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .diffusion-exec-meter-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.diffusion-v2-email-hint {
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  color: rgba(241, 235, 224, 0.55);
+}
+
+@media (max-width: 720px) {
+  .diffusion-v2-risk-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diffusion-v2-risk-assignee {
+    grid-template-columns: 1fr;
+  }
+
+  .diffusion-v2-remind-btn {
+    width: 100%;
+  }
 }
 
 .diffusion-v2-next {
@@ -289,6 +616,38 @@
   min-height: 0;
   overflow: hidden;
   animation: diffusion-drawer-slide-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Execução: espaço de trabalho diário — mais da metade da tela */
+.diffusion-drawer--execution {
+  width: min(58rem, 64vw, calc(100vw - 1.7rem));
+}
+
+.diffusion-drawer--execution .diffusion-drawer-head h3 {
+  font-size: clamp(1.35rem, 2.1vw, 1.75rem);
+  max-width: 42rem;
+}
+
+.diffusion-drawer--execution .diffusion-drawer-body {
+  padding-left: 1.45rem;
+  padding-right: 1.45rem;
+}
+
+@media (min-width: 900px) {
+  .diffusion-drawer--execution .diffusion-drawer-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem 1.15rem;
+    align-content: start;
+  }
+
+  .diffusion-drawer--execution .diffusion-v2-criteria,
+  .diffusion-drawer--execution .diffusion-v2-sponsor-block,
+  .diffusion-drawer--execution .diffusion-exec-meter-row,
+  .diffusion-drawer--execution .diffusion-checklist,
+  .diffusion-drawer--execution .diffusion-v2-email-hint {
+    grid-column: 1 / -1;
+  }
 }
 
 .diffusion-drawer-head {
@@ -438,7 +797,11 @@
 }
 
 .diffusion-drawer-body .team-member-combobox {
-  z-index: 6;
+  z-index: 1;
+}
+
+.diffusion-drawer-body .diffusion-checklist-assignee .team-member-combobox {
+  z-index: auto;
 }
 
 .diffusion-drawer-body .team-member-combobox__list {
@@ -451,8 +814,16 @@
     padding: 0.65rem;
   }
 
-  .diffusion-drawer {
+  .diffusion-drawer,
+  .diffusion-drawer--execution {
     width: 100%;
+  }
+
+  .diffusion-drawer--execution .diffusion-drawer-body {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 
@@ -585,6 +956,13 @@
   gap: 0.35rem;
   margin-bottom: 0.85rem;
   position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.team-member-combobox.is-compact {
+  margin-bottom: 0;
 }
 
 .team-member-combobox > span {
@@ -597,15 +975,29 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   padding: 0.55rem 0.7rem;
   border-radius: 10px;
   border: 1px solid rgba(175, 146, 112, 0.28);
   background: rgba(8, 10, 14, 0.65);
   color: #ffbc7d;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.team-member-combobox__field > svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
 }
 
 .team-member-combobox__field input {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
   color: #f3ead8;
@@ -712,4 +1104,405 @@
 .design-plan-card.is-inherited {
   border-color: rgba(120, 160, 220, 0.4);
   box-shadow: inset 0 0 0 1px rgba(120, 160, 220, 0.12);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.diffusion-v2-status-derived {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.diffusion-v2-status-badge {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(175, 146, 112, 0.3);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #f3ead8;
+  background: rgba(8, 10, 14, 0.45);
+}
+
+.diffusion-v2-status-badge.is-verde {
+  border-color: rgba(106, 143, 90, 0.5);
+  color: #c5e0b4;
+}
+
+.diffusion-v2-status-badge.is-amarelo {
+  border-color: rgba(200, 160, 80, 0.5);
+  color: #f0d9a0;
+}
+
+.diffusion-v2-status-badge.is-vermelho {
+  border-color: rgba(180, 90, 80, 0.5);
+  color: #f0b8b0;
+}
+
+.diffusion-checklist {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.05rem 1.1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(175, 146, 112, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 188, 125, 0.03), transparent 40%),
+    rgba(8, 10, 14, 0.4);
+}
+
+.diffusion-checklist-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.85rem;
+  align-items: center;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(175, 146, 112, 0.14);
+}
+
+.diffusion-checklist-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #c4a882;
+}
+
+.diffusion-checklist-suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 188, 125, 0.35);
+  background: rgba(255, 188, 125, 0.12);
+  color: #ffbc7d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.diffusion-checklist-suggest:hover:not(:disabled) {
+  background: rgba(255, 188, 125, 0.18);
+  border-color: rgba(255, 188, 125, 0.55);
+}
+
+.diffusion-checklist-suggest:focus-visible {
+  outline: 2px solid rgba(255, 188, 125, 0.7);
+  outline-offset: 2px;
+}
+
+.diffusion-checklist-suggest:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.diffusion-checklist-cols {
+  display: none;
+  margin-left: auto;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(196, 168, 130, 0.8);
+}
+
+.diffusion-checklist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.diffusion-checklist-row {
+  display: grid;
+  grid-template-columns:
+    2rem
+    minmax(0, 1.55fr)
+    minmax(0, 1.2fr)
+    4.85rem
+    minmax(8.25rem, 0.95fr)
+    2rem;
+  gap: 0.5rem;
+  align-items: start;
+  padding: 0.55rem;
+  border-radius: 10px;
+  border: 1px solid rgba(175, 146, 112, 0.16);
+  background: rgba(4, 6, 10, 0.28);
+}
+
+.diffusion-checklist-check {
+  margin-top: 0.4rem;
+  border: none;
+  background: transparent;
+  color: #c4a882;
+  cursor: pointer;
+  padding: 0.15rem;
+  border-radius: 6px;
+  touch-action: manipulation;
+}
+
+.diffusion-checklist-check:hover:not(:disabled) {
+  color: #ffbc7d;
+}
+
+.diffusion-checklist-check:focus-visible {
+  outline: 2px solid rgba(255, 188, 125, 0.7);
+  outline-offset: 2px;
+}
+
+.diffusion-checklist-text {
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(4, 6, 10, 0.55);
+  color: #f3ead8;
+  font: inherit;
+}
+
+.diffusion-checklist-text:focus-visible,
+.diffusion-checklist-status select:focus-visible,
+.diffusion-checklist-prazo input[type='date']:focus-visible {
+  outline: 2px solid rgba(255, 188, 125, 0.55);
+  outline-offset: 1px;
+  border-color: rgba(255, 188, 125, 0.55);
+}
+
+.diffusion-checklist-assignee {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.diffusion-checklist-assignee .team-member-combobox {
+  flex: 1 1 auto;
+  margin: 0;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+}
+
+.diffusion-checklist-assignee .team-member-combobox__field {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+}
+
+.diffusion-checklist-remind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2.35rem;
+  width: 2.35rem;
+  height: 2.4rem;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(175, 146, 112, 0.1);
+  color: #f3ead8;
+  cursor: pointer;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.diffusion-checklist-remind:hover:not(:disabled) {
+  background: rgba(255, 188, 125, 0.16);
+  border-color: rgba(255, 188, 125, 0.45);
+  color: #ffbc7d;
+}
+
+.diffusion-checklist-remind:focus-visible {
+  outline: 2px solid rgba(255, 188, 125, 0.7);
+  outline-offset: 2px;
+}
+
+.diffusion-checklist-remind:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.diffusion-checklist-status {
+  min-width: 0;
+  width: 100%;
+}
+
+.diffusion-checklist-status select,
+.diffusion-checklist-prazo input[type='date'] {
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(4, 6, 10, 0.55);
+  color: #f3ead8;
+  font: inherit;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  box-sizing: border-box;
+}
+
+.diffusion-checklist-status select {
+  padding-right: 0.35rem;
+}
+
+.diffusion-checklist-prazo {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.diffusion-checklist-prazo input[type='date'] {
+  min-width: 0;
+}
+
+.diffusion-checklist-days {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  color: rgba(241, 235, 224, 0.55);
+}
+
+.diffusion-checklist-days svg {
+  flex: 0 0 auto;
+}
+
+.diffusion-checklist-remove {
+  margin-top: 0.4rem;
+  border: none;
+  background: transparent;
+  color: #d4a090;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.diffusion-checklist-remove:hover {
+  color: #f0b8b0;
+}
+
+.diffusion-checklist-remove:focus-visible {
+  outline: 2px solid rgba(240, 184, 176, 0.7);
+  outline-offset: 2px;
+}
+
+.diffusion-checklist-remove-spacer {
+  width: 1.25rem;
+}
+
+.diffusion-checklist-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: none;
+  color: #c4a882;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  touch-action: manipulation;
+}
+
+.diffusion-checklist-add:hover {
+  color: #ffbc7d;
+}
+
+.diffusion-checklist-add:focus-visible {
+  outline: 2px solid rgba(255, 188, 125, 0.7);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.diffusion-checklist-notes {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: rgba(241, 235, 224, 0.48);
+  text-wrap: pretty;
+}
+
+@media (min-width: 1100px) {
+  .diffusion-checklist-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) 4.85rem minmax(8.25rem, 0.95fr);
+    width: min(100%, 24.5rem);
+    justify-items: start;
+    align-items: end;
+  }
+
+  .diffusion-checklist-cols span:nth-child(2) {
+    justify-self: center;
+  }
+}
+
+/* Empilha antes de espremido — evita ícones/campos sobrepostos no drawer */
+@media (max-width: 1100px) {
+  .diffusion-checklist-row {
+    grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+    grid-template-areas:
+      'check text remove'
+      'check assignee assignee'
+      'check status prazo';
+  }
+
+  .diffusion-checklist-check {
+    grid-area: check;
+  }
+
+  .diffusion-checklist-text {
+    grid-area: text;
+  }
+
+  .diffusion-checklist-assignee {
+    grid-area: assignee;
+  }
+
+  .diffusion-checklist-status {
+    grid-area: status;
+  }
+
+  .diffusion-checklist-prazo {
+    grid-area: prazo;
+  }
+
+  .diffusion-checklist-remove,
+  .diffusion-checklist-remove-spacer {
+    grid-area: remove;
+  }
 }

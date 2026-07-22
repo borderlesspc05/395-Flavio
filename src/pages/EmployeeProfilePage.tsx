@@ -1,29 +1,18 @@
-import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { CheckCircle2, Loader2, Save } from 'lucide-react';
 import {
-  Briefcase,
-  Calendar,
-  CheckCircle2,
-  CircleDot,
-  Mail,
-  MapPin,
-  Sparkles,
-  Target,
-  TrendingUp,
-} from 'lucide-react';
-import { getMockEmployeeProfile } from '../data/mockEmployeeProfile';
+  memberPortalApi,
+  type MemberPortalPayload,
+  type MemberPortalProgress,
+  type MemberPortalTask,
+} from '../services/memberPortalApi';
 
-const STATUS_LABELS = {
-  concluido: 'Concluído',
-  em_andamento: 'Em andamento',
-  pendente: 'Pendente',
-} as const;
+const PROGRESS_OPTIONS: MemberPortalProgress[] = [0, 25, 50, 75, 100];
 
-const MEMBER_STATUS_LABELS = {
-  active: 'Ativo',
-  remote: 'Remoto',
-  'on-leave': 'Licença',
-} as const;
+function tokenStorageKey(memberId: string) {
+  return `mm-member-portal-token:${memberId}`;
+}
 
 function initials(name: string) {
   return name
@@ -34,203 +23,232 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function formatDate(iso?: string) {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
-  } catch {
-    return iso;
-  }
-}
-
 export function EmployeeProfilePage() {
-  const { memberId } = useParams<{ memberId: string }>();
-  const profile = useMemo(() => getMockEmployeeProfile(memberId), [memberId]);
-  const [acknowledged, setAcknowledged] = useState(false);
+  const { memberId: routeMemberId } = useParams<{ memberId: string }>();
+  const [searchParams] = useSearchParams();
+  const memberId = routeMemberId?.trim() || '';
+
+  const urlToken = searchParams.get('token')?.trim() || '';
+  const [token, setToken] = useState(() => {
+    if (urlToken) return urlToken;
+    if (!memberId) return '';
+    try {
+      return sessionStorage.getItem(tokenStorageKey(memberId)) || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [payload, setPayload] = useState<MemberPortalPayload | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!memberId || !urlToken) return;
+    setToken(urlToken);
+    try {
+      sessionStorage.setItem(tokenStorageKey(memberId), urlToken);
+    } catch {
+      /* ignore */
+    }
+  }, [memberId, urlToken]);
+
+  const load = useCallback(async () => {
+    if (!memberId) {
+      setError('Link incompleto. Peça ao gestor um novo convite.');
+      setLoading(false);
+      return;
+    }
+    if (!token) {
+      setError('Este link precisa do token de acesso. Peça ao gestor o link completo do portal.');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await memberPortalApi.load(memberId, token);
+      setPayload(data);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 401) {
+        setError('Link inválido ou expirado. Peça ao gestor um novo acesso.');
+      } else if (status === 404) {
+        setError('Membro não encontrado.');
+      } else {
+        setError('Não foi possível carregar suas ações. Tente de novo em instantes.');
+      }
+      setPayload(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [memberId, token]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const tasks = payload?.tasks ?? [];
+  const avgProgress = useMemo(() => {
+    if (tasks.length === 0) return 0;
+    return Math.round(tasks.reduce((sum, t) => sum + t.progresso, 0) / tasks.length);
+  }, [tasks]);
+
+  const updateProgress = async (task: MemberPortalTask, progresso: MemberPortalProgress) => {
+    if (!memberId || !token) return;
+    setSavingId(task.itemId);
+    setSavedId(null);
+    try {
+      const { task: updated } = await memberPortalApi.updateProgress(memberId, token, {
+        canvasId: task.canvasId,
+        deliveryId: task.deliveryId,
+        itemId: task.itemId,
+        progresso,
+      });
+      setPayload((prev) =>
+        prev
+          ? {
+              ...prev,
+              tasks: prev.tasks.map((t) =>
+                t.itemId === updated.itemId && t.canvasId === updated.canvasId ? updated : t
+              ),
+            }
+          : prev
+      );
+      setSavedId(task.itemId);
+    } catch {
+      setError('Não foi possível salvar o progresso desta ação.');
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   return (
-    <div className="employee-profile-page">
-      <div className="ep-bg" aria-hidden>
-        <div className="ep-bg-glow" />
-        <div className="ep-bg-grain" />
-      </div>
-
-      <div className="ep-shell">
-        <header className="ep-topbar">
-          <Link to="/" className="ep-brand">
-            <span className="ep-brand-mark">M</span>
-            <span className="ep-brand-text">Sprint · Desenvolvimento</span>
-          </Link>
-          <span className="ep-demo-badge">Visualização mockada</span>
+    <div className="member-portal-page">
+      <div className="member-portal-bg" aria-hidden />
+      <div className="member-portal-shell">
+        <header className="member-portal-top">
+          <div className="member-portal-brand">
+            <span className="member-portal-mark">M</span>
+            <span>Sprint · Minhas ações</span>
+          </div>
+          <span className="member-portal-badge">Acesso do colaborador</span>
         </header>
 
-        <section className="ep-hero">
-          <div className="ep-avatar" aria-hidden>
-            {initials(profile.name)}
+        {loading ? (
+          <div className="member-portal-state">
+            <Loader2 className="spin" size={28} aria-hidden />
+            <p>Carregando suas ações…</p>
           </div>
-          <div className="ep-hero-main">
-            <h1>Olá, {profile.name.split(' ')[0]}</h1>
-            <p className="ep-role">{profile.role}</p>
-            <div className="ep-meta-row">
-              {profile.department && (
-                <span>
-                  <Briefcase size={15} aria-hidden />
-                  {profile.department}
-                </span>
-              )}
-              {profile.location && (
-                <span>
-                  <MapPin size={15} aria-hidden />
-                  {profile.location}
-                </span>
-              )}
-              <span>
-                <Mail size={15} aria-hidden />
-                {profile.email}
-              </span>
-              <span>{MEMBER_STATUS_LABELS[profile.status]}</span>
-            </div>
+        ) : error && !payload ? (
+          <div className="member-portal-state">
+            <p className="member-portal-error">{error}</p>
+            <Link to="/" className="member-portal-ghost">
+              Ir para o início
+            </Link>
           </div>
-          <div className="ep-cycle-pill">
-            <Sparkles size={15} aria-hidden />
-            {profile.cycleLabel}
-          </div>
-          <div className="ep-leader-note" style={{ gridColumn: '1 / -1' }}>
-            <strong>Mensagem de {profile.leaderName} · {profile.companyName}</strong>
-            {profile.leaderMessage}
-          </div>
-        </section>
-
-        <div className="ep-grid">
-          <article className="ep-card">
-            <h2>Destaques</h2>
-            <ul className="ep-list ep-list--highlights">
-              {profile.highlights.map((item) => (
-                <li key={item}>
-                  <CheckCircle2 size={16} aria-hidden />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </article>
-
-          <article className="ep-card">
-            <h2>O que melhorar agora</h2>
-            <ul className="ep-list ep-list--improvements">
-              {profile.improvements.map((item) => (
-                <li key={item}>
-                  <TrendingUp size={16} aria-hidden />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </article>
-
-          <article className="ep-card">
-            <h2>Indicadores</h2>
-            <div className="ep-stats">
-              <div className="ep-stat">
-                <div className="ep-stat-value">{profile.performance}%</div>
-                <div className="ep-stat-label">Desempenho</div>
+        ) : payload ? (
+          <>
+            <section className="member-portal-hero">
+              <div className="member-portal-avatar" aria-hidden>
+                {initials(payload.member.name)}
               </div>
-              <div className="ep-stat">
-                <div className="ep-stat-value">{profile.projectsCompleted}</div>
-                <div className="ep-stat-label">Projetos</div>
+              <div className="member-portal-hero-copy">
+                <h1>Olá, {payload.member.name.split(' ')[0]}</h1>
+                <p>
+                  {payload.member.role}
+                  {payload.member.department ? ` · ${payload.member.department}` : ''}
+                </p>
+                <p className="member-portal-hero-hint">
+                  Você vê apenas o que o gestor atribuiu a você. Atualize o progresso das suas ações.
+                </p>
               </div>
-              <div className="ep-stat">
-                <div className="ep-stat-value">{profile.objectives.length}</div>
-                <div className="ep-stat-label">Objetivos</div>
-              </div>
-            </div>
-            <div className="ep-skills" style={{ marginTop: '1rem' }}>
-              {profile.skills.map((skill) => (
-                <span key={skill} className="ep-skill">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </article>
-
-          <article className="ep-card">
-            <h2>Convite</h2>
-            <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: 'var(--ep-muted)', lineHeight: 1.55 }}>
-              Você recebeu este panorama porque está vinculado ao People Sprint da Difusão neste ciclo.
-            </p>
-            <div className="ep-meta-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.35rem' }}>
-              <span>
-                <Calendar size={15} aria-hidden />
-                Convite enviado em {formatDate(profile.invitedAt)}
-              </span>
-              {profile.hireDate && (
-                <span>
-                  <Calendar size={15} aria-hidden />
-                  Na equipe desde {formatDate(profile.hireDate)}
-                </span>
-              )}
-            </div>
-          </article>
-
-          <article className="ep-card ep-card--wide">
-            <h2>Objetivos vinculados a você</h2>
-            <div className="ep-objectives">
-              {profile.objectives.map((obj) => (
-                <div key={obj.id} className="ep-objective">
-                  <div>
-                    <div className="ep-objective-title">
-                      <Target size={14} style={{ display: 'inline', marginRight: 6, verticalAlign: -2 }} aria-hidden />
-                      {obj.title}
-                    </div>
-                    {obj.impact && <div className="ep-objective-impact">{obj.impact}</div>}
-                  </div>
-                  <span className={`ep-status ep-status--${obj.status}`}>
-                    {STATUS_LABELS[obj.status]}
-                  </span>
+              <div className="member-portal-meter" aria-label={`Progresso médio ${avgProgress}%`}>
+                <div className="member-portal-meter__lede">
+                  <span>Seu progresso</span>
+                  <strong>
+                    {avgProgress}
+                    <span>%</span>
+                  </strong>
                 </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="ep-card ep-card--wide">
-            <h2>Entregas no Action Canvas</h2>
-            <div className="ep-deliveries">
-              {profile.deliveries.map((delivery) => (
-                <div key={delivery.id} className="ep-delivery">
-                  <span className="ep-delivery-initiative">{delivery.initiative}</span>
-                  <span className="ep-delivery-title">{delivery.title}</span>
-                  <span className={`ep-traffic ep-traffic--${delivery.status}`} title={delivery.status} />
-                  <div className="ep-delivery-meta">
-                    {delivery.dueDate && <>Prazo: {delivery.dueDate}</>}
-                    {delivery.evidence && <> · {delivery.evidence}</>}
-                  </div>
+                <div className="member-portal-meter__track">
+                  <div
+                    className="member-portal-meter__fill"
+                    style={{ width: `${avgProgress}%` }}
+                  />
                 </div>
-              ))}
-            </div>
-          </article>
-        </div>
+                <p>
+                  {tasks.length} {tasks.length === 1 ? 'ação' : 'ações'} atribuídas
+                </p>
+              </div>
+            </section>
 
-        <footer className="ep-footer">
-          <p>
-            Este é um perfil de desenvolvimento personalizado. Em breve os dados virão do seu ciclo real no Sprint.
-          </p>
-          {acknowledged ? (
-            <span className="ep-acknowledged">
-              <CheckCircle2 size={18} aria-hidden />
-              Leitura confirmada — obrigado!
-            </span>
-          ) : (
-            <button type="button" className="ep-btn ep-btn--primary" onClick={() => setAcknowledged(true)}>
-              <CircleDot size={16} aria-hidden />
-              Confirmar que li
-            </button>
-          )}
-          <Link to="/login" className="ep-btn ep-btn--ghost">
-            Acessar Sprint
-          </Link>
-        </footer>
+            {error ? <p className="member-portal-inline-error">{error}</p> : null}
+
+            <section className="member-portal-tasks">
+              <h2>Ações atribuídas a você</h2>
+              {tasks.length === 0 ? (
+                <div className="member-portal-empty">
+                  <p>Nenhuma ação no check-list com o seu nome ainda.</p>
+                  <p>Quando o gestor te atribuir uma tarefa na Execução, ela aparece aqui.</p>
+                </div>
+              ) : (
+                <ul className="member-portal-task-list">
+                  {tasks.map((task) => (
+                    <li key={`${task.canvasId}-${task.itemId}`} className="member-portal-task">
+                      <div className="member-portal-task__meta">
+                        <span className="member-portal-task__initiative">{task.initiative}</span>
+                        <span className="member-portal-task__delivery">{task.deliveryTitle}</span>
+                      </div>
+                      <h3>{task.texto}</h3>
+                      <div className="member-portal-task__row">
+                        <label>
+                          <span>Progresso</span>
+                          <select
+                            value={task.progresso}
+                            disabled={savingId === task.itemId}
+                            onChange={(e) =>
+                              void updateProgress(
+                                task,
+                                Number(e.target.value) as MemberPortalProgress
+                              )
+                            }
+                          >
+                            {PROGRESS_OPTIONS.map((p) => (
+                              <option key={p} value={p}>
+                                {p}%
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        {task.prazo ? (
+                          <p className="member-portal-task__prazo">Prazo: {task.prazo}</p>
+                        ) : null}
+                        <span className="member-portal-task__status" aria-live="polite">
+                          {savingId === task.itemId ? (
+                            <>
+                              <Loader2 size={14} className="spin" aria-hidden /> Salvando…
+                            </>
+                          ) : savedId === task.itemId ? (
+                            <>
+                              <CheckCircle2 size={14} aria-hidden /> Salvo
+                            </>
+                          ) : (
+                            <>
+                              <Save size={14} aria-hidden /> Atualiza ao mudar
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        ) : null}
       </div>
     </div>
   );

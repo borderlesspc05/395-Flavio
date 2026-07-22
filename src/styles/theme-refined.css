@@ -495,35 +495,72 @@ body {
   color: var(--accent-blue) !important;
 }
 
-.nav-item.is-phase-locked {
+.nav-item.is-phase-locked,
+.nav-item.is-phase-completed,
+.nav-item.is-phase-future-locked {
   color: rgba(185, 182, 195, 0.55) !important;
   border-color: rgba(255, 255, 255, 0.06) !important;
   background: rgba(12, 16, 24, 0.35) !important;
 }
 
 .nav-item.is-phase-locked .nav-icon,
-.nav-item.is-phase-locked .nav-label {
+.nav-item.is-phase-locked .nav-label,
+.nav-item.is-phase-completed .nav-icon,
+.nav-item.is-phase-completed .nav-label,
+.nav-item.is-phase-future-locked .nav-icon,
+.nav-item.is-phase-future-locked .nav-label {
   color: rgba(185, 182, 195, 0.55) !important;
   opacity: 0.85;
 }
 
-.nav-item.is-phase-locked .nav-lock-icon {
+.nav-item.is-phase-future-locked {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.nav-item.is-phase-current {
+  border-color: rgba(110, 180, 120, 0.35) !important;
+}
+
+.nav-item.is-phase-reopened {
+  border-color: rgba(255, 188, 125, 0.4) !important;
+}
+
+.nav-phase-icon,
+.nav-lock-icon {
   margin-left: auto;
   flex-shrink: 0;
   color: rgba(175, 146, 112, 0.7);
   opacity: 0.95;
 }
 
-.nav-item.is-phase-locked.active {
+.nav-item.is-phase-completed .nav-phase-icon {
+  color: rgba(140, 190, 150, 0.85);
+}
+
+.nav-item.is-phase-current .nav-phase-icon.is-current-dot {
+  color: #6eb478;
+  fill: #6eb478;
+}
+
+.nav-item.is-phase-reopened .nav-phase-icon {
+  color: #ffbc7d;
+}
+
+.nav-item.is-phase-locked.active,
+.nav-item.is-phase-completed.active,
+.nav-item.is-phase-future-locked.active {
   border-color: rgba(175, 146, 112, 0.28) !important;
   background: rgba(20, 24, 32, 0.55) !important;
   color: rgba(210, 205, 198, 0.72) !important;
 }
 
-.nav-item.is-phase-locked.active .nav-icon {
+.nav-item.is-phase-locked.active .nav-icon,
+.nav-item.is-phase-completed.active .nav-icon {
   color: rgba(175, 146, 112, 0.65) !important;
 }
 
+.dashboard-sidebar.collapsed .nav-item .nav-phase-icon,
 .dashboard-sidebar.collapsed .nav-item.is-phase-locked .nav-lock-icon {
   position: absolute;
   right: 0.2rem;
@@ -531,6 +568,17 @@ body {
   width: 0.7rem;
   height: 0.7rem;
   margin: 0;
+}
+
+.dashboard-phase-notice {
+  margin: 0.35rem 0 0;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 188, 125, 0.28);
+  background: rgba(255, 188, 125, 0.1);
+  color: #f8e6c7;
+  font-size: 0.8rem;
+  line-height: 1.35;
 }
 
 .nav-item-logout {

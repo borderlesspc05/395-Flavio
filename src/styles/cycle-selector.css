@@ -316,6 +316,64 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+.cycle-selector__new {
+  width: 100%;
+  margin: 0.15rem 0 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem;
+  border: 1px dashed rgba(175, 146, 112, 0.35);
+  border-radius: 10px;
+  background: rgba(175, 146, 112, 0.06);
+  color: #d9c8a8;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cycle-selector__new:hover:not(:disabled) {
+  background: rgba(175, 146, 112, 0.14);
+}
+
+.cycle-selector__new:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cycle-selector__more {
+  width: 100%;
+  margin: 0.15rem 0 0.25rem;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 188, 125, 0.92);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+}
+
+.cycle-selector__more:hover {
+  background: rgba(175, 146, 112, 0.1);
+  color: #ffbc7d;
+}
+
+.cycle-selector__limit-hint {
+  margin: 0 0 0.45rem;
+  padding: 0 0.25rem;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: rgba(242, 237, 230, 0.5);
+}
+
+.cycle-selector__limit-hint a {
+  color: #ffbc7d;
+}
+
 .cycle-selector__hub {
   display: flex;
   align-items: center;
@@ -335,43 +393,6 @@
 
 .cycle-selector__hub:hover {
   background: rgba(175, 146, 112, 0.1);
-  color: #ffbc7d;
-}
-
-.cycle-selector__new {
-  width: 100%;
-  margin-top: 0.35rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.55rem;
-  border: 1px dashed rgba(175, 146, 112, 0.35);
-  border-radius: 10px;
-  background: rgba(175, 146, 112, 0.06);
-  color: #d9c8a8;
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-
-.cycle-selector__new:hover:not(:disabled) {
-  background: rgba(175, 146, 112, 0.14);
-}
-
-.cycle-selector__new:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.cycle-selector__limit-hint {
-  margin: 0.35rem 0 0;
-  padding: 0 0.25rem;
-  font-size: 0.7rem;
-  line-height: 1.45;
-  color: rgba(242, 237, 230, 0.5);
-}
-
-.cycle-selector__limit-hint a {
   color: #ffbc7d;
 }
 
