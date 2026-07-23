@@ -26,7 +26,19 @@ export function DeliveryChecklistEditor({
   onSuggest,
   onRemind,
 }: Props) {
-  const list = items.length > 0 ? items : [emptyChecklistItem()];
+  const priorityRank = { critica: 0, alta: 1, media: 2, baixa: 3 };
+  const list = (items.length > 0 ? [...items] : [emptyChecklistItem()]).sort((left, right) => {
+    const leftDone = left.done || left.progresso === 100;
+    const rightDone = right.done || right.progresso === 100;
+    if (leftDone !== rightDone) return leftDone ? 1 : -1;
+    const leftOverdue = left.prazo ? new Date(left.prazo).getTime() < Date.now() : false;
+    const rightOverdue = right.prazo ? new Date(right.prazo).getTime() < Date.now() : false;
+    if (leftOverdue !== rightOverdue) return leftOverdue ? -1 : 1;
+    const priorityDiff =
+      priorityRank[left.prioridade ?? 'media'] - priorityRank[right.prioridade ?? 'media'];
+    if (priorityDiff) return priorityDiff;
+    return (left.prazo || '9999').localeCompare(right.prazo || '9999');
+  });
 
   const updateItem = (id: string, patch: Partial<DeliveryChecklistItem>) => {
     const next = list.map((item) => {
@@ -71,6 +83,7 @@ export function DeliveryChecklistEditor({
         </button>
         <div className="diffusion-checklist-cols" aria-hidden>
           <span>Responsável</span>
+          <span>Prioridade</span>
           <span>Status</span>
           <span>Prazo</span>
         </div>
@@ -95,6 +108,7 @@ export function DeliveryChecklistEditor({
 
               <input
                 className="diffusion-checklist-text"
+                title={item.texto}
                 value={item.texto}
                 disabled={disabled}
                 placeholder="IA sugere ações editáveis…"
@@ -106,6 +120,9 @@ export function DeliveryChecklistEditor({
                   label=""
                   value={item.responsavel || ''}
                   disabled={disabled}
+                  showAddToTeam
+                  restrictToMembers
+                  compactWhenSelected
                   onChange={(responsavel) => updateItem(item.id, { responsavel })}
                 />
                 <button
@@ -123,6 +140,25 @@ export function DeliveryChecklistEditor({
                   )}
                 </button>
               </div>
+
+              <label className={`diffusion-checklist-priority is-${item.prioridade ?? 'media'}`}>
+                <span className="sr-only">Prioridade</span>
+                <select
+                  value={item.prioridade ?? 'media'}
+                  disabled={disabled}
+                  onChange={(event) =>
+                    updateItem(item.id, {
+                      prioridade: event.target.value as DeliveryChecklistItem['prioridade'],
+                    })
+                  }
+                  title="Prioridade da ação"
+                >
+                  <option value="critica">Crítica</option>
+                  <option value="alta">Alta</option>
+                  <option value="media">Média</option>
+                  <option value="baixa">Baixa</option>
+                </select>
+              </label>
 
               <label className="diffusion-checklist-status">
                 <span className="sr-only">Status</span>

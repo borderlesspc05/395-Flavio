@@ -100,65 +100,52 @@ function buildOverview(
   };
 }
 
-function deliveryStatusLabel(status: MidExecutionRow['status']): string {
-  switch (status) {
-    case 'verde':
-      return 'No ritmo';
-    case 'amarelo':
-      return 'Atenção';
-    case 'vermelho':
-      return 'Travado';
-    default:
-      return 'Pendente';
-  }
-}
-
 function buildExecution(input: BuildMidInput): MidExecutionRow[] {
   const rows: MidExecutionRow[] = [];
 
   for (const canvas of input.canvases) {
     for (const entrega of canvas.entregas) {
-      if (!entrega.entrega?.trim()) continue;
-      const status = entrega.status ?? 'pendente';
-      rows.push({
-        id: `${canvas.id}-${entrega.id}`,
-        delivery: entrega.entrega,
-        owner: entrega.responsavel?.trim() || canvas.owner || '—',
-        status,
-        statusLabel: deliveryStatusLabel(status),
-        evidence: entrega.evidencia?.trim() || 'Registrar evidência no follow-up',
-        nextAction:
-          status === 'vermelho'
-            ? 'Desbloquear com sponsor — revisar risco'
-            : status === 'amarelo'
-              ? 'Reforçar ritmo e evidência até o prazo'
-              : status === 'verde'
-                ? 'Consolidar e repetir o padrão'
-                : 'Definir dono e primeira evidência',
-        source: canvas.nomeIniciativa || 'Action Canvas',
-      });
+      for (const item of entrega.checklistItems ?? []) {
+        if (!item.texto?.trim() || item.done || item.progresso === 100) continue;
+        const overdue = item.prazo
+          ? new Date(item.prazo).getTime() < Date.now()
+          : false;
+        const status: MidExecutionRow['status'] = overdue
+          ? 'vermelho'
+          : (item.progresso ?? 0) >= 50
+            ? 'amarelo'
+            : 'pendente';
+        rows.push({
+          id: `${canvas.id}-${entrega.id}-${item.id}`,
+          delivery: item.texto,
+          owner: item.responsavel?.trim() || entrega.responsavel?.trim() || canvas.owner || '—',
+          status,
+          statusLabel: overdue ? 'Atrasada' : `${item.progresso ?? 0}% concluída`,
+          evidence: `${entrega.entrega} · ${item.prioridade ?? 'média'} prioridade`,
+          nextAction: overdue
+            ? `Regularizar “${item.texto}” antes de iniciar novas atividades dependentes.`
+            : (item.progresso ?? 0) === 0
+              ? `Confirmar responsável e iniciar “${item.texto}”.`
+              : `Concluir a próxima evidência de “${item.texto}” até o prazo.`,
+          source: canvas.nomeIniciativa || 'Action Canvas',
+          deadline: item.prazo || entrega.prazo,
+          priority: item.prioridade ?? 'media',
+        });
+      }
     }
   }
-
-  for (const obj of input.objectives.filter((o) => o.status !== 'concluido').slice(0, 6)) {
-    const status: MidExecutionRow['status'] =
-      obj.status === 'em_andamento' ? 'amarelo' : 'pendente';
-    rows.push({
-      id: `obj-${obj.id}`,
-      delivery: obj.titulo,
-      owner: obj.responsavel?.trim() || '—',
-      status,
-      statusLabel: obj.status === 'em_andamento' ? 'Em andamento' : 'Não iniciado',
-      evidence: obj.impacto?.trim() || 'Impacto ainda não documentado',
-      nextAction:
-        obj.prioridade === 'alta'
-          ? 'Priorizar na próxima cadência de follow-up'
-          : 'Avançar após destravar entregas críticas',
-      source: 'Objetivo estratégico',
-    });
-  }
-
-  return rows.slice(0, 12);
+  const priorityRank = { critica: 0, alta: 1, media: 2, baixa: 3 };
+  return rows
+    .sort((left, right) => {
+      const statusRank = { vermelho: 0, amarelo: 1, pendente: 2, verde: 3 };
+      const byStatus = statusRank[left.status] - statusRank[right.status];
+      if (byStatus) return byStatus;
+      const byPriority =
+        priorityRank[left.priority ?? 'media'] - priorityRank[right.priority ?? 'media'];
+      if (byPriority) return byPriority;
+      return (left.deadline || '9999').localeCompare(right.deadline || '9999');
+    })
+    .slice(0, 5);
 }
 
 function toIntelligenceInput(input: BuildMidInput): MidIntelligenceInput {

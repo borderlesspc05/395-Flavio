@@ -27,23 +27,48 @@ export async function ensureMemberPortalToken(member: TeamMember): Promise<TeamM
   return updated ?? { ...member, portalToken };
 }
 
-function normalizeName(value: string): string {
-  return value.trim().toLowerCase();
+function normalizePersonKey(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
 }
 
 /** Verifica se o texto de responsável aponta para este membro (nome ou e-mail). */
 export function assigneeMatchesMember(responsavel: string, member: TeamMember): boolean {
   const raw = (responsavel || '').trim();
   if (!raw) return false;
-  const needle = normalizeName(raw);
-  const nome = normalizeName(member.nome || '');
-  const email = normalizeName(member.email || '');
+  const needle = normalizePersonKey(raw);
+  if (!needle) return false;
 
-  if (email && (needle === email || needle.includes(email) || email.includes(needle))) {
-    return true;
+  const nome = normalizePersonKey(member.nome || '');
+  const email = normalizePersonKey(member.email || '');
+
+  if (email) {
+    if (needle === email || needle.includes(email) || email.includes(needle)) return true;
+    const local = email.split('@')[0] || '';
+    if (local && (needle === local || needle.includes(local) || local.includes(needle))) return true;
   }
+
   if (!nome) return false;
-  return needle === nome || needle.includes(nome) || nome.includes(needle);
+  if (needle === nome || needle.includes(nome) || nome.includes(needle)) return true;
+
+  // Tokens: "Ana Silva" casa com "Ana" ou "Silva" quando o nome cadastrado tem ≥2 partes
+  // e o token digitado tem ≥3 chars (evita falso positivo em "de"/"da").
+  const needleTokens = needle.split(' ').filter((t) => t.length >= 3);
+  const nomeTokens = nome.split(' ').filter((t) => t.length >= 3);
+  if (needleTokens.length && nomeTokens.length) {
+    if (needleTokens.every((t) => nomeTokens.some((n) => n === t || n.startsWith(t) || t.startsWith(n)))) {
+      return true;
+    }
+    if (nomeTokens.some((n) => needleTokens.includes(n))) {
+      return needleTokens.length === 1 || nomeTokens.filter((n) => needleTokens.includes(n)).length >= 1;
+    }
+  }
+
+  return false;
 }
 
 export interface MemberPortalTask {

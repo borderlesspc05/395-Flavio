@@ -33,6 +33,17 @@ services:
         sync: false
       - key: CRON_SECRET
         sync: false
+      # Stripe Billing — cole STRIPE_SECRET_KEY e STRIPE_WEBHOOK_SECRET no painel Render
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_STARTER
+        value: price_1TobnLKjY0WVHr4V5PbFE7iI
+      - key: STRIPE_PRICE_ADVANCED
+        value: price_1TobpSKjY0WVHr4VpL9vQAbz
+      - key: STRIPE_PRICE_PREMIUM
+        value: price_1Tobr1KjY0WVHr4V4lzMNpkh
 
   # Segunda-feira 12:00 UTC (~09:00 BRT) — Sprint Weekly Brief
   - type: cron

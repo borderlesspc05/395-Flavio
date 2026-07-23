@@ -216,6 +216,7 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
   const [drawerDeliveryId, setDrawerDeliveryId] = useState<string | null>(null);
   const [emailHint, setEmailHint] = useState<string | null>(null);
   const [drawerSaved, setDrawerSaved] = useState(false);
+  const [suggestingCriteria, setSuggestingCriteria] = useState(false);
   const [suggestingRisks, setSuggestingRisks] = useState(false);
   const [remindingRiskId, setRemindingRiskId] = useState<string | null>(null);
   const [suggestingActions, setSuggestingActions] = useState(false);
@@ -323,6 +324,36 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
       return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const suggestCriteria = async () => {
+    if (!active || suggestingCriteria) return;
+    setSuggestingCriteria(true);
+    try {
+      const result = await actionCanvasesApi.suggestSuccessCriteria({
+        nomeIniciativa: active.nomeIniciativa.trim(),
+        objetivoEspecifico: active.objetivoEspecifico.trim(),
+        prazoFinal: active.prazoFinal,
+        entregas: active.entregas.map((item) => item.entrega.trim()).filter(Boolean),
+        riscos: active.riscos.map((item) => item.risco.trim()).filter(Boolean),
+      });
+      if (result.criteria.length !== 3) {
+        throw new Error('A IA não retornou os três critérios esperados.');
+      }
+      await patchActive(
+        { successCriteria: result.criteria },
+        {
+          successMessage: result.demoMode
+            ? 'Critérios SMART gerados com o modelo de contingência.'
+            : 'Três critérios SMART distintos foram gerados e salvos.',
+        },
+      );
+    } catch {
+      setNotice('Não foi possível sugerir os critérios. Tente novamente.');
+      pushToast('error', 'Não foi possível gerar novos critérios SMART.', 'Erro na sugestão');
+    } finally {
+      setSuggestingCriteria(false);
     }
   };
 
@@ -660,14 +691,31 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
                 />
               </label>
               <div className="diffusion-v2-criteria">
-                <span>Critérios de sucesso (Design)</span>
+                <div className="diffusion-v2-criteria-head">
+                  <span>Critérios de sucesso (Design)</span>
+                  <button
+                    type="button"
+                    className="diffusion-v2-criteria-suggest"
+                    disabled={saving || suggestingCriteria || active.fechado}
+                    onClick={() => void suggestCriteria()}
+                  >
+                    {suggestingCriteria ? (
+                      <Loader2 size={14} className="spin" aria-hidden />
+                    ) : (
+                      <Sparkles size={14} aria-hidden />
+                    )}
+                    {suggestingCriteria ? 'Gerando…' : 'Sugerir critérios'}
+                  </button>
+                </div>
                 <p className="diffusion-v2-criteria-hint">
                   Edite aqui se precisar ajustar os indicadores — as alterações salvam com a iniciativa.
                 </p>
                 <div className="diffusion-v2-criteria-fields">
                   {normalizeCriteria(active.successCriteria).map((criterion, index) => (
                     <label key={`criterion-${index}`} className="diffusion-v2-field">
-                      <span className="diffusion-v2-criteria-index">Critério {index + 1}</span>
+                      <span className="diffusion-v2-criteria-index">
+                        Critério {index + 1} · {['Resultado', 'Adoção', 'Qualidade / sustentação'][index]}
+                      </span>
                       <input
                         value={criterion}
                         placeholder={`Indicador observável ${index + 1}`}
@@ -1016,14 +1064,32 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
               <>
                 <div className="diffusion-drawer-body">
                   <div className="diffusion-v2-criteria diffusion-v2-criteria--drawer">
-                    <span>Critérios de sucesso</span>
+                    <div className="diffusion-v2-criteria-head">
+                      <span>Critérios de sucesso</span>
+                      <button
+                        type="button"
+                        className="diffusion-v2-criteria-suggest"
+                        disabled={saving || suggestingCriteria || active.fechado}
+                        onClick={() => void suggestCriteria()}
+                      >
+                        {suggestingCriteria ? (
+                          <Loader2 size={14} className="spin" aria-hidden />
+                        ) : (
+                          <Sparkles size={14} aria-hidden />
+                        )}
+                        {suggestingCriteria ? 'Gerando…' : 'Sugerir critérios'}
+                      </button>
+                    </div>
                     <p className="diffusion-v2-criteria-hint">
                       Editáveis — alinhe o indicador desta entrega ao Design.
                     </p>
                     <div className="diffusion-v2-criteria-fields">
                       {normalizeCriteria(active.successCriteria).map((criterion, index) => (
                         <label key={`drawer-criterion-${index}`} className="diffusion-v2-field">
-                          <span className="diffusion-v2-criteria-index">Critério {index + 1}</span>
+                          <span className="diffusion-v2-criteria-index">
+                            Critério {index + 1} ·{' '}
+                            {['Resultado', 'Adoção', 'Qualidade / sustentação'][index]}
+                          </span>
                           <input
                             value={criterion}
                             placeholder={`Indicador observável ${index + 1}`}
@@ -1049,7 +1115,7 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
                     </div>
                   </div>
 
-                  <label className="diffusion-v2-field">
+                  <label className="diffusion-v2-field diffusion-v2-delivery-title-field">
                     <span>Entrega</span>
                     <input
                       value={delivery.entrega}
@@ -1074,6 +1140,9 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
                     <TeamMemberCombobox
                       label="Sponsor"
                       value={deliverySponsorValue(delivery, active.sponsor)}
+                      showAddToTeam
+                      restrictToMembers
+                      compactWhenSelected
                       onChange={(sponsor) => {
                         setCanvases((prev) =>
                           prev.map((c) =>

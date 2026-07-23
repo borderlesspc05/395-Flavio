@@ -1,5 +1,6 @@
 import { retrieveRelevantContextDetailed } from './rag';
 import { dayHash } from '../utils/dailyInsight';
+import { chatCompletion, getDefaultModel, isLlmConfigured } from './llm';
 
 export type MidKpiId =
   | 'evolution-index'
@@ -131,15 +132,62 @@ export async function buildMidKpiRagInsights(
       );
 
       const candidates = extractCandidates(retrieved.context);
-      const bullets = pickDailyItems(candidates, `mid-kpi-rag-${kpiId}`, 3);
+      let bullets = pickDailyItems(candidates, `mid-kpi-rag-${kpiId}`, 3);
       const sources = extractSources(retrieved.context);
       const usedRag = retrieved.usedVectorRag || retrieved.usedFrameworkRag;
 
-      const detail =
+      let detail =
         bullets[0] ??
         (usedRag
           ? `Encontrei contexto relevante na memória do ciclo para ${label}. Continue alimentando o diagnóstico e a execução.`
           : `Ainda sem trechos RAG suficientes para ${label}. Conclua scans, planos e check-ins para enriquecer a memória.`);
+
+      if (isLlmConfigured() && retrieved.context.trim()) {
+        try {
+          const raw = await chatCompletion({
+            model: getDefaultModel(),
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'Você é um gerente de projetos sênior. Responda somente JSON válido e não use frameworks ou recomendações genéricas.',
+              },
+              {
+                role: 'user',
+                content: `Analise o indicador ${label} usando apenas as evidências desta iniciativa.
+
+Pergunta do indicador: ${query}
+
+Produza:
+- leitura: uma frase curta sobre o estado atual;
+- causa: a principal causa desse estado;
+- acao: uma única próxima decisão específica.
+
+Cruze objetivo, critérios, execução, atrasos, bloqueios, riscos e aprendizados quando disponíveis. Não repita a nota e não escreva algo reutilizável em qualquer projeto.
+
+Evidências:
+${retrieved.context.slice(0, 9000)}
+
+JSON: {"leitura":"...","causa":"...","acao":"..."}`,
+              },
+            ],
+            temperature: 0.35,
+          });
+          const match = raw.match(/\{[\s\S]*\}/);
+          const parsed = match
+            ? (JSON.parse(match[0]) as { leitura?: string; causa?: string; acao?: string })
+            : null;
+          const generated = [parsed?.leitura, parsed?.causa, parsed?.acao]
+            .map((item) => String(item ?? '').trim())
+            .filter(Boolean);
+          if (generated.length === 3) {
+            detail = generated[0];
+            bullets = generated.slice(1);
+          }
+        } catch (error) {
+          console.warn(`[midKpiInsights] AI failed for ${kpiId}:`, error);
+        }
+      }
 
       return {
         kpiId,

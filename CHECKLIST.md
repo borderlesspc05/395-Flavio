@@ -203,10 +203,14 @@ Documento de validação do que foi implementado na plataforma.
 
 ### Validar em produção
 
-- [ ] Render: `STRIPE_*`, `FRONTEND_URL`, `CORS_ORIGIN` preenchidos + redeploy
-- [ ] Stripe: webhook apontando para `https://SUA-API.onrender.com/api/billing/webhook`
-- [ ] Netlify: `VITE_API_BASE_URL` → API Render
-- [ ] Firebase: domínio Netlify em **Authorized domains**
+- [x] Local: chaves Stripe live + 3 price IDs validados (Starter R$97 / Advanced R$147 / Premium R$297)
+- [x] Local: Checkout Session cria URL `checkout.stripe.com` (sessão live)
+- [x] Código: Checkout sem `payment_method_types` fixo + `allow_promotion_codes`
+- [x] `render.yaml`: `STRIPE_PRICE_*` + placeholders `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`
+- [ ] Render Dashboard: colar `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` (sync:false) + redeploy
+- [ ] Stripe: webhook → `https://three95-flavio-fcha.onrender.com/api/billing/webhook`
+- [ ] Netlify: `VITE_API_BASE_URL` → API Render + `VITE_STRIPE_PUBLISHABLE_KEY`
+- [ ] Firebase: domínio Netlify / sprint.magnusmind.io em **Authorized domains**
 - [ ] Teste E2E: plano → pagamento → registro (mesmo email) → dashboard com limite do plano
 
 ### Arquivos principais — sessão 02/06

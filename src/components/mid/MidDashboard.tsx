@@ -295,10 +295,10 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
             <table className="mid-table mid-table--execution">
               <thead>
                 <tr>
-                  <th>Entrega</th>
-                  <th>Owner</th>
+                  <th>Ação prioritária</th>
+                  <th>Responsável</th>
                   <th>Status</th>
-                  <th>Evidência</th>
+                  <th>Prazo</th>
                   <th>Próxima ação</th>
                 </tr>
               </thead>
@@ -315,7 +315,7 @@ export function MidDashboard({ data, loading }: MidDashboardProps) {
                         {row.statusLabel}
                       </span>
                     </td>
-                    <td className="mid-cell-muted">{row.evidence}</td>
+                    <td className="mid-cell-muted">{row.deadline || 'A definir'}</td>
                     <td>{row.nextAction}</td>
                   </tr>
                 ))}

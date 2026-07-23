@@ -7,25 +7,27 @@ import {
   checklistItemsEqual,
   type DeliveryChecklistItem,
 } from './deliveryChecklist';
-import { buildMemberPortalUrl, ensureMemberPortalToken } from './memberPortal';
+import {
+  assigneeMatchesMember,
+  buildMemberPortalUrl,
+  ensureMemberPortalToken,
+} from './memberPortal';
+
+async function findTeamMemberByAssignee(
+  userId: string,
+  responsavel: string
+): Promise<TeamMember | null> {
+  const trimmed = (responsavel || '').trim();
+  if (!trimmed) return null;
+  const members = await listByUser<TeamMember>(COLLECTIONS.teamMembers, userId);
+  return members.find((m) => assigneeMatchesMember(trimmed, m)) ?? null;
+}
 
 async function resolvePortalLink(
   userId: string,
   responsavel: string
 ): Promise<string | null> {
-  const trimmed = (responsavel || '').trim();
-  if (!trimmed) return null;
-  const members = await listByUser<TeamMember>(COLLECTIONS.teamMembers, userId);
-  const needle = trimmed.toLowerCase();
-  const emailMatch = trimmed.match(/[^\s<>]+@[^\s<>]+/);
-  const emailNeedle = emailMatch?.[0]?.toLowerCase();
-  const match = members.find((m) => {
-    const nome = (m.nome || '').trim().toLowerCase();
-    const email = (m.email || '').trim().toLowerCase();
-    if (emailNeedle && email === emailNeedle) return true;
-    if (email && (needle === email || needle.includes(email))) return true;
-    return nome === needle || nome.includes(needle) || needle.includes(nome);
-  });
+  const match = await findTeamMemberByAssignee(userId, responsavel);
   if (!match) return null;
   const ensured = await ensureMemberPortalToken(match);
   return buildMemberPortalUrl(ensured);
@@ -66,28 +68,41 @@ function isRolePlaceholder(value: string): boolean {
 export async function resolveAssigneeEmail(
   userId: string,
   responsavel: string
-): Promise<{ email: string | null; displayName: string }> {
+): Promise<{ email: string | null; displayName: string; matchedMember: boolean }> {
   const trimmed = (responsavel || '').trim();
-  if (!trimmed) return { email: null, displayName: '' };
+  if (!trimmed) return { email: null, displayName: '', matchedMember: false };
 
   const emailMatch = trimmed.match(/[^\s<>]+@[^\s<>]+/);
   if (emailMatch) {
-    return { email: emailMatch[0], displayName: trimmed };
+    const member = await findTeamMemberByAssignee(userId, emailMatch[0]);
+    return {
+      email: emailMatch[0],
+      displayName: member?.nome || trimmed,
+      matchedMember: Boolean(member),
+    };
   }
   if (looksLikeEmail(trimmed)) {
-    return { email: trimmed, displayName: trimmed };
+    const member = await findTeamMemberByAssignee(userId, trimmed);
+    return {
+      email: trimmed,
+      displayName: member?.nome || trimmed,
+      matchedMember: Boolean(member),
+    };
   }
 
-  const members = await listByUser<TeamMember>(COLLECTIONS.teamMembers, userId);
-  const needle = trimmed.toLowerCase();
-  const match = members.find((m) => {
-    const nome = (m.nome || '').trim().toLowerCase();
-    return nome === needle || nome.includes(needle) || needle.includes(nome);
-  });
+  const match = await findTeamMemberByAssignee(userId, trimmed);
   if (match?.email?.trim()) {
-    return { email: match.email.trim(), displayName: match.nome || trimmed };
+    return {
+      email: match.email.trim(),
+      displayName: match.nome || trimmed,
+      matchedMember: true,
+    };
   }
-  return { email: null, displayName: trimmed };
+  // Membro encontrado sem e-mail cadastrado
+  if (match) {
+    return { email: null, displayName: match.nome || trimmed, matchedMember: true };
+  }
+  return { email: null, displayName: trimmed, matchedMember: false };
 }
 
 /**
@@ -249,11 +264,13 @@ export async function sendChecklistReminderEmail(params: {
     return { sent: false, reason: 'Defina um responsável na ação antes de enviar o lembrete.' };
   }
 
-  const { email: to, displayName } = await resolveAssigneeEmail(canvas.userId, responsavel);
+  const { email: to, displayName, matchedMember } = await resolveAssigneeEmail(canvas.userId, responsavel);
   if (!to) {
     return {
       sent: false,
-      reason: 'Não encontramos e-mail para este responsável. Cadastre o membro na equipe.',
+      reason: matchedMember
+        ? 'Membro encontrado na equipe, mas sem e-mail cadastrado. Atualize o e-mail em Minha Equipe.'
+        : 'Não reconhecemos este nome na equipe. Selecione o membro na lista do check-list (não digite solto) e confira se ele tem e-mail em Minha Equipe.',
     };
   }
 
@@ -328,11 +345,13 @@ export async function sendRiskReminderEmail(params: {
     return { sent: false, reason: 'Defina um responsável antes de enviar o reminder.' };
   }
 
-  const { email: to, displayName } = await resolveAssigneeEmail(canvas.userId, responsavel);
+  const { email: to, displayName, matchedMember } = await resolveAssigneeEmail(canvas.userId, responsavel);
   if (!to) {
     return {
       sent: false,
-      reason: 'Não encontramos e-mail para este responsável. Cadastre o membro na equipe.',
+      reason: matchedMember
+        ? 'Membro encontrado na equipe, mas sem e-mail cadastrado. Atualize o e-mail em Minha Equipe.'
+        : 'Não reconhecemos este nome na equipe. Selecione o membro na lista (não digite solto) e confira se ele tem e-mail em Minha Equipe.',
     };
   }
 
@@ -341,7 +360,6 @@ export async function sendRiskReminderEmail(params: {
     risk,
     assigneeName: displayName || responsavel,
   });
-
   if (!isEmailConfigured()) {
     return { sent: false, demoMode: true };
   }

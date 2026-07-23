@@ -517,21 +517,30 @@ Exemplo: se a ameaca/fraqueza for variacao do cambio do dolar, NAO sugira "alter
 Em vez disso, sugira estrategias ao alcance do usuario: revisar politicas de precos, renegociar contratos, diversificar fornecedores, ajustar planejamento financeiro ou mitigar impactos.
 O principio: transformar problemas em acoes concretas, realistas e executaveis pelo usuario.
 
-PRIMEIRO sintetize em portugues do Brasil, com profundidade consultiva e sem frases genericas:
-1) companySummary: exatamente 2 paragrafos. Cada paragrafo deve ter 3 a 4 frases, trazendo leitura executiva, dores reais, prioridades e implicacoes para o negocio. Separe os dois paragrafos com "\\n\\n".
-2) companySituation: exatamente 2 paragrafos. Cada paragrafo deve ter 3 a 4 frases, descrevendo o que a empresa esta vivendo agora, tensoes organizacionais, sintomas do dia a dia e riscos se nada mudar. Separe os dois paragrafos com "\\n\\n".
+PRIMEIRO raciocine internamente como consultor organizacional: conecte respostas, separe sintomas de causas, identifique padrões recorrentes e encontre o problema-raiz que explica a maior parte dos demais sinais.
+
+Depois sintetize em português do Brasil:
+1) companySummary com esta estrutura textual:
+"O que identificamos\\n" + 4 ou 5 descobertas objetivas;
+"O que isso está provocando\\n" + consequências observadas;
+"O principal desafio\\n" + uma única conclusão sobre o problema-raiz.
+Não faça resumo campo a campo.
+2) companySituation: análise executiva das tensões atuais, relações de causa e consequência, prioridade de intervenção e risco de não agir. Use evidências concretas do diagnóstico, não frases que serviriam para qualquer empresa.
 
 DEPOIS proponha exatamente 10 acoes de plano de mudanca concretas e EXECUTAVEIS pelo usuario.
 Cada acao deve nascer das evidencias do diagnostico (incluindo SWOT quando houver).
-Atribua score de 0 a 100 = probabilidade de impacto real.
+Atribua score de 0 a 100 = nível de aderência ao diagnóstico e potencial de impacto.
 Ordene do maior para o menor score.
 
 Para cada item em "suggestions" retorne APENAS:
 - titulo (curto)
-- descricao (1-2 frases)
+- descricao (1-2 frases explicando qual problema específico a iniciativa resolve e qual transformação busca)
 - score (0-100)
 - categoria: pessoas|processo|tecnologia|estrutura|comunicacao|outro
-- rationale (ligado ao diagnostico)
+- rationale (cite padrões/evidências concretas do diagnóstico que justificam a escolha; não repita a descrição)
+
+Use nomes de iniciativas estratégicos, como projetos reais, evitando títulos vagos como "Melhorar comunicação".
+Antes de finalizar, teste cada texto: se ele continuar válido ao trocar o contexto por outra empresa, reescreva-o.
 
 Nao inclua draft, entregas ou riscos — o servidor completa esses campos.
 
@@ -550,7 +559,7 @@ Responda APENAS com JSON valido (sem markdown):
         {
           role: 'system',
           content:
-            'Retorne somente JSON objeto valido com companySummary, companySituation e suggestions (10 itens). companySummary e companySituation devem ter exatamente 2 paragrafos cada, separados por duas quebras de linha. Nunca use "Sprint Waves" ou "Magnus Mind" como nome da empresa do cliente. Toda acao sugerida deve estar na esfera de influencia do usuario — nunca proponha mudar fatores externos incontrolaveis (ex.: cotacao do dolar); proponha mitigacoes executaveis.',
+            'Retorne somente JSON objeto válido com companySummary, companySituation e suggestions (10 itens). A análise deve identificar problema-raiz, consequências e evidências específicas. Nunca use "Sprint Waves" ou "Magnus Mind" como nome da empresa do cliente. Toda ação deve estar na esfera de influência do usuário.',
         },
         { role: 'user', content: prompt },
       ],

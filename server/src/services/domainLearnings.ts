@@ -6,29 +6,19 @@ import { retrieveRelevantContext } from './rag';
 
 
 
-const SYSTEM = `Você é analista de inteligência organizacional do Magnus Mind (Onda 4 — Domínio).
+const SYSTEM = `Você é um consultor sênior em retrospectivas, transformação organizacional e melhoria contínua.
 
+Analise todo o histórico da iniciativa: objetivo, critérios, comentários da Mobilização, checklist, percentuais, prazos, pendências, atrasos, riscos, impactos e reflexões existentes.
+Raciocine internamente sobre resultado, fatores de sucesso, obstáculos, valor gerado, surpresas e práticas replicáveis antes de escrever.
 
+Produza:
+1) cinco respostas distintas para a retrospectiva, cada uma com um parágrafo curto, específico e consultivo;
+2) exatamente cinco aprendizados executivos nas perspectivas: principal descoberta, principal gargalo, maior oportunidade, padrão observado e recomendação estratégica.
 
-Com base no contexto de execução, reflexões do ciclo e trechos recuperados do histórico do cliente, extraia exatamente 5 aprendizados acionáveis em português do Brasil.
+Não liste atividades, não procure culpados, não repita métricas sem interpretá-las e não use recomendações genéricas ou frameworks decorativos. Cada texto deve ser específico para esta iniciativa.
 
-
-
-Regras:
-
-- Cada aprendizado em uma frase clara, específica e baseada nas evidências fornecidas.
-
-- Foque em padrões (o que funcionou, o que travou, o que surpreendeu).
-
-- Não repita o texto do usuário literalmente; sintetize com insight.
-
-- Priorize evidências do RAG vetorial quando disponíveis.
-
-
-
-Responda APENAS com JSON válido (sem markdown):
-
-{"learnings":["aprendizado 1","aprendizado 2","aprendizado 3","aprendizado 4","aprendizado 5"]}`;
+Responda APENAS com JSON válido:
+{"responses":{"workedWell":"...","didNotWork":"...","wouldDoDifferently":"...","biggestSurprise":"...","practiceToReplicate":"..."},"learnings":["descoberta","gargalo","oportunidade","padrão","recomendação"]}`;
 
 
 
@@ -58,7 +48,16 @@ export async function suggestDomainLearnings(
 
   context: string
 
-): Promise<{ learnings: string[] }> {
+): Promise<{
+  learnings: string[];
+  responses: {
+    workedWell: string;
+    didNotWork: string;
+    wouldDoDifferently: string;
+    biggestSurprise: string;
+    practiceToReplicate: string;
+  };
+}> {
 
   if (!isLlmConfigured()) {
 
@@ -128,7 +127,10 @@ export async function suggestDomainLearnings(
 
 
 
-  const parsed = JSON.parse(jsonStr) as { learnings?: unknown };
+  const parsed = JSON.parse(jsonStr) as {
+    learnings?: unknown;
+    responses?: Record<string, unknown>;
+  };
 
   const learnings = Array.isArray(parsed.learnings)
 
@@ -154,7 +156,16 @@ export async function suggestDomainLearnings(
 
 
 
-  return { learnings };
+  return {
+    learnings,
+    responses: {
+      workedWell: String(parsed.responses?.workedWell ?? '').trim(),
+      didNotWork: String(parsed.responses?.didNotWork ?? '').trim(),
+      wouldDoDifferently: String(parsed.responses?.wouldDoDifferently ?? '').trim(),
+      biggestSurprise: String(parsed.responses?.biggestSurprise ?? '').trim(),
+      practiceToReplicate: String(parsed.responses?.practiceToReplicate ?? '').trim(),
+    },
+  };
 
 }
 

@@ -624,6 +624,20 @@
 }
 
 /* AI block */
+.domain-learning-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.domain-learning-ai-actions p {
+  margin: 0;
+  color: var(--dw-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .domain-ai-block {
   padding-top: 0.85rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -887,6 +901,12 @@
   padding: 0.5rem 0 0.25rem;
 }
 
+.domain-wave-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
 .domain-wave-footer-note {
   display: flex;
   align-items: center;
@@ -1132,7 +1152,7 @@
 
 /* Header → progresso do ciclo: colados sem vão */
 .sprint-wave-header:has(+ .sprint-phase-chrome) {
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.45rem !important;
 }
 
 .sprint-wave-header + .sprint-phase-chrome {

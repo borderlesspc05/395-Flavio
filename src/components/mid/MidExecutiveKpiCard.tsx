@@ -167,7 +167,7 @@ export function MidExecutiveKpiCard({
 
               {backBullets.length > 0 ? (
                 <div className="mid-exec-kpi-back-block">
-                  <p className="mid-exec-kpi-back-label">Próximos passos</p>
+                  <p className="mid-exec-kpi-back-label">Causa e próxima ação</p>
                   <ol className="mid-exec-kpi-back-meta">
                     {backBullets.map((line, i) => (
                       <li key={`back-${line}`}>

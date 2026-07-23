@@ -19,6 +19,10 @@ interface TeamMemberComboboxProps {
   id?: string;
   /** Link “Adicionar à equipe” — desligado por padrão (evita sair do fluxo). */
   showAddToTeam?: boolean;
+  /** Quando ativo, somente uma pessoa cadastrada pode ser confirmada. */
+  restrictToMembers?: boolean;
+  /** Troca o campo de busca por uma identificação compacta após a seleção. */
+  compactWhenSelected?: boolean;
 }
 
 function memberName(m: TeamMemberLite) {
@@ -32,6 +36,8 @@ export function TeamMemberCombobox({
   disabled,
   id,
   showAddToTeam = false,
+  restrictToMembers = false,
+  compactWhenSelected = false,
 }: TeamMemberComboboxProps) {
   const [members, setMembers] = useState<TeamMemberLite[]>([]);
   const [query, setQuery] = useState(value);
@@ -79,6 +85,10 @@ export function TeamMemberCombobox({
     if (!q) return true;
     return members.some((m) => memberName(m).toLowerCase() === q);
   }, [members, query]);
+  const selectedMember = useMemo(
+    () => members.find((m) => memberName(m).toLowerCase() === value.trim().toLowerCase()),
+    [members, value],
+  );
 
   const showList = open && loaded && matches.length > 0;
 
@@ -121,6 +131,17 @@ export function TeamMemberCombobox({
   return (
     <label className={`team-member-combobox${label ? '' : ' is-compact'}`}>
       {label ? <span>{label}</span> : null}
+      {compactWhenSelected && selectedMember && !open ? (
+        <div className="team-member-combobox__selected">
+          <span>
+            <UserRound size={14} aria-hidden />
+            <strong>{memberName(selectedMember)}</strong>
+          </span>
+          <button type="button" disabled={disabled} onClick={() => setOpen(true)}>
+            Alterar responsável
+          </button>
+        </div>
+      ) : (
       <div className="team-member-combobox__field" ref={fieldRef}>
         <UserRound size={14} aria-hidden />
         <input
@@ -133,12 +154,18 @@ export function TeamMemberCombobox({
           onFocus={() => setOpen(true)}
           onChange={(e) => {
             setQuery(e.target.value);
-            onChange(e.target.value);
+            if (!restrictToMembers) onChange(e.target.value);
             setOpen(true);
           }}
-          onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+          onBlur={() =>
+            window.setTimeout(() => {
+              setOpen(false);
+              if (restrictToMembers && !exactMatch) setQuery(value);
+            }, 150)
+          }
         />
       </div>
+      )}
       {showList && listStyle
         ? createPortal(
             <ul className="team-member-combobox__list is-portal" role="listbox" style={listStyle}>

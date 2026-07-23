@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Loader2,
   Plus,
+  RotateCcw,
   Sparkles,
   Trash2,
 } from 'lucide-react';
@@ -30,9 +31,10 @@ import type { ActionCanvas, SuggestedActionCanvasDraft } from '../types';
 import { ToastStack } from '../components/ui/ToastStack';
 import { PhaseInfoButton } from '../components/ui/PhaseInfoButton';
 import { PhaseLockBanner } from '../components/ui/PhaseLockBanner';
+import { Modal } from '../components/ui/Modal';
 import { usePhaseLock } from '../hooks/usePhaseLock';
 import { useCycle } from '../context/CycleContext';
-import { PHASE_PATHS } from '../services/phaseLock';
+import { canReopenPhase, PHASE_PATHS, reopenSprintPhase } from '../services/phaseLock';
 
 type EditablePlan = SuggestedActionCanvasDraft & {
   localId: string;
@@ -82,16 +84,6 @@ function blankPlan(): EditablePlan {
     ],
     riscos: [{ risco: '', acaoTomar: '' }],
   };
-}
-
-function suggestCriteriaLocal(plan: EditablePlan): string[] {
-  const title = plan.nomeIniciativa.trim() || 'a iniciativa';
-  const prazo = plan.prazoFinal || 'o prazo definido';
-  return [
-    `Indicador mensurável de avanço de ${title} até ${prazo}`,
-    `Evidência clara de adoção/uso pela equipe responsável`,
-    `Risco principal mitigado ou com plano de contingência ativo`,
-  ];
 }
 
 function fromDraft(
@@ -226,7 +218,7 @@ function linkPlansToCanvases(
 export function DesignPlansPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { clearNeedsDiagnosis } = useCycle();
+  const { clearNeedsDiagnosis, refreshCycles } = useCycle();
   const {
     locks,
     setLocks,
@@ -242,8 +234,12 @@ export function DesignPlansPage() {
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [suggestingCriteriaId, setSuggestingCriteriaId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [reopenDiagnosticOpen, setReopenDiagnosticOpen] = useState(false);
+  const [reopenReason, setReopenReason] = useState('');
+  const [reopeningDiagnostic, setReopeningDiagnostic] = useState(false);
   const syncTimers = useRef<Record<string, number>>({});
 
   useEffect(() => {
@@ -267,10 +263,30 @@ export function DesignPlansPage() {
   const validatedCount = useMemo(() => plans.filter((p) => p.validated).length, [plans]);
   const pendingCount = useMemo(() => plans.filter((p) => !p.validated).length, [plans]);
   const allValidated = plans.length > 0 && pendingCount === 0;
+  const diagnosticReopenable = canReopenPhase(progress, 'diagnostic');
   const activePlan = useMemo(
     () => plans.find((p) => p.localId === activePlanId) ?? plans[0] ?? null,
     [plans, activePlanId]
   );
+
+  const handleReopenDiagnostic = async () => {
+    setReopeningDiagnostic(true);
+    setError(null);
+    const result = await reopenSprintPhase(cycle, 'diagnostic', reopenReason);
+    setReopeningDiagnostic(false);
+
+    if (!result.ok) {
+      setError(result.message ?? 'Não foi possível reabrir o Diagnóstico.');
+      return;
+    }
+
+    setLocks(result.state.phaseLocks);
+    setProgress(result.state);
+    await refreshCycles();
+    setReopenDiagnosticOpen(false);
+    setReopenReason('');
+    navigate(result.nextPath ?? PHASE_PATHS.diagnostic);
+  };
 
   const persistCanvas = useCallback(async (plan: EditablePlan): Promise<string | undefined> => {
     if (!plan.nomeIniciativa.trim()) return plan.canvasId;
@@ -443,6 +459,33 @@ export function DesignPlansPage() {
     const plan = blankPlan();
     setPlans((prev) => [...prev, plan]);
     setActivePlanId(plan.localId);
+  };
+
+  const suggestCriteria = async (plan: EditablePlan) => {
+    setError(null);
+    setSuggestingCriteriaId(plan.localId);
+    try {
+      const result = await actionCanvasesApi.suggestSuccessCriteria({
+        nomeIniciativa: plan.nomeIniciativa.trim(),
+        objetivoEspecifico: plan.objetivoEspecifico.trim(),
+        prazoFinal: plan.prazoFinal,
+        entregas: plan.entregas.map((item) => item.entrega.trim()).filter(Boolean),
+        riscos: plan.riscos.map((item) => item.risco.trim()).filter(Boolean),
+      });
+      if (result.criteria.length !== 3) {
+        throw new Error('A IA não retornou os três critérios esperados.');
+      }
+      updatePlan(plan.localId, { successCriteria: result.criteria });
+      setNotice(
+        result.demoMode
+          ? 'Critérios SMART gerados com o modelo de contingência.'
+          : 'Três critérios SMART distintos foram gerados.',
+      );
+    } catch (err) {
+      setError(extractApiError(err, 'Não foi possível sugerir os critérios. Tente novamente.'));
+    } finally {
+      setSuggestingCriteriaId(null);
+    }
   };
 
   const validatePlan = async (localId: string) => {
@@ -705,17 +748,22 @@ export function DesignPlansPage() {
                       <button
                         type="button"
                         className="design-plan-btn is-ghost"
-                        onClick={() =>
-                          updatePlan(plan.localId, { successCriteria: suggestCriteriaLocal(plan) })
-                        }
+                        onClick={() => void suggestCriteria(plan)}
+                        disabled={suggestingCriteriaId === plan.localId}
                       >
-                        <Sparkles size={14} aria-hidden />
-                        Sugerir critérios
+                        {suggestingCriteriaId === plan.localId ? (
+                          <Loader2 size={14} className="spin" aria-hidden />
+                        ) : (
+                          <Sparkles size={14} aria-hidden />
+                        )}
+                        {suggestingCriteriaId === plan.localId ? 'Gerando critérios…' : 'Sugerir critérios'}
                       </button>
                     </div>
                     {normalizeCriteria(plan.successCriteria).map((criterion, ci) => (
                       <label key={ci} className="design-plan-field">
-                        <span>Critério {ci + 1}</span>
+                        <span>
+                          Critério {ci + 1} · {['Resultado', 'Adoção', 'Qualidade / sustentação'][ci]}
+                        </span>
                         <input
                           value={criterion}
                           onChange={(e) => {
@@ -795,6 +843,16 @@ export function DesignPlansPage() {
             </p>
           )}
           <div className="design-plans-footer-actions">
+            {diagnosticReopenable ? (
+              <button
+                type="button"
+                className="design-plan-btn is-ghost design-plans-reopen"
+                onClick={() => setReopenDiagnosticOpen(true)}
+              >
+                <RotateCcw size={16} aria-hidden />
+                Reabrir Diagnóstico
+              </button>
+            ) : null}
             {pendingCount > 0 ? (
               <button
                 type="button"
@@ -826,6 +884,49 @@ export function DesignPlansPage() {
           </div>
         </div>
       </footer>
+
+      <Modal
+        open={reopenDiagnosticOpen}
+        onClose={() => !reopeningDiagnostic && setReopenDiagnosticOpen(false)}
+        title="Reabrir Diagnóstico?"
+        size="info"
+        dismissLocked={reopeningDiagnostic}
+      >
+        <div className="phase-lock-confirm-panel">
+          <p className="phase-lock-confirm-text">
+            Deseja reabrir a fase <strong>Diagnóstico</strong>? O Design deixará de ser a fase
+            atual e precisará ser concluído novamente para manter a consistência do projeto.
+          </p>
+          <label className="phase-lock-reason">
+            <span>Motivo (opcional)</span>
+            <textarea
+              value={reopenReason}
+              onChange={(event) => setReopenReason(event.target.value)}
+              rows={3}
+              placeholder="Por que o diagnóstico precisa ser reaberto?"
+              disabled={reopeningDiagnostic}
+            />
+          </label>
+          <div className="phase-info-actions">
+            <button
+              type="button"
+              className="phase-info-close is-ghost"
+              disabled={reopeningDiagnostic}
+              onClick={() => setReopenDiagnosticOpen(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="phase-info-close"
+              disabled={reopeningDiagnostic}
+              onClick={() => void handleReopenDiagnostic()}
+            >
+              {reopeningDiagnostic ? 'Reabrindo…' : 'Reabrir Diagnóstico'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

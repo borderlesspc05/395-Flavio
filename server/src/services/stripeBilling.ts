@@ -54,7 +54,6 @@ export async function createCheckoutSession(planId: string): Promise<{ url: stri
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     locale: 'pt-BR',
-    payment_method_types: ['card'],
     line_items: [{ price: priceIdForPlan(planId), quantity: 1 }],
     success_url: `${env.frontendUrl}/register?payment=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.frontendUrl}/planos?payment=cancelled`,
@@ -62,6 +61,7 @@ export async function createCheckoutSession(planId: string): Promise<{ url: stri
     subscription_data: {
       metadata: { planId },
     },
+    allow_promotion_codes: true,
   });
 
   if (!session.url) {

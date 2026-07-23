@@ -261,6 +261,7 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
         ...domainData,
         learning: {
           ...domainData.learning,
+          ...result.responses,
           aiTopLearnings: result.learnings,
           aiGeneratedAt: new Date().toISOString(),
         },
@@ -571,6 +572,19 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
           </div>
         </div>
 
+        <div className="domain-learning-ai-actions">
+          <button
+            type="button"
+            className="domain-primary-button domain-primary-button--ghost"
+            onClick={() => void handleGenerateLearnings()}
+            disabled={generatingAi || apiUnreachable || aiConfigured === false}
+          >
+            {generatingAi ? <Loader2 size={16} className="spinning" /> : <Sparkles size={16} />}
+            {generatingAi ? 'Analisando o ciclo…' : 'Sugerir respostas com IA'}
+          </button>
+          <p>A IA cruza Mobilização, Execução, riscos, prazos e resultados antes de responder.</p>
+        </div>
+
         <div className="domain-fields-grid">
           {LEARNING_FIELDS.map(([key, label]) => {
             const fieldId = `learning-${key}`;
@@ -608,7 +622,7 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
             }
           >
             {generatingAi ? <Loader2 size={16} className="spinning" /> : <Sparkles size={16} />}
-            {generatingAi ? 'Gerando…' : 'Gerar Top 5'}
+            {generatingAi ? 'Gerando…' : 'Gerar Top 5 Aprendizados'}
           </button>
 
           {domainData.learning.aiTopLearnings.length > 0 ? (
@@ -697,15 +711,23 @@ export function DomainWaveWorkspace({ onSustainabilityChange }: Props) {
       </section>
 
       <footer className="domain-wave-footer domain-reveal domain-reveal--5">
-        <button
-          type="button"
-          className="domain-primary-button"
-          disabled={saving}
-          onClick={() => void handleSaveAndClose()}
-        >
-          {saving ? <Loader2 size={16} className="spinning" /> : <Save size={16} />}
-          {saving ? 'Salvando…' : 'Salvar Domínio e fechar o ciclo'}
-        </button>
+        <div className="domain-wave-footer-actions">
+          <Link className="domain-primary-button domain-primary-button--ghost" to={PHASE_PATHS.diagnostic}>
+            Voltar ao Diagnóstico
+          </Link>
+          <Link className="domain-primary-button domain-primary-button--ghost" to={PHASE_PATHS.diffusion}>
+            Voltar à Difusão
+          </Link>
+          <button
+            type="button"
+            className="domain-primary-button"
+            disabled={saving}
+            onClick={() => void handleSaveAndClose()}
+          >
+            {saving ? <Loader2 size={16} className="spinning" /> : <Save size={16} />}
+            {saving ? 'Salvando…' : 'Salvar Domínio e fechar o ciclo'}
+          </button>
+        </div>
         <p className="domain-wave-footer-note">
           <CheckCircle2 size={14} aria-hidden />
           Ao salvar, o ciclo se fecha no <Link to="/dashboard/historico">Loop contínuo</Link> — onde

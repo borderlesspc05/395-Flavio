@@ -10,6 +10,7 @@ export interface DeliveryChecklistItem {
   responsavel?: string;
   progresso?: ChecklistProgress;
   prazo?: string;
+  prioridade?: 'critica' | 'alta' | 'media' | 'baixa';
 }
 
 function normalizeProgress(value: unknown, done?: boolean): ChecklistProgress {
@@ -50,6 +51,13 @@ export function normalizeChecklistItems(raw: unknown): DeliveryChecklistItem[] {
       responsavel: String(row.responsavel ?? '').trim(),
       progresso,
       prazo: String(row.prazo ?? '').trim(),
+      prioridade:
+        row.prioridade === 'critica' ||
+        row.prioridade === 'alta' ||
+        row.prioridade === 'media' ||
+        row.prioridade === 'baixa'
+          ? row.prioridade
+          : 'media',
     };
   });
 }
@@ -117,6 +125,7 @@ export function checklistItemsEqual(
       item.responsavel === other.responsavel &&
       item.progresso === other.progresso &&
       item.prazo === other.prazo &&
+      item.prioridade === other.prioridade &&
       Boolean(item.done) === Boolean(other.done)
     );
   });

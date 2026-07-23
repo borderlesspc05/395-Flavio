@@ -188,12 +188,46 @@
   color: rgba(241, 235, 224, 0.75);
 }
 
-.diffusion-v2-criteria > span:first-child {
-  display: block;
+.diffusion-v2-criteria-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.diffusion-v2-criteria-head > span {
   font-size: 0.75rem;
   font-weight: 650;
   color: rgba(255, 188, 125, 0.85);
-  margin-bottom: 0.35rem;
+}
+
+.diffusion-v2-criteria-suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  border-radius: 999px;
+  background: rgba(175, 146, 112, 0.08);
+  color: #f3ddbd;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.diffusion-v2-criteria-suggest:hover:not(:disabled) {
+  border-color: rgba(255, 188, 125, 0.62);
+  background: rgba(175, 146, 112, 0.16);
+  color: #fff0da;
+}
+
+.diffusion-v2-criteria-suggest:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .diffusion-v2-criteria-hint {
@@ -642,6 +676,7 @@
   }
 
   .diffusion-drawer--execution .diffusion-v2-criteria,
+  .diffusion-drawer--execution .diffusion-v2-delivery-title-field,
   .diffusion-drawer--execution .diffusion-v2-sponsor-block,
   .diffusion-drawer--execution .diffusion-exec-meter-row,
   .diffusion-drawer--execution .diffusion-checklist,
@@ -987,6 +1022,43 @@
   overflow: hidden;
 }
 
+.team-member-combobox__selected {
+  min-height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.42rem 0.55rem;
+  border: 1px solid rgba(175, 146, 112, 0.3);
+  border-radius: 8px;
+  background: rgba(4, 6, 10, 0.38);
+}
+
+.team-member-combobox__selected > span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #f3ead8;
+}
+
+.team-member-combobox__selected strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.team-member-combobox__selected button {
+  border: 0;
+  background: transparent;
+  color: #ffbc7d;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .team-member-combobox__field > svg {
   flex: 0 0 auto;
   width: 14px;
@@ -1236,8 +1308,9 @@
   display: grid;
   grid-template-columns:
     2rem
-    minmax(0, 1.55fr)
-    minmax(0, 1.2fr)
+    minmax(18rem, 2fr)
+    minmax(10rem, 1fr)
+    6.5rem
     4.85rem
     minmax(8.25rem, 0.95fr)
     2rem;
@@ -1278,6 +1351,29 @@
   background: rgba(4, 6, 10, 0.55);
   color: #f3ead8;
   font: inherit;
+  line-height: 1.35;
+}
+
+.diffusion-checklist-priority select {
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid rgba(175, 146, 112, 0.35);
+  background: rgba(4, 6, 10, 0.55);
+  color: #f3ead8;
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.diffusion-checklist-priority.is-critica select {
+  border-color: rgba(235, 105, 105, 0.65);
+  color: #ffc1ba;
+}
+
+.diffusion-checklist-priority.is-alta select {
+  border-color: rgba(238, 165, 94, 0.58);
+  color: #ffd1a1;
 }
 
 .diffusion-checklist-text:focus-visible,
@@ -1460,13 +1556,13 @@
 @media (min-width: 1100px) {
   .diffusion-checklist-cols {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) 4.85rem minmax(8.25rem, 0.95fr);
-    width: min(100%, 24.5rem);
+    grid-template-columns: minmax(10rem, 1fr) 6.5rem 4.85rem minmax(8.25rem, 0.95fr);
+    width: min(100%, 34rem);
     justify-items: start;
     align-items: end;
   }
 
-  .diffusion-checklist-cols span:nth-child(2) {
+  .diffusion-checklist-cols span:nth-child(3) {
     justify-self: center;
   }
 }
@@ -1478,6 +1574,7 @@
     grid-template-areas:
       'check text remove'
       'check assignee assignee'
+      'check priority priority'
       'check status prazo';
   }
 
@@ -1495,6 +1592,10 @@
 
   .diffusion-checklist-status {
     grid-area: status;
+  }
+
+  .diffusion-checklist-priority {
+    grid-area: priority;
   }
 
   .diffusion-checklist-prazo {

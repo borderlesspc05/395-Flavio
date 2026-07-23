@@ -71,6 +71,8 @@ export interface MidExecutionRow {
   evidence: string;
   nextAction: string;
   source: string;
+  deadline?: string;
+  priority?: 'critica' | 'alta' | 'media' | 'baixa';
 }
 
 export interface MidTimelineEvent {

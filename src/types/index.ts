@@ -39,6 +39,7 @@ export interface DeliveryChecklistItem {
   responsavel?: string;
   progresso?: ChecklistProgress;
   prazo?: string;
+  prioridade?: 'critica' | 'alta' | 'media' | 'baixa';
 }
 
 export interface ActionCanvasDelivery {

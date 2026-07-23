@@ -139,6 +139,16 @@ export const actionCanvasesApi = {
             demoMode?: boolean;
           }
       ),
+  suggestSuccessCriteria: (data: {
+    nomeIniciativa: string;
+    objetivoEspecifico: string;
+    prazoFinal: string;
+    entregas: string[];
+    riscos: string[];
+  }) =>
+    api
+      .post('/api/action-canvases/suggest-success-criteria', data)
+      .then((r) => r.data as { criteria: string[]; demoMode?: boolean }),
   suggestRisks: (id: string) =>
     api.post(`/api/action-canvases/${id}/suggest-risks`).then(
       (r) =>
@@ -309,7 +319,19 @@ export const aiApi = {
         { context },
         { timeout: CHAT_TIMEOUT }
       )
-      .then((r) => r.data as { learnings: string[] }),
+      .then(
+        (r) =>
+          r.data as {
+            learnings: string[];
+            responses: {
+              workedWell: string;
+              didNotWork: string;
+              wouldDoDifferently: string;
+              biggestSurprise: string;
+              practiceToReplicate: string;
+            };
+          },
+      ),
   suggestEvolutionLoop: (context: string) =>
     api
       .post(

@@ -652,6 +652,17 @@
   font-size: 0.86rem;
 }
 
+.design-plans-reopen {
+  border-color: rgba(175, 146, 112, 0.38);
+  color: #e7cfad;
+}
+
+.design-plans-reopen:hover:not(:disabled) {
+  border-color: rgba(218, 181, 137, 0.68);
+  background: rgba(175, 146, 112, 0.12);
+  color: #f8e6ca;
+}
+
 .design-plans-conclude {
   display: inline-flex;
   align-items: center;

@@ -14,6 +14,7 @@ import { AppError } from '../utils/errors';
 import { listByUser, getById, create, update, remove, COLLECTIONS } from '../services/storage';
 import { logActivity } from '../services/activities';
 import { suggestActionCanvases } from '../services/actionCanvasSuggest';
+import { suggestSuccessCriteria } from '../services/successCriteriaSuggest';
 import { suggestRisksForCanvas } from '../services/riskSuggest';
 import { suggestChecklistActions } from '../services/checklistSuggest';
 import {
@@ -170,6 +171,24 @@ router.post('/suggest', async (req: Request, res: Response, next: NextFunction) 
         diagnosticContext: typeof diagnosticContext === 'string' ? diagnosticContext : undefined,
         gateContext: typeof gateContext === 'string' ? gateContext : undefined,
       })
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/suggest-success-criteria', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const result = await withConcurrencyLimit(req.userId, () =>
+      suggestSuccessCriteria({
+        nomeIniciativa: String(body.nomeIniciativa ?? ''),
+        objetivoEspecifico: String(body.objetivoEspecifico ?? ''),
+        prazoFinal: String(body.prazoFinal ?? ''),
+        entregas: Array.isArray(body.entregas) ? body.entregas.map(String).slice(0, 10) : [],
+        riscos: Array.isArray(body.riscos) ? body.riscos.map(String).slice(0, 8) : [],
+      }),
     );
     res.json(result);
   } catch (err) {

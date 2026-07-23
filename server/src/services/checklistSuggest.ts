@@ -6,52 +6,29 @@ import { normalizeChecklistItems } from './deliveryChecklist';
 
 function defaultActions(delivery: ActionCanvasDelivery): DeliveryChecklistItem[] {
   const base = delivery.entrega.trim() || 'esta entrega';
-  return [
-    {
-      id: `chk-${generateId()}`,
-      texto: `Definir escopo e critérios de sucesso de ${base}`,
-      progresso: 0,
-      responsavel: '',
-      prazo: delivery.prazo || '',
-      done: false,
-    },
-    {
-      id: `chk-${generateId()}`,
-      texto: `Alinhar stakeholders e Sponsor sobre ${base}`,
-      progresso: 0,
-      responsavel: '',
-      prazo: delivery.prazo || '',
-      done: false,
-    },
-    {
-      id: `chk-${generateId()}`,
-      texto: `Executar o primeiro ciclo de trabalho de ${base}`,
-      progresso: 0,
-      responsavel: '',
-      prazo: delivery.prazo || '',
-      done: false,
-    },
-    {
-      id: `chk-${generateId()}`,
-      texto: `Coletar evidências e validar avanço de ${base}`,
-      progresso: 0,
-      responsavel: '',
-      prazo: delivery.prazo || '',
-      done: false,
-    },
-    {
-      id: `chk-${generateId()}`,
-      texto: `Registrar aprendizados e próximos passos de ${base}`,
-      progresso: 0,
-      responsavel: '',
-      prazo: delivery.prazo || '',
-      done: false,
-    },
-  ];
+  const actions = [
+    [`Mapear o contexto, as dependências e os envolvidos necessários para ${base}`, 'alta'],
+    [`Definir escopo, limites e evidências de conclusão de ${base}`, 'critica'],
+    ['Validar o plano de execução e o cronograma com o Sponsor', 'critica'],
+    [`Preparar os recursos, materiais e responsáveis necessários para ${base}`, 'alta'],
+    ['Comunicar o plano e os impactos às pessoas envolvidas', 'media'],
+    [`Executar a primeira etapa operacional de ${base}`, 'alta'],
+    ['Monitorar a adoção e corrigir desvios identificados durante a execução', 'alta'],
+    ['Consolidar evidências e validar os resultados frente aos critérios de sucesso', 'critica'],
+  ] as const;
+  return actions.map(([texto, prioridade]) => ({
+    id: `chk-${generateId()}`,
+    texto,
+    progresso: 0,
+    responsavel: '',
+    prazo: delivery.prazo || '',
+    prioridade,
+    done: false,
+  }));
 }
 
 /**
- * Sugere até 5 ações editáveis para o check-list da Execução.
+ * Sugere 8 a 12 ações cronológicas e editáveis para o check-list da Execução.
  */
 export async function suggestChecklistActions(params: {
   canvas: ActionCanvas;
@@ -63,17 +40,35 @@ export async function suggestChecklistActions(params: {
     .map((i) => `- ${i.texto}`)
     .join('\n');
 
-  const prompt = `Você é consultor de execução. Sugira exatamente 5 ações concretas e editáveis para o check-list da entrega abaixo.
-Responda APENAS com JSON array: [{"texto":"...","prazo":"YYYY-MM-DD opcional"}]
+  const prompt = `Você é um gerente de projetos sênior e consultor de transformação organizacional.
+Antes de escrever, analise internamente o problema, a transformação desejada, dependências, participantes, riscos e as evidências necessárias para cumprir os critérios de sucesso.
+
+Crie entre 8 e 12 ações concretas para executar esta entrega. Use 8 para iniciativas simples, 10 para médias e 12 para complexas.
+
+Regras:
+- Use todo o contexto informado; nenhuma sugestão pode ignorá-lo.
+- Organize em ordem cronológica natural, da preparação à validação e ao encerramento.
+- Cada ação começa com verbo claro e representa uma entrega verificável.
+- Evite frases vagas, redundâncias e nomes inventados.
+- As ações devem conduzir aos critérios de sucesso sem copiá-los.
+- Distribua prazos realistas, nunca posteriores ao prazo da entrega ou da iniciativa.
+- Defina prioridade critica, alta, media ou baixa segundo impacto e dependências.
+
+Responda APENAS com JSON array:
+[{"texto":"ação específica","prazo":"YYYY-MM-DD","prioridade":"critica|alta|media|baixa"}]
 
 Iniciativa: ${canvas.nomeIniciativa || '—'}
 Objetivo: ${canvas.objetivoEspecifico || '—'}
+Critérios de sucesso: ${canvas.successCriteria?.filter(Boolean).join(' | ') || 'não informados'}
+Comentários da Mobilização: ${canvas.mobilizationNotes || 'não informados'}
+Riscos: ${canvas.riscos?.map((risk) => `${risk.risco}: ${risk.acaoTomar}`).join(' | ') || 'não informados'}
+Prazo final da iniciativa: ${canvas.prazoFinal || '—'}
 Entrega: ${delivery.entrega || '—'}
 Prazo da entrega: ${delivery.prazo || '—'}
 Ações já listadas:
 ${existing || '(nenhuma)'}
 
-Use português do Brasil. Seja específico e acionável. Não use a palavra Owner.`;
+Use português do Brasil. Seja específico e acionável.`;
 
   try {
     const raw = await chatCompletion({
@@ -89,7 +84,7 @@ Use português do Brasil. Seja específico e acionável. Não use a palavra Owne
     const parsed = JSON.parse(match[0]) as unknown;
     const items = normalizeChecklistItems(
       Array.isArray(parsed)
-        ? parsed.slice(0, 5).map((row) => {
+        ? parsed.slice(0, 12).map((row) => {
             const r = (row && typeof row === 'object' ? row : {}) as Record<string, unknown>;
             return {
               id: `chk-${generateId()}`,
@@ -97,12 +92,19 @@ Use português do Brasil. Seja específico e acionável. Não use a palavra Owne
               progresso: 0,
               responsavel: '',
               prazo: String(r.prazo ?? delivery.prazo ?? ''),
+              prioridade:
+                r.prioridade === 'critica' ||
+                r.prioridade === 'alta' ||
+                r.prioridade === 'media' ||
+                r.prioridade === 'baixa'
+                  ? r.prioridade
+                  : 'media',
               done: false,
             };
           })
         : []
     ).filter((i) => i.texto.trim());
-    return { items: items.length ? items : defaultActions(delivery) };
+    return { items: items.length >= 8 ? items : defaultActions(delivery) };
   } catch (err) {
     if (isLlmNotConfiguredError(err)) {
       return { items: defaultActions(delivery), demoMode: true };
