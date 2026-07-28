@@ -1,4 +1,12 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { UserPlus, UserRound } from 'lucide-react';
@@ -29,6 +37,24 @@ function memberName(m: TeamMemberLite) {
   return (m.nome || m.name || m.email || 'Membro').trim();
 }
 
+function normalizeMemberKey(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
+
+function normalizeMembersResponse(response: unknown): TeamMemberLite[] {
+  if (Array.isArray(response)) return response as TeamMemberLite[];
+  if (!response || typeof response !== 'object') return [];
+  const record = response as { items?: unknown; data?: unknown };
+  if (Array.isArray(record.items)) return record.items as TeamMemberLite[];
+  if (Array.isArray(record.data)) return record.data as TeamMemberLite[];
+  return [];
+}
+
 export function TeamMemberCombobox({
   label,
   value,
@@ -43,6 +69,7 @@ export function TeamMemberCombobox({
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [listStyle, setListStyle] = useState<CSSProperties | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
 
@@ -50,47 +77,60 @@ export function TeamMemberCombobox({
     setQuery(value);
   }, [value]);
 
-  useEffect(() => {
-    let cancelled = false;
-    teamApi
-      .list()
-      .then((list) => {
-        if (!cancelled) {
-          setMembers(Array.isArray(list) ? (list as TeamMemberLite[]) : []);
-          setLoaded(true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setLoaded(true);
-      });
-    return () => {
-      cancelled = true;
-    };
+  const loadMembers = useCallback(async () => {
+    setLoadError(false);
+    try {
+      const response = await teamApi.list();
+      setMembers(normalizeMembersResponse(response));
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoaded(true);
+    }
   }, []);
 
+  useEffect(() => {
+    void loadMembers();
+  }, [loadMembers]);
+
   const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeMemberKey(query);
     if (!q) return members.slice(0, 8);
     return members
       .filter((m) => {
-        const name = memberName(m).toLowerCase();
-        const email = (m.email || '').toLowerCase();
+        const name = normalizeMemberKey(memberName(m));
+        const email = normalizeMemberKey(m.email || '');
         return name.includes(q) || email.includes(q);
       })
       .slice(0, 8);
   }, [members, query]);
 
   const exactMatch = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeMemberKey(query);
     if (!q) return true;
-    return members.some((m) => memberName(m).toLowerCase() === q);
+    return members.some(
+      (m) =>
+        normalizeMemberKey(memberName(m)) === q ||
+        normalizeMemberKey(m.email || '') === q,
+    );
   }, [members, query]);
-  const selectedMember = useMemo(
-    () => members.find((m) => memberName(m).toLowerCase() === value.trim().toLowerCase()),
-    [members, value],
-  );
+  const selectedMember = useMemo(() => {
+    const selected = normalizeMemberKey(value);
+    if (!selected) return undefined;
+    return members.find(
+      (m) =>
+        normalizeMemberKey(memberName(m)) === selected ||
+        normalizeMemberKey(m.email || '') === selected,
+    );
+  }, [members, value]);
 
   const showList = open && loaded && matches.length > 0;
+
+  useEffect(() => {
+    if (!restrictToMembers || !selectedMember) return;
+    const canonicalName = memberName(selectedMember);
+    if (canonicalName !== value) onChange(canonicalName);
+  }, [onChange, restrictToMembers, selectedMember, value]);
 
   useLayoutEffect(() => {
     if (!showList || !fieldRef.current) {
@@ -131,7 +171,41 @@ export function TeamMemberCombobox({
   return (
     <label className={`team-member-combobox${label ? '' : ' is-compact'}`}>
       {label ? <span>{label}</span> : null}
-      {compactWhenSelected && selectedMember && !open ? (
+      {restrictToMembers ? (
+        <div className="team-member-combobox__select-wrap">
+          <UserRound size={14} aria-hidden />
+          <select
+            id={id}
+            value={selectedMember ? memberName(selectedMember) : ''}
+            disabled={disabled || !loaded || loadError}
+            aria-label={label || 'Responsável'}
+            onFocus={() => void loadMembers()}
+            onChange={(event) => {
+              const next = event.target.value;
+              onChange(next);
+              setQuery(next);
+            }}
+          >
+            <option value="">
+              {!loaded
+                ? 'Carregando equipe…'
+                : loadError
+                  ? 'Erro ao carregar equipe'
+                  : members.length === 0
+                    ? 'Nenhum membro cadastrado'
+                    : 'Selecione o responsável'}
+            </option>
+            {members.map((member) => {
+              const name = memberName(member);
+              return (
+                <option key={member.id || name} value={name}>
+                  {member.email ? `${name} — ${member.email}` : name}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      ) : compactWhenSelected && selectedMember && !open ? (
         <div className="team-member-combobox__selected">
           <span>
             <UserRound size={14} aria-hidden />
@@ -151,7 +225,10 @@ export function TeamMemberCombobox({
           disabled={disabled}
           autoComplete="off"
           placeholder="Buscar na equipe…"
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true);
+            void loadMembers();
+          }}
           onChange={(e) => {
             setQuery(e.target.value);
             if (!restrictToMembers) onChange(e.target.value);
@@ -188,11 +265,30 @@ export function TeamMemberCombobox({
             document.body,
           )
         : null}
-      {showAddToTeam && loaded && query.trim() && !exactMatch ? (
-        <Link to="/dashboard/equipe" className="team-member-combobox__add">
+      {showAddToTeam && !restrictToMembers && loaded && query.trim() && !exactMatch ? (
+        <Link to="/dashboard/minha-equipe" className="team-member-combobox__add">
           <UserPlus size={14} aria-hidden />
           Adicionar à equipe
         </Link>
+      ) : null}
+      {showAddToTeam && restrictToMembers ? (
+        <Link to="/dashboard/minha-equipe" className="team-member-combobox__add">
+          <UserPlus size={14} aria-hidden />
+          Gerenciar equipe
+        </Link>
+      ) : null}
+      {!restrictToMembers && open && loaded && !loadError && members.length === 0 ? (
+        <span className="team-member-combobox__status">Nenhum membro cadastrado ainda.</span>
+      ) : null}
+      {loadError ? (
+        <button
+          type="button"
+          className="team-member-combobox__retry"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => void loadMembers()}
+        >
+          Não foi possível carregar a equipe. Tentar novamente
+        </button>
       ) : null}
     </label>
   );

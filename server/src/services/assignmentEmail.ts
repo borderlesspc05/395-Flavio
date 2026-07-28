@@ -257,7 +257,7 @@ export async function sendChecklistReminderEmail(params: {
   canvas: ActionCanvas;
   delivery: ActionCanvasDelivery;
   item: DeliveryChecklistItem;
-}): Promise<{ sent: boolean; demoMode?: boolean; reason?: string }> {
+}): Promise<{ sent: boolean; demoMode?: boolean; reason?: string; recipient?: string }> {
   const { canvas, delivery, item } = params;
   const responsavel = (item.responsavel || '').trim();
   if (!responsavel) {
@@ -282,7 +282,7 @@ export async function sendChecklistReminderEmail(params: {
   });
 
   if (!isEmailConfigured()) {
-    return { sent: false, demoMode: true };
+    return { sent: false, demoMode: true, recipient: to };
   }
 
   const result = await sendEmail({
@@ -292,7 +292,11 @@ export async function sendChecklistReminderEmail(params: {
     html: copy.html,
   });
 
-  return { sent: result.ok, demoMode: result.demoMode || copy.demoMode };
+  return {
+    sent: result.ok,
+    demoMode: result.demoMode || copy.demoMode,
+    recipient: to,
+  };
 }
 
 /**

@@ -13,6 +13,7 @@ interface Props {
   suggesting?: boolean;
   remindingId?: string | null;
   onChange: (items: DeliveryChecklistItem[]) => void;
+  onAssign: (itemId: string, responsavel: string) => void;
   onSuggest: () => void;
   onRemind: (item: DeliveryChecklistItem) => void;
 }
@@ -23,6 +24,7 @@ export function DeliveryChecklistEditor({
   suggesting,
   remindingId,
   onChange,
+  onAssign,
   onSuggest,
   onRemind,
 }: Props) {
@@ -123,7 +125,10 @@ export function DeliveryChecklistEditor({
                   showAddToTeam
                   restrictToMembers
                   compactWhenSelected
-                  onChange={(responsavel) => updateItem(item.id, { responsavel })}
+                  onChange={(responsavel) => {
+                    updateItem(item.id, { responsavel });
+                    onAssign(item.id, responsavel);
+                  }}
                 />
                 <button
                   type="button"

@@ -172,7 +172,15 @@ export const actionCanvasesApi = {
   remindChecklistItem: (id: string, deliveryId: string, itemId: string) =>
     api
       .post(`/api/action-canvases/${id}/deliveries/${deliveryId}/checklist/${itemId}/remind`)
-      .then((r) => r.data as { sent: boolean; demoMode?: boolean; reason?: string }),
+      .then(
+        (r) =>
+          r.data as {
+            sent: boolean;
+            demoMode?: boolean;
+            reason?: string;
+            recipient?: string;
+          },
+      ),
 };
 
 export const objectivesApi = {

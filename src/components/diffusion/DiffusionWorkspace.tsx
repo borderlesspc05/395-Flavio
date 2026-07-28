@@ -492,6 +492,35 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
     );
   };
 
+  const assignChecklistOwner = async (
+    deliveryId: string,
+    itemId: string,
+    responsavel: string,
+  ) => {
+    if (!active) return;
+    const entregas = active.entregas.map((delivery) => {
+      if (delivery.id !== deliveryId) return delivery;
+      const checklistItems = getDeliveryChecklistItems(delivery).map((item) =>
+        item.id === itemId ? { ...item, responsavel } : item,
+      );
+      return {
+        ...delivery,
+        checklistItems,
+        checklist: checklistItems.map((item) => item.texto).filter(Boolean),
+        status: deriveDeliveryStatusFromChecklist(checklistItems, delivery.prazo),
+      };
+    });
+    await patchActive(
+      { entregas },
+      {
+        deliveryId,
+        successMessage: responsavel
+          ? `Responsável definido: ${responsavel}.`
+          : 'Responsável removido.',
+      },
+    );
+  };
+
   const suggestDeliveryActions = async (deliveryId: string) => {
     if (!active || suggestingActions) return;
     setSuggestingActions(true);
@@ -540,7 +569,13 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
           'Lembrete'
         );
       } else if (result.sent) {
-        pushToast('success', 'Lembrete enviado ao responsável da ação.', 'Lembrete');
+        pushToast(
+          'success',
+          result.recipient
+            ? `Lembrete entregue ao provedor de ${result.recipient}. Confira também Spam e Promoções.`
+            : 'Lembrete entregue ao provedor do responsável.',
+          'Lembrete enviado',
+        );
       } else {
         pushToast('error', result.reason || 'Não foi possível enviar o lembrete.', 'Lembrete');
       }
@@ -1234,6 +1269,9 @@ export function DiffusionWorkspace({ onCanvasClosed }: Props) {
                     suggesting={suggestingActions}
                     remindingId={remindingChecklistId}
                     onChange={(items) => updateDeliveryChecklist(delivery.id, items)}
+                    onAssign={(itemId, responsavel) =>
+                      void assignChecklistOwner(delivery.id, itemId, responsavel)
+                    }
                     onSuggest={() => void suggestDeliveryActions(delivery.id)}
                     onRemind={(item) => void sendChecklistReminder(delivery.id, item)}
                   />
